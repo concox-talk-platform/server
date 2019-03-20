@@ -1,0 +1,6 @@
+[submodule "third_party/go/src/github.com/go-sql-driver/mysql"]
+	path = third_party/go/src/github.com/go-sql-driver/mysql
+	url = https://github.com/go-sql-driver/mysql
+[submodule "third_party/go/src/github.com/gomodule/redigo"]
+	path = third_party/go/src/github.com/gomodule/redigo
+	url = https://github.com/gomodule/redigo
