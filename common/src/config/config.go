@@ -52,3 +52,11 @@ func (cfg *DBConfig) GetDSN() string {
 	}
 	return str
 }
+
+func (cfg *DBConfig) GetDriver() string {
+	if cfg != nil {
+		return cfg.Driver
+	}
+
+	return ""
+}

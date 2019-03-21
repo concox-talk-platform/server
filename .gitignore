@@ -1,0 +1,5 @@
+# ignore .idea dir
+.idea
+
+# ignore .exe
+*.exe
