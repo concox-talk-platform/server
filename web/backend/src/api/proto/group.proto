@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package dbops;
+package pkg;
 
 service GroupService {
     // 通过账户id获取群组

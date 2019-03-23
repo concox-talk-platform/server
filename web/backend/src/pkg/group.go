@@ -3,24 +3,24 @@
 * @Date: 2019/3/18 10:31
 * @Description: 对群组表格的操作
  */
-package dbops
+package pkg
 
 import (
 	"fmt"
-	"github.com/concox-talk-platform/server/web/backend-api/defs"
+	"github.com/concox-talk-platform/server/web/backend/src/model"
 	"github.com/smartwalle/dbs"
 	"log"
 	"strconv"
 )
 
 // 查看
-func SelectGroupsByAccountId(aid int) ([]*defs.GroupInfo, error) {
+func SelectGroupsByAccountId(aid int) ([]*model.GroupInfo, error) {
 	stmtOut, err := dbConn.Prepare("SELECT id, group_name, stat, create_time FROM `group` WHERE account_id = ? AND stat = 1")
 	if err != nil {
 		return nil, err
 	}
 
-	var res []*defs.GroupInfo
+	var res []*model.GroupInfo
 
 	rows, err := stmtOut.Query(aid)
 	if err != nil {
@@ -34,7 +34,7 @@ func SelectGroupsByAccountId(aid int) ([]*defs.GroupInfo, error) {
 			return res, err
 		}
 
-		g := &defs.GroupInfo{Id: gid, GroupName: groupName, Status: status, CTime: cTime}
+		g := &model.GroupInfo{Id: gid, GroupName: groupName, Status: status, CTime: cTime}
 		res = append(res, g)
 	}
 
@@ -47,7 +47,7 @@ func SelectGroupsByAccountId(aid int) ([]*defs.GroupInfo, error) {
 }
 
 // 创建组
-func CreateGroup(gl *defs.GroupList) error {
+func CreateGroup(gl *model.GroupList) error {
 	stmtInsG, err := dbConn.Prepare("INSERT INTO `group` (group_name, account_id) VALUES (?, ?)")
 	if err != nil {
 		return err
@@ -90,7 +90,7 @@ func CreateGroup(gl *defs.GroupList) error {
 }
 
 // 查找群组
-func SelectGroupByGroupName(GroupName string) (*defs.GroupInfo, error) {
+func SelectGroupByGroupName(GroupName string) (*model.GroupInfo, error) {
 	stmtOut, err := dbConn.Prepare("SELECT id, stat, create_time FROM `group` WHERE group_name = ?")
 	if err != nil {
 		return nil, err
@@ -102,7 +102,7 @@ func SelectGroupByGroupName(GroupName string) (*defs.GroupInfo, error) {
 		return nil, err
 	}
 
-	g := &defs.GroupInfo{Id: gid, GroupName: GroupName, Status: status, CTime: cTime}
+	g := &model.GroupInfo{Id: gid, GroupName: GroupName, Status: status, CTime: cTime}
 
 	defer func() {
 		if err := stmtOut.Close(); err != nil {
@@ -126,7 +126,7 @@ func UpdateGroup() {
 }
 
 // 删除群组
-func DeleteGroup(g *defs.GroupInfo) error {
+func DeleteGroup(g *model.GroupInfo) error {
 	tx, err := dbConn.Begin()
 	if err != nil {
 		return err

@@ -7,13 +7,22 @@ package main
 
 import (
 	"fmt"
+	"github.com/concox-talk-platform/server/web/backend/src/controllers"
 	"github.com/gin-gonic/gin"
+	"io"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 )
 
 func Prepare() *gin.Engine {
+
+	// 禁用控制台颜色
+	gin.DisableConsoleColor()
+	// 创建记录日志的文件
+	f, _ := os.Create("backend-api.log")
+	gin.DefaultWriter = io.MultiWriter(f)
 
 	engine := gin.Default()
 
@@ -21,21 +30,21 @@ func Prepare() *gin.Engine {
 	engine.Use(Cors())
 
 	// 注册路由
-	engine.POST("/account", SignUp)
+	engine.POST("/account", controllers.SignUp)
 
-	engine.POST("/account/login.do/:account_name", SignIn)
+	engine.POST("/account/login.do/:account_name", controllers.SignIn)
 
-	engine.POST("/account/logout.do/:account_name", SignOut)
+	engine.POST("/account/logout.do/:account_name", controllers.SignOut)
 
-	engine.GET("/account/:account_name", GetAccountInfo)
+	engine.GET("/account/:account_name", controllers.GetAccountInfo)
 
-	engine.POST("/account/info/update", UpdateAccountInfo)
+	engine.POST("/account/info/update", controllers.UpdateAccountInfo)
 
-	engine.POST("/account/pwd/update", UpdateAccountPwd)
+	engine.POST("/account/pwd/update", controllers.UpdateAccountPwd)
 
-	engine.POST("/group", CreateGroup)
+	engine.POST("/group", controllers.CreateGroup)
 
-	engine.POST("/group/update", UpdateGroup)
+	engine.POST("/group/update", controllers.UpdateGroup)
 
 	return engine
 }

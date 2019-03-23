@@ -3,7 +3,7 @@
 * @Date: 2019/3/11 11:03
 * @Description: 用来定义返回错误的结构体和消息格式
  */
-package defs
+package model
 
 import "github.com/gin-gonic/gin"
 

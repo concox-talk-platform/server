@@ -3,11 +3,11 @@
 * @Date: 2019/3/11 11:16
 * @Description:
  */
-package dbops
+package pkg
 
 import (
 	"database/sql"
-	"github.com/concox-talk-platform/server/web/backend-api/defs"
+	"github.com/concox-talk-platform/server/web/backend/src/model"
 	"github.com/smartwalle/dbs"
 	"log"
 )
@@ -19,7 +19,7 @@ func AddAccountCredential(loginName string, pwd string) error {
 		return err
 	}
 
-	if _, err := stmtIns.Exec( /*"DISPATCHER", */ loginName, pwd); err != nil {
+	if _, err := stmtIns.Exec( loginName, pwd); err != nil {
 		log.Println("AddAccountCredential Fail")
 		return err
 	}
@@ -110,7 +110,7 @@ func GetAccountByName(userName string) (int, error) {
 }
 
 // 获取用户
-func GetAccount(loginName string) (*defs.AccountCredential, error) {
+func GetAccount(loginName string) (*model.AccountCredential, error) {
 	stmtOut, err := dbConn.Prepare(`SELECT id, pid, user_name, nick_name, passwd, email, phone, remark, address, privilege_id, 
        									  role_type, stat, last_login_time, create_time, change_time 
 								FROM account WHERE user_name = ?`)
@@ -150,7 +150,7 @@ func GetAccount(loginName string) (*defs.AccountCredential, error) {
 
 	// 赋值给返回的结构体
 	log.Println("get account : ", id, "  ", username, " ", privilegeId, " ", pwd, " ", cTime)
-	res := &defs.AccountCredential{
+	res := &model.AccountCredential{
 		Id: id,
 		Pid: pid,
 		Username: username,
@@ -177,7 +177,7 @@ func GetAccount(loginName string) (*defs.AccountCredential, error) {
 }
 
 // 更新用户
-func UpdateAccount(a *defs.Account) error {
+func UpdateAccount(a *model.Account) error {
 	var ub = dbs.NewUpdateBuilder()
 	ub.Table("account")
 	if a.Remark != "" {

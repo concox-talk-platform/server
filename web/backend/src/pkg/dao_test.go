@@ -3,10 +3,10 @@
 * @Date: 2019/3/11 11:32
 * @Description:
  */
-package dbops
+package pkg
 
 import (
-	"github.com/concox-talk-platform/server/web/backend-api/defs"
+	"github.com/concox-talk-platform/server/web/backend/src/model"
 	"strconv"
 	"testing"
 	//"strconv"
@@ -67,7 +67,7 @@ func testGetSessionValue(t *testing.T) {
 }
 
 func testInsertSession(t *testing.T) {
-	var s = &defs.SessionInfo{
+	var s = &model.SessionInfo{
 		SessionID: "23456789",
 		UserName:  "tiger",
 		AccountId: 2,
@@ -82,7 +82,7 @@ func testInsertSession(t *testing.T) {
 }
 
 func testDeleteGroup(t *testing.T) {
-	if err := DeleteGroup(&defs.GroupInfo{Id: 18, Status: "0"}); err != nil {
+	if err := DeleteGroup(&model.GroupInfo{Id: 18, Status: "0"}); err != nil {
 		t.Errorf("Delete group is wrong : %v", err)
 	}
 }
@@ -125,7 +125,7 @@ func testDeleteAccount(t *testing.T) {
 }
 
 func testUpdateAccount(t *testing.T) {
-	if err := UpdateAccount(&defs.Account{Id: "2"}); err != nil {
+	if err := UpdateAccount(&model.Account{Id: "2"}); err != nil {
 		t.Errorf("Error of UpdateAccount %v", err)
 	}
 }
@@ -140,7 +140,7 @@ func testAddDevice(t *testing.T) {
 	base := int64(123456789123456)
 	for i := int64(6); i < 3; i++ {
 		imei := strconv.FormatInt(base-i, 10)
-		d := &defs.Device{IMei: imei, AliasName: ("巡逻" + strconv.FormatInt(i, 10) + "号"), AccountId: 5, Status: "0", ActiveStatus: "0", BindStatus: "1"}
+		d := &model.Device{IMei: imei, AliasName: ("巡逻" + strconv.FormatInt(i, 10) + "号"), AccountId: 5, Status: "0", ActiveStatus: "0", BindStatus: "1"}
 		if err := AddDevice(d); err != nil {
 			t.Errorf("Error of AddDevice %v", err)
 		}
@@ -174,8 +174,8 @@ func testSelectDeviceByAccountId(t *testing.T) {
 
 func testCreateGroup(t *testing.T) {
 	nums := []int{9, 10, 11, 12, 13}
-	g := &defs.GroupInfo{GroupName: "大连组", AccountId: 2, Id: 5}
-	gl := &defs.GroupList{DeviceIds: nums, GroupInfo: g}
+	g := &model.GroupInfo{GroupName: "大连组", AccountId: 2, Id: 5}
+	gl := &model.GroupList{DeviceIds: nums, GroupInfo: g}
 	if err := CreateGroup(gl); err != nil {
 		t.Errorf("create group test error: %v", err)
 	}

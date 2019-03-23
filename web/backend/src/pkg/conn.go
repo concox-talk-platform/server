@@ -3,7 +3,7 @@
 * @Date: 2019/3/11 11:17
 * @Description: 连接数据库
  */
-package dbops
+package pkg
 
 import (
 	"database/sql"
@@ -24,7 +24,7 @@ var (
  * 连接数据库
  */
 func init() {
-	cfg, err := ini.Load("../../common/conf/db.ini")  // 编译之后的执行文件所在位置的相对位置
+	cfg, err := ini.Load("../../../../common/conf/db.ini")  // 编译之后的执行文件所在位置的相对位置
 	if err != nil {
 		log.Printf("Fail to read file: %v", err)
 		os.Exit(1)
@@ -46,9 +46,16 @@ func init() {
 		panic(err.Error())
 	}
 
+	redisPwd := cfg.Section("redis").Key("password").String()
+	redisHost := cfg.Section("redis").Key("host").String()
+	redisPort := cfg.Section("redis").Key("port").String()
+
 	// redis Temporary
-	rdsConn, err = redis.Dial("tcp", "172.16.0.74.:6379")
+	rdsConn, err = redis.Dial("tcp", redisHost + ":" + redisPort)
 	if err != nil {
+		log.Fatalf("connect redis error : %s", err)
+	}
+	if _, err := rdsConn.Do("AUTH", redisPwd); err != nil {
 		log.Println("connect redis error :", err)
 		return
 	}
