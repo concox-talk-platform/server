@@ -1,5 +1,5 @@
 <template>
-    <div style="height:100%">
+<div style="height:100%">
     <!-- 侧边栏 -->
     <div class="homePage_sideGroup">
         <div class="sideGroup_head" @click="unfold" >
@@ -67,18 +67,32 @@
                                     2001
                                 </div> 
                             </li>                                          
-
-
-                 
-               
-                  
-          
                                                                                      
                        </ul>
                 </div>
                 <el-button  class="addbotton" @click="members_div= true">{{$t('button_message.add')}}</el-button>
             </div>
         </div>
+        <el-dialog
+        width="31%" :title="$t('group.member_title')" :visible.sync="members_div" append-to-body>
+        <!-- 左右列表移动 -->
+            <el-transfer
+                style="text-align: left; display: inline-block"
+                v-model="value3"
+                filterable
+                :render-content="renderFunc"
+                :titles="[Source, Target]"
+                :button-texts="[toleft, toright]"
+                :format="{
+                    noChecked: '${total}',
+                    hasChecked: '${checked}/${total}'
+                }"
+                @change="handleChange"
+                :data="data">
+                <el-button class="transfer-footer" slot="left-footer" size="small">操作</el-button>
+                <el-button class="transfer-footer" slot="right-footer" size="small">操作</el-button>
+            </el-transfer>
+        </el-dialog>
         <div slot="footer" class="dialog-footer">
         <el-button @click="outerVisible = false">{{ $t("button_message.cancel") }}</el-button>
         <el-button type="primary" >{{ $t("button_message.ensure") }}</el-button>
@@ -86,39 +100,59 @@
     </el-dialog>
     <!-- 组内详细设备 -->
     <div class="device_detail">
-           <div class="device_detail_tittle">
-               <!-- {{device_group_name}} -->
-               Text
-           </div>
-           <div class="device_detail_num">
-               <ul>
-                    <li  @contextmenu.prevent='control(index)'  v-for="(item,index) in monise" :key="item.id">
-                        <div class='device_pic'>
-                            <img src="../../assets/img/computer.png" alt="">
-                        </div>
-                        <div class="device_name">
-                            {{item.name}}
-                        </div> 
-                        <div class="control_menum" v-show="control_show">
-                            <div class="control_voice">语音通话</div>
-                            <div class="control_vedio">视频通话</div>
-                            <div class="control_look">视频查看</div>
-                            <div class="control_text">即时消息</div>
-
-                        </div>
-                    </li>                             
-               </ul>
-
-           </div>
-
+            <div class="device_detail_tittle">
+                <!-- {{device_group_name}} -->
+                Text
+            </div>
+            <div class="device_detail_num">
+                <ul>
+                        <li  @contextmenu.prevent='control(index)'  v-for="(item,index) in monise" :key="item.id">
+                            <div class='device_pic'>
+                                <img src="../../assets/img/computer.png" alt="">
+                            </div>
+                            <div class="device_name">
+                                {{item.name}}
+                            </div> 
+                            <div class="control_menum" v-show="control_show">
+                                <div class="control_voice">语音通话</div>
+                                <div class="control_vedio">视频通话</div>
+                                <div class="control_look">视频查看</div>
+                                <div class="control_text">即时消息</div>
+                            </div>
+                        </li>                             
+                </ul>
+            </div>
     </div>
-    </div>
+
+
+
+</div>
 </template>
 
 <script>
 export default {
     data() {
+      const generateData = _ => {
+        const data = [];
+        const cities = this.device_member;
+         this.cities = this.device_member
+        // const pinyin = ['shanghai', 'beijing', 'guangzhou', 'shenzhen', 'nanjing', 'xian', 'chengdu'];
+        cities .forEach((city, index) => {
+          data.push({
+            label: city,
+            key: index,
+            // pinyin: pinyin[index]
+          });
+        });
+        return data;
+      };       
         return {
+        data: generateData(),
+        value3: [],
+        value4: [],
+        renderFunc(h, option) {
+          return <span>{ option.key } - { option.label }</span>;
+        },
          show:false,
          online:6,
          totalnum:20,
@@ -132,15 +166,20 @@ export default {
         //  group_list:[],
          group_div:false,
          members_div:false, 
+         device_group_name:'',
+         control_show:false,
          titles_left:this.$t('group.all_member'), 
          titles_right:this.$t('group.select_member'), 
          button_left: this.$t('group.remove'),
          button_right: this.$t('group.add'),
+         Source: this.$t('group.all_member'), 
+         Target: this.$t('group.select_member'),
+         toleft: this.$t('group.remove'),
+         toright: this.$t('group.add'),
          addgroup_form: {
          name:'',
          },
-        device_group_name:'',
-         control_show:false,
+
          group_rules : {
             name: [
             { required: true, message: this.$t('group.message'), trigger: 'blur' },
@@ -159,7 +198,7 @@ export default {
         },
         unfold(){
             this.show=!this.show;
-            window.console.log(this.group_member);
+            window.console.log(this.device_member);
 
         },
         groupbody_show(){
@@ -182,14 +221,18 @@ export default {
         // 添加新的组
         group_add(){
          this.group_div = true;
-        }
+        },
+        // 列表移动
+      handleChange(value, direction, movedKeys) {
+        window.console.log(value, direction, movedKeys);
+      }
     },
     computed:{
    
             group_list(){
                 return this.$store.state.Equipment.groupList;
             },
-            group_member(){
+            device_member(){
                  let device_id=this.$store.state.Equipment.device.map(e =>{
                      if(e.hasOwnProperty('id')){
                          return e.id
