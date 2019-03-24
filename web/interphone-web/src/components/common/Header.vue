@@ -295,7 +295,8 @@ import vSidebar from './Sidebar.vue';
             //  localStorage.setItem('id', response.data.account_info.id);
              sessionStorage.setItem('id', response.data.account_info.id);
              this.$store.commit("groupList",response.data.group_list);
-             window.console.log(response)
+             window.console.log(response);
+             window.console.log(response.data.device_list);
             // localStorage.setItem('id', response.data.account_info.id);
             this.$store.commit("deviceList",response.data.device_list);
             })

@@ -31,24 +31,24 @@ axios.defaults.baseURL = 'http://113.105.153.240:8080'
 Vue.prototype.$axios = axios;
 
 //使用钩子函数对路由进行权限跳转
-router.beforeEach((to, from, next) => {
-    // let role=localStorage.getItem('setSession_id');
-    let role=sessionStorage.getItem('setSession_id');
-    if(role===null&&to.path=='/login'){
-    next()
-    }else if(role===null){
-    router.push('/login')
-    next()
-    }
-    else{
-    if(to.path=='/login'){
-    router.push('/')
-    next()
-    }else{
-    next()
-    }
-    }
-    })
+// router.beforeEach((to, from, next) => {
+//     // let role=localStorage.getItem('setSession_id');
+//     let role=sessionStorage.getItem('setSession_id');
+//     if(role===null&&to.path=='/login'){
+//     next()
+//     }else if(role===null){
+//     router.push('/login')
+//     next()
+//     }
+//     else{
+//     if(to.path=='/login'){
+//     router.push('/')
+//     next()
+//     }else{
+//     next()
+//     }
+//     }
+//     })
 
 new Vue({
     

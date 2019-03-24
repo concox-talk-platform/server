@@ -78,9 +78,7 @@
         <!-- 左右列表移动 -->
             <el-transfer
                 style="text-align: left; display: inline-block"
-                v-model="value3"
-                filterable
-                :render-content="renderFunc"
+                v-model="yesData"
                 :titles="[Source, Target]"
                 :button-texts="[toleft, toright]"
                 :format="{
@@ -88,10 +86,12 @@
                     hasChecked: '${checked}/${total}'
                 }"
                 @change="handleChange"
-                :data="data">
-                <el-button class="transfer-footer" slot="left-footer" size="small">操作</el-button>
-                <el-button class="transfer-footer" slot="right-footer" size="small">操作</el-button>
+                :props="{key: 'id',label:'account_id'}"
+                :data="noData">
+                <!-- <el-button class="transfer-footer" slot="left-footer" size="small">操作</el-button>
+                <el-button class="transfer-footer" slot="right-footer" size="small">操作</el-button> -->
             </el-transfer>
+
         </el-dialog>
         <div slot="footer" class="dialog-footer">
         <el-button @click="outerVisible = false">{{ $t("button_message.cancel") }}</el-button>
@@ -132,27 +132,24 @@
 <script>
 export default {
     data() {
-      const generateData = _ => {
-        const data = [];
-        const cities = this.device_member;
-         this.cities = this.device_member
-        // const pinyin = ['shanghai', 'beijing', 'guangzhou', 'shenzhen', 'nanjing', 'xian', 'chengdu'];
-        cities .forEach((city, index) => {
-          data.push({
-            label: city,
-            key: index,
-            // pinyin: pinyin[index]
-          });
-        });
-        return data;
-      };       
+    //     const generateData = _ => {
+    //     const data = [];
+    //     const cities = ['上海', '北京', '广州', '深圳', '南京', '西安', '成都'];
+    //     cities.forEach((city, index) => {
+    //       data.push({
+    //         label: city,
+    //         key: index,
+    //       });
+    //     });
+    //     return data;
+    //   };       
         return {
-        data: generateData(),
-        value3: [],
-        value4: [],
-        renderFunc(h, option) {
-          return <span>{ option.key } - { option.label }</span>;
-        },
+        // data: generateData(),
+        //  noData: [{id:1,name:'测试1',d:'saas'},{id:2,name:'测试2',d:'sqs'},{id:3,name:'测试3',d:'saa123s'}],
+         yesData: [],
+        // renderFunc(h, option) {
+        //   return <span>{ option.key } - { option.label }</span>;
+        // },
          show:false,
          online:6,
          totalnum:20,
@@ -239,6 +236,12 @@ export default {
                      }
                  })
                 return device_id
+            },
+            noData(){
+                // let  transfer_name=this.$store.state.Equipment.device;
+                let  transfer_name=[{id:1,account_id:'asd'},{id:5,account_id:'aseqed'},{id:6,account_id:'ada'},{id:9,account_id:'asdasd'},
+                {id:25,account_id:'ajfghd'},{id:123,account_id:'123asd'},];
+                return  transfer_name
             }
             
     },
