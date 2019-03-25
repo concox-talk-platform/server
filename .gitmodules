@@ -10,3 +10,21 @@
 [submodule "third_party/go/src/github.com/gin-gonic/gin"]
 	path = third_party/go/src/github.com/gin-gonic/gin
 	url = https://github.com/gin-gonic/gin
+[submodule "third_party/go/src/github.com/gin-contrib/sse"]
+	path = third_party/go/src/github.com/gin-contrib/sse
+	url = https://github.com/gin-contrib/sse
+[submodule "third_party/go/src/github.com/golang/protobuf"]
+	path = third_party/go/src/github.com/golang/protobuf
+	url = https://github.com/golang/protobuf
+[submodule "third_party/go/src/github.com/mattn/go-isatty"]
+	path = third_party/go/src/github.com/mattn/go-isatty
+	url = https://github.com/mattn/go-isatty
+[submodule "third_party/go/src/github.com/ugorji/go"]
+	path = third_party/go/src/github.com/ugorji/go
+	url = https://github.com/ugorji/go
+[submodule "third_party/go/src/gopkg.in/go-playground/validator.v8"]
+	path = third_party/go/src/gopkg.in/go-playground/validator.v8
+	url = https://gopkg.in/go-playground/validator.v8
+[submodule "third_party/go/src/gopkg.in/yaml.v2"]
+	path = third_party/go/src/gopkg.in/yaml.v2
+	url = https://gopkg.in/yaml.v2
