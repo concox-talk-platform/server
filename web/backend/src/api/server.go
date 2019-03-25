@@ -7,7 +7,7 @@ package api
 
 import (
 	"context"
-	pb "github.com/concox-talk-platform/server/web/backend/src/api/proto"
+	pb "server/web/backend/src/api/proto"
 	"google.golang.org/grpc"
 	"log"
 	"net"

@@ -7,7 +7,7 @@ package pkg
 
 import (
 	"database/sql"
-	"github.com/concox-talk-platform/server/web/backend/src/model"
+	"server/web/backend/src/model"
 	"github.com/smartwalle/dbs"
 	"log"
 )

@@ -7,12 +7,12 @@ package main
 
 import (
 	"fmt"
-	"controllers"
 	"github.com/gin-gonic/gin"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"server/web/backend/src/controllers"
 	"strings"
 )
 

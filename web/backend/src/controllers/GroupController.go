@@ -6,13 +6,12 @@
 package controllers
 
 import (
-	"model"
-	"pkg"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
+	"server/web/backend/src/model"
+	"server/web/backend/src/pkg"
 )
-
 
 // 创建群组
 func CreateGroup(c *gin.Context) {

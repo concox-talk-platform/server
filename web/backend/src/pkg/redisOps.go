@@ -7,7 +7,7 @@ package pkg
 
 import (
 	"encoding/json"
-	"github.com/concox-talk-platform/server/web/backend/src/model"
+	"server/web/backend/src/model"
 	"github.com/gomodule/redigo/redis"
 	"log"
 )

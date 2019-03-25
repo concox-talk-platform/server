@@ -6,7 +6,7 @@
 package pkg
 
 import (
-	"github.com/concox-talk-platform/server/web/backend/src/model"
+	"server/web/backend/src/model"
 	"strconv"
 	"testing"
 	//"strconv"

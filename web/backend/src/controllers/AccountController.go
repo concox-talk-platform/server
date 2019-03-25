@@ -6,12 +6,12 @@
 package controllers
 
 import (
-	"model"
-	"pkg"
-	"service"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
+	"server/web/backend/src/model"
+	"server/web/backend/src/pkg"
+	"server/web/backend/src/service"
 	"strconv"
 )
 
@@ -68,17 +68,17 @@ func GetAccountInfo(c *gin.Context) {
 		devices := make([]*model.Device, 0)
 		for _, d := range ds {
 			devices = append(devices, &model.Device{
-				Id:d.Id,
-				IMei:d.IMei,
-				UserName:d.UserName,
-				PassWord:d.PassWord,
-				AccountId:d.AccountId,
-				Status:d.Status,
-				ActiveStatus:d.ActiveStatus,
-				BindStatus:d.BindStatus,
-				CrateTime:d.CrateTime,
-				LLTime:d.LLTime,
-				ChangeTime:d.ChangeTime,
+				Id:           d.Id,
+				IMei:         d.IMei,
+				UserName:     d.UserName,
+				PassWord:     d.PassWord,
+				AccountId:    d.AccountId,
+				Status:       d.Status,
+				ActiveStatus: d.ActiveStatus,
+				BindStatus:   d.BindStatus,
+				CrateTime:    d.CrateTime,
+				LLTime:       d.LLTime,
+				ChangeTime:   d.ChangeTime,
 			})
 		}
 		ids, err := pkg.SelectDeviceIdsByGroupId((*groups[i]).Id)
@@ -90,10 +90,9 @@ func GetAccountInfo(c *gin.Context) {
 			})
 			return
 		}
-		gListEle := &model.GroupList{DeviceInfo: devices, DeviceIds:ids, GroupInfo: groups[i]}
+		gListEle := &model.GroupList{DeviceInfo: devices, DeviceIds: ids, GroupInfo: groups[i]}
 		gList = append(gList, gListEle)
 	}
-
 
 	c.JSON(http.StatusOK, gin.H{
 		"message":      "User information obtained successfully",

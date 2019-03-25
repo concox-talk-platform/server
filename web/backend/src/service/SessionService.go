@@ -6,9 +6,9 @@
 package service
 
 import (
-	"github.com/concox-talk-platform/server/web/backend/src/model"
-	"github.com/concox-talk-platform/server/web/backend/src/pkg"
-	"github.com/concox-talk-platform/server/web/backend/src/utils"
+	"server/web/backend/src/model"
+	"server/web/backend/src/pkg"
+	"server/web/backend/src/utils"
 	"log"
 	"net/http"
 	"strconv"

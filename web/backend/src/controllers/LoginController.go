@@ -7,13 +7,13 @@ package controllers
 
 import (
 	"database/sql"
-	"model"
-	"pkg"
-	"service"
 	"github.com/gin-gonic/gin"
 	"github.com/syssam/go-validator"
 	"log"
 	"net/http"
+	"server/web/backend/src/model"
+	"server/web/backend/src/pkg"
+	"server/web/backend/src/service"
 )
 
 // 创建账户
