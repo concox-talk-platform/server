@@ -30,22 +30,21 @@ func Prepare() *gin.Engine {
 	engine.Use(Cors())
 
 	// 注册路由
-	engine.Get("/test", Test)
-	//engine.POST("/account", controllers.SignUp)
-	//
-	//engine.POST("/account/login.do/:account_name", controllers.SignIn)
-	//
-	//engine.POST("/account/logout.do/:account_name", controllers.SignOut)
-	//
-	//engine.GET("/account/:account_name", controllers.GetAccountInfo)
-	//
-	//engine.POST("/account/info/update", controllers.UpdateAccountInfo)
-	//
-	//engine.POST("/account/pwd/update", controllers.UpdateAccountPwd)
-	//
-	//engine.POST("/group", controllers.CreateGroup)
-	//
-	//engine.POST("/group/update", controllers.UpdateGroup)
+	engine.POST("/account", controllers.SignUp)
+
+	engine.POST("/account/login.do/:account_name", controllers.SignIn)
+
+	engine.POST("/account/logout.do/:account_name", controllers.SignOut)
+
+	engine.GET("/account/:account_name", controllers.GetAccountInfo)
+
+	engine.POST("/account/info/update", controllers.UpdateAccountInfo)
+
+	engine.POST("/account/pwd/update", controllers.UpdateAccountPwd)
+
+	engine.POST("/group", controllers.CreateGroup)
+
+	engine.POST("/group/update", controllers.UpdateGroup)
 
 	return engine
 }

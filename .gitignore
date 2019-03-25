@@ -3,3 +3,6 @@
 
 # ignore .exe
 *.exe
+
+# ignore .log
+# *.log
