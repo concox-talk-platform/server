@@ -70,7 +70,7 @@ message LoginReq {
 }
 
 message LoginRsp {
-    // 待定
+    ErrorMsg err = 1;
 }
 
 // 登出请求
@@ -80,7 +80,7 @@ message LogoutReq {
 }
 
 message LogoutRsp {
-    // 待定
+    ErrorMsg err = 1;
 }
 
 /************** User_Friend *************/

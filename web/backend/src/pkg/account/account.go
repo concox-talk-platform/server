@@ -3,7 +3,7 @@
 * @Date: 2019/3/11 11:16
 * @Description:
  */
-package pkg
+package account
 
 import (
 	"database/sql"
