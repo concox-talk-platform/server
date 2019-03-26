@@ -51,12 +51,12 @@ func AddGroupUser(uid, gid int64, userType RoleType,  db *sql.DB) error {
     return nil
 }
 
-func RemoveGroupUser(uid int64, db *sql.DB) error {
+func RemoveGroupUser(uid, gid uint64, db *sql.DB) error {
     if db == nil {
         return fmt.Errorf("db is nil")
     }
 
-    sql := fmt.Sprintf("DELETE FROM group_device WHERE device_id=%d", uid)
+    sql := fmt.Sprintf("DELETE FROM group_device WHERE device_id=%d AND group_id=%d", uid, gid)
     _, err := db.Query(sql)
     if err != nil {
         log.Printf("query(%s), error(%s)", sql, err)
@@ -66,7 +66,7 @@ func RemoveGroupUser(uid int64, db *sql.DB) error {
     return nil
 }
 
-func RemoveGroup(gid int64, db *sql.DB) error {
+func RemoveGroup(gid uint64, db *sql.DB) error {
     if db == nil {
         return fmt.Errorf("db is nil")
     }
@@ -81,7 +81,7 @@ func RemoveGroup(gid int64, db *sql.DB) error {
     return nil
 }
 
-func ClearGroupUser(gid int64, db *sql.DB) error {
+func ClearGroupUser(gid uint64, db *sql.DB) error {
     if db == nil {
         return fmt.Errorf("db is nil")
     }
