@@ -7,8 +7,10 @@
 package user_friend
 
 import (
+	pb "api/talk_cloud"
 	"database/sql"
 	"fmt"
+	"log"
 )
 
 func CheckFriendExist(uid, fuid uint64, db *sql.DB) (bool, error) {
@@ -77,7 +79,7 @@ func RemoveFriend(uid, fuid uint64, db *sql.DB) (bool, error) {
 }
 
 // 获取好友请求列表
-func GetFriendReqList(uid uint64, db *sql.DB) (*UserFriendList, error) {
+func GetFriendReqList(uid uint64, db *sql.DB) (*pb.FriendsRsp, error) {
     if db == nil {
         return nil, fmt.Errorf("db is nil")
     }
@@ -89,11 +91,12 @@ func GetFriendReqList(uid uint64, db *sql.DB) (*UserFriendList, error) {
     }
     
     defer rows.Close()
-    
-    friends := &UserFriendList{UID: uid, FriendList:nil}
+
+    friends := &pb.FriendsRsp{Uid: uid, FriendList:nil}
+
     for rows.Next() {
-        friend := new(FriendRecord)
-        err = rows.Scan(&friend.UID, &friend.Name, &friend.IMEI)
+        friend := new(pb.FriendRecord)
+        err = rows.Scan(&friend.Uid, &friend.Name, &friend.Imei)
         if err != nil {
             return nil, err
         }
@@ -102,4 +105,35 @@ func GetFriendReqList(uid uint64, db *sql.DB) (*UserFriendList, error) {
     }
     
     return friends,nil
+}
+
+// 查找好友
+func SearchUserByName(uid uint64, target string, db *sql.DB) (*pb.UserSearchRsp, error) {
+	if db == nil {
+		return nil, fmt.Errorf("db is nil")
+	}
+
+	sql := fmt.Sprintf("SELECT id, user_name FROM device WHERE user_name LIKE '%%s%' AND id!= %d", target, uid)
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("query(%s), error(%s)", sql, err)
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	users := &pb.UserSearchRsp{UserList: nil}
+
+	for rows.Next() {
+		user := new(pb.UserRecord)
+
+		err = rows.Scan(&user.Uid, &user.Name)
+		if err != nil {
+			log.Printf("scan rows error: %s", err)
+			return nil, err
+		}
+		users.UserList = append(users.UserList, user)
+	}
+
+	return users, nil
 }

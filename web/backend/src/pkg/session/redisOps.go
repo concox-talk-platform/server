@@ -3,11 +3,11 @@
 * @Date: 2019/3/15 14:11
 * @Description: 调试阶段redis存储 session
  */
-package pkg
+package session
 
 import (
 	"encoding/json"
-	"server/web/backend/src/model"
+	"model"
 	"github.com/gomodule/redigo/redis"
 	"log"
 )

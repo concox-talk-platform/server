@@ -3,7 +3,7 @@
 * @Date: 2019/3/11 11:17
 * @Description: 连接数据库
  */
-package pkg
+package device
 
 import (
 	"database/sql"

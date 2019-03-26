@@ -56,7 +56,7 @@ type AccountGroupsResp struct {
 }
 
 type GroupList struct {
-	DeviceIds []int `json:"device_ids"`
+	DeviceIds  []int      `json:"device_ids"`
 	DeviceInfo []*Device  `json:"device_infos"`
 	GroupInfo  *GroupInfo `json:"group_info"`
 }
@@ -65,6 +65,7 @@ type GroupList struct {
 type SessionInfo struct {
 	SessionID string `json:"session_id"`
 	UserName  string `json:"user_name"`
+	UserPwd   string `json:"user_pwd"`
 	AccountId int    `json:"account_id"`
 	TTL       string `json:"ttl"`
 }
@@ -72,9 +73,9 @@ type SessionInfo struct {
 // device
 type Device struct {
 	Id           int            `json:"id"`
-	IMei         sql.NullString `json:"imei"`
-	UserName     sql.NullString `json:"user_name"`
-	PassWord     sql.NullString `json:"password"`
+	IMei         string         `json:"imei"`
+	UserName     string         `json:"user_name"`
+	PassWord     string         `json:"password"`
 	AccountId    int            `json:"account_id"`
 	Status       sql.NullString `json:"status"`
 	ActiveStatus sql.NullString `json:"active_status"`

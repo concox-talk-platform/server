@@ -11,6 +11,7 @@ service TalkCloud {
     rpc AddFriend(FriendNewReq) returns (FriendNewRsp) {}
     rpc DelFriend(FriendDelReq) returns (FriendDelRsp) {}
     rpc GetFriendList(FriendsReq) returns (FriendsRsp) {}
+    rpc SearchUser(UserSearchReq) returns (UserSearchRsp) {}
 
     // 组管理
     rpc CreateGroup(GroupNewReq) returns (GroupNewRsp) {}
@@ -19,6 +20,7 @@ service TalkCloud {
     rpc ExitGrp(UserExitReq) returns (UserExitRsp) {}
     rpc RemoveGrp(GroupDelReq) returns (GroupDelRsp) {}
     rpc GetGroupList(GrpListReq) returns (GroupListRsp) {}
+    rpc SearchGroup(GrpSearchReq) returns (GroupListRsp) {}
 }
 
 /*************** Register ***************/
@@ -68,7 +70,7 @@ message LoginReq {
 }
 
 message LoginRsp {
-    // 待定
+    ErrorMsg err = 1;
 }
 
 // 登出请求
@@ -78,7 +80,7 @@ message LogoutReq {
 }
 
 message LogoutRsp {
-    // 待定
+    ErrorMsg err = 1;
 }
 
 /************** User_Friend *************/
@@ -114,6 +116,20 @@ message FriendRecord {
 message FriendsRsp {
     uint64 uid = 1;
     repeated FriendRecord friend_list = 2;
+}
+
+message UserSearchReq {
+    uint64 uid = 1;
+    string target = 2;
+}
+
+message UserRecord {
+    uint64 uid = 1;
+    string name = 2;
+}
+
+message UserSearchRsp {
+    repeated UserRecord user_list = 1;
 }
 
 /**************** Group *****************/
@@ -178,4 +194,9 @@ message GroupListRsp {
     uint64 uid = 1;
     repeated GroupRecord group_list = 2;
     ErrorMsg err = 3;
+}
+
+message GrpSearchReq {
+    uint64 uid = 1;
+    string target = 2;
 }
