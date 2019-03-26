@@ -210,7 +210,6 @@ import vSidebar from './Sidebar.vue';
             sendpwd.old_pwd=this.form.oldPassword;
             sendpwd.new_pwd=this.form.newPassword;
             sendpwd.confirm_pwd=this.form.cfmPassword;
-            window.console.log(sendpwd);
             this.$axios.post('/account/pwd/update',sendpwd)
             .then(function (response) {
             window.console.log(response);
@@ -296,7 +295,6 @@ import vSidebar from './Sidebar.vue';
              sessionStorage.setItem('id', response.data.account_info.id);
              this.$store.commit("groupList",response.data.group_list);
              window.console.log(response);
-             window.console.log(response.data.device_list);
             // localStorage.setItem('id', response.data.account_info.id);
             this.$store.commit("deviceList",response.data.device_list);
             })

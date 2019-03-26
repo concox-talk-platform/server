@@ -19,7 +19,8 @@ module.exports = {
         cancel: 'Cancel',
         sign_up: 'Sign Up',
         ensure: 'Submit',
-        add: 'Add'
+        add: 'Add',
+        confirm :'Confirm'
         
     },
     reg_message: {
@@ -50,7 +51,8 @@ module.exports = {
          account_error: 'Account does not exist',
          login_error: ' Wrong password',
          register_succ: 'The account is created successfully. Please go to the login page to log in',
-         register_error: 'Creation failed, please recreate'
+         register_error: 'Creation failed, please recreate',
+         device_num: 'Please add device'
         },
         change_pwd: {
             title: 'change Password',
@@ -75,13 +77,22 @@ module.exports = {
             all_member: 'All Members',
             select_member: 'Selected Member',
             add:"Add",
-            remove:"Remove",  
+            remove:"Remove", 
+            dbremove:"Double-click the delete",
+            dissolve:"Dissolve this group",
+            amend: 'Modify this group',
+            modified_member: 'Member editor',
         },
         // 我的用户
         client_lang: {
             client_list: 'Client list',
             client_add: 'Add'
-        }
+        },
+        // 操作组
+         control: {
+          hint: 'Hint',
+          delete_this: 'Are you sure to dissolve this group?'
+         }
 
         
 }
