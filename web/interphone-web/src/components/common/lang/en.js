@@ -28,6 +28,7 @@ module.exports = {
         title: 'Register Account',
         account: 'Account',
         pwd: 'Password',
+        name:'Client Name',
         cfm_pwd: 'Confirm Password',
         account_type: 'Account Type',
         dealer: 'Dealer',
@@ -44,6 +45,7 @@ module.exports = {
     prompt_message: {
          account: 'Please enter an account',
          pwd: 'Please enter your password',
+         name: 'Please type user name',
          again_pwd: 'Please enter your password again',
          pwd_length: 'The length should be between 6 and 15 characters',
          account_type: 'Please select account type',
@@ -91,8 +93,34 @@ module.exports = {
         // 操作组
          control: {
           hint: 'Hint',
-          delete_this: 'Are you sure to dissolve this group?'
-         }
+          delete_this: 'Are you sure to dissolve this group?',
+          Modify_group:'Modify the group',
+          group_num: 'Group id',
+          group_name: 'Group name'
+         },
+    // homepage页面
+        ztree: {
+            filter:"Please enter a search phrase"
+        },
+        information:{
+            login_name: 'Login name ',
+            type: 'Type', 
+            number:'Equipment number',
+            contact: 'Contacts',
+            phone:'Phone',
+            adress:'Adress',
+            equipment: 'equipment',
+            data:  'personal data',
+        },
+        table:{
+           number:'Number',
+           model: 'Model',
+           name: 'Device name',
+           time: 'Import time',
+           operation :'operation',
+           export: 'export'
+        }
+    
 
         
 }

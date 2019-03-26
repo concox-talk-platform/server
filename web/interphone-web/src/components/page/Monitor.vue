@@ -141,6 +141,45 @@
         </el-dialog>
 
      <!-- 修改组弹出框 -->
+        <el-dialog :title="$t('control.Modify_group')" :visible.sync="amend_show">
+            <el-form :model="Modify_group_form">
+                <el-form-item :label="$t('control.group_num')" label-width="110px">
+                <el-input v-model="Modify_group_form.num" autocomplete="off" :disabled="dis_control"></el-input>
+                </el-form-item>
+                <el-form-item :label="$t('control.group_name')" label-width="110px">
+                <el-input v-model="Modify_group_form.name" autocomplete="off"></el-input>
+                </el-form-item>
+
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="amend_show = false">{{$t('button_message.cancel')}}</el-button>
+                <el-button type="primary" @click="amend_group_submit">{{$t('button_message.confirm')}}</el-button>
+            </div>
+       </el-dialog>
+
+       <!-- 修改组成员弹出框 -->
+
+            <el-dialog
+                width="31%" :title="$t('group.modified_member')" :visible.sync="modified_member_show" append-to-body>
+            <!-- 左右列表移动 -->
+                <el-transfer
+                    style="text-align: left; display: inline-block"
+                    v-model="select_Data"
+                    :titles="[Source, Target]"
+                    :button-texts="[toleft, toright]"
+                    :format="{
+                        noChecked: '${total}',
+                        hasChecked: '${checked}/${total}'
+                    }"
+                    @change="handleChange"
+                    :props="{key: 'id',label:'name'}"
+                    :data="member_data">
+                    <!-- <el-button class="transfer-footer" slot="left-footer" size="small">操作</el-button>
+                    <el-button class="transfer-footer" slot="right-footer" size="small">操作</el-button> -->
+                </el-transfer>
+            <div class="select_cancel" @click="modified_cancel">{{$t("button_message.cancel")}}</div>
+            <div class="select_add" @click="modified_add">{{$t("button_message.confirm")}}</div>
+        </el-dialog>
 
 
 </div>
@@ -151,6 +190,7 @@ export default {
     data() {   
         return {
          yesData: [],
+         select_Data:[],
          show:false,
          online:6,
          totalnum:20,
@@ -169,10 +209,14 @@ export default {
          dialogVisible: false,
          select_group_nummber:'a' ,
          group_div_show: false,
+         modified_member_show: false,
          dele_num:null,
          group_memberdiv_show: false,
+         amend_show:false,
+         dis_control:true,
          confirm_device:[],
          confirm_device_List:[],
+         modified_add_member : [],
          titles_left:this.$t('group.all_member'), 
          titles_right:this.$t('group.select_member'), 
          button_left: this.$t('group.remove'),
@@ -184,7 +228,10 @@ export default {
          addgroup_form: {
          name:'',
          },
-
+        Modify_group_form: {
+            num:'',
+            name: ''
+        },
          group_rules : {
             name: [
             { required: true, message: this.$t('group.message'), trigger: 'blur' },
@@ -252,6 +299,7 @@ export default {
                 }
             }
         }
+        window.console.log(this.confirm_device_List)
         this.members_div = false;
         this.group_memberdiv_show = true;
 
@@ -303,29 +351,82 @@ export default {
         // 解散组
         dissolve(){
             this.dialogVisible = true
-             window.console.log(this.dele_num);
-             let dele_mumber=this.dele_num
-             window.console.log(this.$store.state.Equipment.groupList);
-             let dele_groupList= this.$store.state.Equipment.groupList.slice(0,this.$store.state.Equipment.groupList.length);
-             window.console.log(dele_mumber);
-             window.console.log(dele_groupList);
-             window.console.log(11111);
-             dele_groupList.splice(dele_mumber,1);
-             window.console.log(dele_groupList);
-             this.$store.commit("groupList",dele_groupList);
+            window.console.log(this.dele_num);
 
         },
+        // 删除组提交
         dele_submit(){
-
-         this.dialogVisible = false
+        let dele_mumber=this.dele_num
+        window.console.log(this.$store.state.Equipment.groupList);
+        window.console.log(this.$store.state.Equipment.groupList);
+        let dele_groupList= this.$store.state.Equipment.groupList.slice(0,this.$store.state.Equipment.groupList.length);
+        dele_groupList.splice(dele_mumber,1);
+        this.$store.commit("groupList",dele_groupList);
+        this.dialogVisible = false;
         },
         // 修改组
         amend(){
-          window.console.log(111)
+          this.amend_show = true;
+          let  amend_num = this.dele_num;
+           window.console.log(amend_num);
+           window.console.log(this.$store.state.Equipment.groupList[amend_num].group_info.id);
+           this.Modify_group_form.num = this.$store.state.Equipment.groupList[amend_num].group_info.id
         },
+        // 修改组提交
+
+           amend_group_submit(){
+          
+            if(this.Modify_group_form.name !== ''){
+              
+              let  new_group_info = {};
+              new_group_info.id = this.Modify_group_form.num;
+              new_group_info.name = this.Modify_group_form.name;
+              window.console.log(new_group_info);
+              this.amend_show = false;
+                 
+            }else{
+                this.$message({
+                            message: this.$t('group.login_error'),
+                            type: 'warning'
+                            });
+            }
+           },
         // 成员编辑
         modified_member(){
-            window.console.log(111)
+            window.console.log(111);
+            this.modified_member_show=true;
+            let  modified_num = this.dele_num;
+            window.console.log(modified_num);
+            let modified_member_data =[];
+            modified_member_data=this.$store.state.Equipment.groupList[modified_num].device_infos;
+            window.console.log(modified_member_data);
+            //  =[];
+            let selected_member_data=modified_member_data.map(e =>{
+                if(e.hasOwnProperty('id')){
+                    return e.id
+                }
+            })
+            window.console.log(selected_member_data);
+            this.select_Data=selected_member_data;
+            
+        },
+        modified_cancel(){
+             this.modified_member_show=false;
+        },
+        // 成员编辑提交
+        modified_add(){
+         window.console.log(this.select_Data);
+
+         for( var i=0;i<this.$store.state.Equipment.device.length;i++){
+             for(var j=0;j< this.select_Data.length;j++){
+                 if(this.$store.state.Equipment.device[i].id == this.select_Data[j]){
+                     this.modified_add_member.push(this.$store.state.Equipment.device[i])
+                 }
+             }
+         }
+         window.console.log(this.modified_add_member);
+         this.modified_member_show=false;
+         this.group_div_show=false;
         }
     },
     computed:{
@@ -354,12 +455,26 @@ export default {
                 return  transfer_newData
             },
             // 选中组的设备信息
-
+            member_data(){
+                let  modified_name=this.$store.state.Equipment.device;
+                let modified_newData = [];
+                modified_name.forEach((obj) => {
+                    var  modified_obj ={};
+                    modified_obj.id = obj.id;
+                    modified_obj.name =obj.user_name.String;
+                    modified_newData.push(modified_obj)
+                });
+               
+                return  modified_newData
+            },
             select_group_num(){
                 let  group_select_device = this.$store.state.Equipment.groupList;
                 let  group_selected_num = this.select_group_nummber
                 if( group_selected_num !== 'a'){
                     group_select_device = group_select_device[group_selected_num].device_infos
+                    // if(this.modified_add_member.length !== 0){
+                    //     group_select_device =this.modified_add_member
+                    // }
                 }
                 return   group_select_device
             },
@@ -377,9 +492,6 @@ export default {
     },
 
     mounted(){
-        // this.group_list=this.$store.state.Equipment.groupList;
-
-        // this.group_list=this.$store.state.Equipment.groupList;
     }
 }
 </script>
@@ -613,6 +725,20 @@ export default {
     background-color: #409eff;
     color: white;
     border-radius: 5px 5px 5px 5px;
+    display: inline-block;
+    margin-left: 40px;
+}
+.select_cancel{
+    width: 59px;
+    height: 26px;
+    line-height: 26px;
+    text-align: center;
+    cursor: pointer;
+    margin-top: 25px;
+    background-color: #ccc;
+    color: white;
+    border-radius: 5px 5px 5px 5px;
+    display: inline-block;
 }
 .editorial_group{
     height: 90px;
