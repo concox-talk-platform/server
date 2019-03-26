@@ -7,6 +7,7 @@
 package user_friend
 
 import (
+	pb "api/talk_cloud"
 	"database/sql"
 	"fmt"
 )
@@ -77,7 +78,7 @@ func RemoveFriend(uid, fuid uint64, db *sql.DB) (bool, error) {
 }
 
 // 获取好友请求列表
-func GetFriendReqList(uid uint64, db *sql.DB) (*UserFriendList, error) {
+func GetFriendReqList(uid uint64, db *sql.DB) (*pb.FriendsRsp, error) {
     if db == nil {
         return nil, fmt.Errorf("db is nil")
     }
@@ -89,11 +90,12 @@ func GetFriendReqList(uid uint64, db *sql.DB) (*UserFriendList, error) {
     }
     
     defer rows.Close()
-    
-    friends := &UserFriendList{UID: uid, FriendList:nil}
+
+    friends := &pb.FriendsRsp{Uid: uid, FriendList:nil}
+
     for rows.Next() {
-        friend := new(FriendRecord)
-        err = rows.Scan(&friend.UID, &friend.Name, &friend.IMEI)
+        friend := new(pb.FriendRecord)
+        err = rows.Scan(&friend.Uid, &friend.Name, &friend.Imei)
         if err != nil {
             return nil, err
         }
@@ -102,4 +104,9 @@ func GetFriendReqList(uid uint64, db *sql.DB) (*UserFriendList, error) {
     }
     
     return friends,nil
+}
+
+// 查找好友
+func SearchFriend(fname string, db *sql.DB) (error) {
+
 }
