@@ -9,7 +9,7 @@ import (
 	"database/sql"
 	"github.com/smartwalle/dbs"
 	"log"
-	"server/web/backend/src/model"
+	"model"
 	"time"
 )
 

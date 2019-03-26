@@ -8,7 +8,7 @@ import (
 )
 
 func (serv *TalkCloudService) CreateGroup(ctx context.Context, req *pb.GroupNewReq) (*pb.GroupNewRsp, error) {
-	err := group.CreateGroup(req.Uid, req.GroupName, db.DBHandler)
+	err := group.CreateGroup(int64(req.Uid), req.GroupName, db.DBHandler)
 	rsp := new(pb.GroupNewRsp)
 	rsp.Err.Code = 0
 	rsp.Err.Msg = ""
@@ -22,14 +22,14 @@ func (serv *TalkCloudService) CreateGroup(ctx context.Context, req *pb.GroupNewR
 }
 
 func (serv *TalkCloudService) JoinGroup(ctx context.Context, req *pb.GrpUserAddReq) (*pb.GrpUserAddRsp, error) {
-	err := group.AddGroupUser(req.Uid, req.Gid, group.GROUP_NORMAL_USER, db.DBHandler)
+	err := group.AddGroupUser(int64(req.Uid), int64(req.Gid), group.GROUP_NORMAL_USER, db.DBHandler)
 
 	rsp := new(pb.GrpUserAddRsp)
 	rsp.Err.Code = 0
 	rsp.Err.Msg = ""
 	if err != nil {
 		rsp.Err.Code = -1
-		rsp.Err.Code = err.Error()
+		rsp.Err.Msg = err.Error()
 	}
 
 	return rsp, err
@@ -63,7 +63,7 @@ func (serv *TalkCloudService) RemoveGrp(ctx context.Context, req *pb.GroupDelReq
 	}
 
 	// then remove group
-	err = group.RemoveGroup(req.Gid, )
+	err = group.RemoveGroup(req.Gid, db.DBHandler)
 	if err != nil {
 		rsp.Err.Code = -2
 		rsp.Err.Msg = err.Error()

@@ -7,7 +7,7 @@ package session
 
 import (
 	"encoding/json"
-	"server/web/backend/src/model"
+	"model"
 	"github.com/gomodule/redigo/redis"
 	"log"
 )
