@@ -10,6 +10,7 @@ import (
 	pb "api/talk_cloud"
 	"database/sql"
 	"fmt"
+	"log"
 )
 
 func CheckFriendExist(uid, fuid uint64, db *sql.DB) (bool, error) {
@@ -107,6 +108,32 @@ func GetFriendReqList(uid uint64, db *sql.DB) (*pb.FriendsRsp, error) {
 }
 
 // 查找好友
-func SearchFriend(fname string, db *sql.DB) (error) {
+func SearchUserByName(uid uint64, target string, db *sql.DB) (*pb.UserSearchRsp, error) {
+	if db == nil {
+		return nil, fmt.Errorf("db is nil")
+	}
 
+	sql := fmt.Sprintf("SELECT id, user_name FROM device WHERE user_name LIKE '%%s%' AND id!= %d", target, uid)
+	rows, err := db.Query(sql)
+	if err != nil {
+		log.Printf("query(%s), error(%s)", sql, err)
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	users := &pb.UserSearchRsp{UserList: nil}
+
+	for rows.Next() {
+		user := new(pb.UserRecord)
+
+		err = rows.Scan(&user.Uid, &user.Name)
+		if err != nil {
+			log.Printf("scan rows error: %s", err)
+			return nil, err
+		}
+		users.UserList = append(users.UserList, user)
+	}
+
+	return users, nil
 }

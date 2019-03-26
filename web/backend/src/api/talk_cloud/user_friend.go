@@ -4,6 +4,7 @@ import (
 	"context"
 )
 func (serv *TalkCloudService) AddFriend(context.Context, *FriendNewReq) (*FriendNewRsp, error) {
+
 	return nil, nil
 }
 
