@@ -19,7 +19,8 @@ module.exports = {
         cancel: '取消',
         sign_up: '注册',
         ensure: '提交',
-        add: '添加'
+        add: '添加',
+        confirm :'确定'
 
         
     },
@@ -52,6 +53,7 @@ module.exports = {
         login_error: '密码错误',
         register_succ: '创建成功，请去登录页面登录',
         register_error: '创建失败，请重新创建',
+        device_num: '请添加设备'
    },
    change_pwd: {
        title: '修改密码',
@@ -76,13 +78,24 @@ module.exports = {
        all_member: '全体成员',
        select_member: '选中成员',
        add:"添加",
-       remove:"移除"
+       remove:"移除",
+       dbremove:"双击删除",
+       dissolve:"解散本组",
+       amend: '修改本组',
+       modified_member: '成员编辑'
+
+
        
    },
            // 我的用户
     client_lang: {
         client_list: '客户列表',
         client_add: '添加'
-    }
+    },
+    // 操作组
+    control: {
+        hint: '提示',
+        delete_this: '确定解散此组？'
+        }
 
 }
