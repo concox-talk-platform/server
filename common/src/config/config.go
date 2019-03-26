@@ -16,7 +16,7 @@ type DBConfig struct {
 	User 		string
 	Password	string
 	DB 			string
-	MaxConn		int64
+	MaxConn		int
 	Driver 		string
 }
 
@@ -39,7 +39,7 @@ func (cfg *DBConfig) LoadConfig(section, configPath string) error {
 	cfg.User = config.Section(section).Key("user").String()
 	cfg.Password = config.Section(section).Key("password").String()
 	cfg.DB = config.Section(section).Key("db").String()
-	cfg.MaxConn = config.Section(section).Key("max_conn").MustInt64(1)
+	cfg.MaxConn = config.Section(section).Key("max_conn").MustInt(1)
 	cfg.Driver = config.Section(section).Key("driver").String()
 
 	return nil

@@ -2,12 +2,13 @@ package api
 
 import (
 	"context"
+	"db"
 	"pkg/user_friend"
-	pb "server/web/backend/src/api/talk_cloud"
+	pb "api/talk_cloud"
 )
 func (serv *TalkCloudService) AddFriend(ctx context.Context, req *pb.FriendNewReq) (*pb.FriendNewRsp, error) {
 
-	_, err := user_friend.AddFriend(req.Uid, req.Fuid, )
+	_, err := user_friend.AddFriend(req.Uid, req.Fuid, db.DBHandler)
 	rsp := new(pb.FriendNewRsp)
 	rsp.Err.Code = 0
 	rsp.Err.Msg = ""
@@ -20,7 +21,7 @@ func (serv *TalkCloudService) AddFriend(ctx context.Context, req *pb.FriendNewRe
 }
 
 func (serv *TalkCloudService) DelFriend(ctx context.Context, req *pb.FriendDelReq) (*pb.FriendDelRsp, error) {
-	_, err := user_friend.RemoveFriend(req.Uid, req.Fuid, )
+	_, err := user_friend.RemoveFriend(req.Uid, req.Fuid, db.DBHandler)
 	rsp := new(pb.FriendDelRsp)
 	rsp.Err.Code = 0
 	rsp.Err.Msg = ""
@@ -34,9 +35,9 @@ func (serv *TalkCloudService) DelFriend(ctx context.Context, req *pb.FriendDelRe
 }
 
 func (serv *TalkCloudService) GetFriendList(ctx context.Context, req *pb.FriendsReq) (*pb.FriendsRsp, error) {
-	return user_friend.GetFriendReqList(req.Uid, )
+	return user_friend.GetFriendReqList(req.Uid, db.DBHandler)
 }
 
 func (serv *TalkCloudService) SearchUser(ctx context.Context, req *pb.UserSearchReq) (*pb.UserSearchRsp, error) {
-	return user_friend.SearchUserByName(req.Uid, req.Target, )
+	return user_friend.SearchUserByName(req.Uid, req.Target, db.DBHandler)
 }

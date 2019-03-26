@@ -2,12 +2,13 @@ package api
 
 import (
 	"context"
+	"db"
 	"pkg/group"
-	pb "server/web/backend/src/api/talk_cloud"
+	pb "api/talk_cloud"
 )
 
 func (serv *TalkCloudService) CreateGroup(ctx context.Context, req *pb.GroupNewReq) (*pb.GroupNewRsp, error) {
-	err := group.CreateGroup(req.Uid, req.GroupName, )
+	err := group.CreateGroup(req.Uid, req.GroupName, db.DBHandler)
 	rsp := new(pb.GroupNewRsp)
 	rsp.Err.Code = 0
 	rsp.Err.Msg = ""
@@ -21,7 +22,7 @@ func (serv *TalkCloudService) CreateGroup(ctx context.Context, req *pb.GroupNewR
 }
 
 func (serv *TalkCloudService) JoinGroup(ctx context.Context, req *pb.GrpUserAddReq) (*pb.GrpUserAddRsp, error) {
-	err := group.AddGroupUser(req.Uid, req.Gid, group.GROUP_NORMAL_USER, )
+	err := group.AddGroupUser(req.Uid, req.Gid, group.GROUP_NORMAL_USER, db.DBHandler)
 
 	rsp := new(pb.GrpUserAddRsp)
 	rsp.Err.Code = 0
@@ -35,7 +36,7 @@ func (serv *TalkCloudService) JoinGroup(ctx context.Context, req *pb.GrpUserAddR
 }
 
 func (serv *TalkCloudService) RemoveGrpUser(ctx context.Context, req *pb.GrpUserDelReq) (*pb.GrpUserDelRsp, error) {
-	err := group.RemoveGroupUser(req.Uid, req.Gid, )
+	err := group.RemoveGroupUser(req.Uid, req.Gid, db.DBHandler)
 	rsp := new(pb.GrpUserDelRsp)
 	rsp.Err.Code = 0
 	rsp.Err.Msg = ""
@@ -53,7 +54,7 @@ func (serv *TalkCloudService) ExitGrp(ctx context.Context, req *pb.UserExitReq) 
 
 func (serv *TalkCloudService) RemoveGrp(ctx context.Context, req *pb.GroupDelReq) (*pb.GroupDelRsp, error) {
 	// clear group user first
-	err := group.ClearGroupUser(req.Gid, )
+	err := group.ClearGroupUser(req.Gid, db.DBHandler)
 	rsp := new(pb.GroupDelRsp)
 
 	if err != nil {
@@ -72,10 +73,10 @@ func (serv *TalkCloudService) RemoveGrp(ctx context.Context, req *pb.GroupDelReq
 }
 
 func (serv *TalkCloudService) GetGroupList(ctx context.Context, req *pb.GrpListReq) (*pb.GroupListRsp, error) {
-	rsp, err := group.GetGroupList(req.Uid, )
+	rsp, err := group.GetGroupList(req.Uid, db.DBHandler)
 	return rsp, err
 }
 
 func (serv *TalkCloudService) SearchGroup(ctx context.Context, req *pb.GrpSearchReq) (*pb.GroupListRsp, error) {
-	return group.SearchGroup(req.Target, )
+	return group.SearchGroup(req.Target, db.DBHandler)
 }
