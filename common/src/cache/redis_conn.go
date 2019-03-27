@@ -18,13 +18,14 @@ func NewRedisPool(redisCfg *config.RedisConfig) (*redis.Pool, error) {
 		return nil, fmt.Errorf("config is nil")
 	}
 
+	redisUrl := fmt.Sprintf("%s:%d", redisCfg.Host, redisCfg.Port)
 	pool := &redis.Pool{
 		MaxIdle: redisCfg.MaxIdle,
 		MaxActive: redisCfg.MaxActive,
 		IdleTimeout: time.Duration(redisCfg.IdleTimeout) * time.Second,
 		Wait: true,
 		Dial: func() (redis.Conn, error) {
-			con, err := redis.Dial("tcp", redisCfg.Host,
+			con, err := redis.Dial("tcp", redisUrl,
 				redis.DialPassword(redisCfg.Password),
 				redis.DialDatabase(redisCfg.DB),
 				redis.DialConnectTimeout(time.Duration(redisCfg.Timeout) * time.Second),
