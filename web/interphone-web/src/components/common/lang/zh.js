@@ -28,6 +28,7 @@ module.exports = {
         enroll: '注册',
         title: '注册账号',
         account: '账号',
+        name:'客户名称',
         pwd: '密码',
         cfm_pwd: '确认密码',
         account_type: '账号类型',
@@ -44,6 +45,7 @@ module.exports = {
     },
     prompt_message: {
         account: '请输入账号',
+        name: '请输入用户名称',
         pwd: '请输入密码',
         again_pwd: '请再次输入密码',
         pwd_length: '长度在 6 到 15个字符',
@@ -95,7 +97,31 @@ module.exports = {
     // 操作组
     control: {
         hint: '提示',
-        delete_this: '确定解散此组？'
-        }
+        delete_this: '确定解散此组？',
+        Modify_group:'修改小组',
+        group_num: '组号码'
+        },
+    // homepage页面
+    ztree: {
+        filter:"输入关键字进行搜索"
+    },
+    information:{
+        login_name: '登录名 ', 
+        type: '类型',
+        number: '设备数量',
+        contact: '联系人',
+        phone:'电话',
+        adress:'地址',
+        equipment:"设备",
+        data:  '资料'
+    },
+    table:{
+        number:'序号',
+        model: '型号',
+        name: '设备名',
+        time: '导入时间',
+        operation :'操作',
+        export: '导出'
+     }
 
 }

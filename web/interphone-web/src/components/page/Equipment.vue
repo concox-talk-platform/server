@@ -27,119 +27,121 @@
 export default {
  data() {
       return {
-        tableData: [{
-         imei: '21424152312321312',
-          Equipment: '王小虎',
-          staff: '测试组一',
-          group: '对讲组10',
-          EquipmentState: '离线',
-    
-        },{
-         imei: '21424152312321312',
-          Equipment: '王小虎',
-          staff: '测试组一',
-          group: '对讲组10',
-          EquipmentState: '离线',
-    
-        },{
-         imei: '21424152312321312',
-          Equipment: '王小虎',
-          staff: '测试组一',
-          group: '对讲组10',
-          EquipmentState: '离线',
-    
-        },{
-         imei: '21424152312321312',
-          Equipment: '王小虎',
-          staff: '测试组一',
-          group: '对讲组10',
-          EquipmentState: '离线',
-    
-        },{
-         imei: '21424152312321312',
-          Equipment: '王小虎',
-          staff: '测试组一',
-          group: '对讲组10',
-          EquipmentState: '离线',
-    
-        },{
-         imei: '21424152312321312',
-          Equipment: '王小虎',
-          staff: '测试组一',
-          group: '对讲组10',
-          EquipmentState: '离线',
-    
-        },{
-         imei: '21424152312321312',
-          Equipment: '王小虎',
-          staff: '测试组一',
-          group: '对讲组10',
-          EquipmentState: '离线',
-    
-        },{
-         imei: '21424152312321312',
-          Equipment: '王小虎',
-          staff: '测试组一',
-          group: '对讲组10',
-          EquipmentState: '离线',
-    
-        },{
-         imei: '21424152312321312',
-          Equipment: '王小虎',
-          staff: '测试组一',
-          group: '对讲组10',
-          EquipmentState: '离线',
-    
-        },{
-         imei: '21424152312321312',
-          Equipment: '王小虎',
-          staff: '测试组一',
-          group: '对讲组10',
-          EquipmentState: '离线',
-    
-        },{
-         imei: '21424152312321312',
-          Equipment: '王小虎',
-          staff: '测试组一',
-          group: '对讲组10',
-          EquipmentState: '离线',
-    
-        },{
-         imei: '21424152312321312',
-          Equipment: '王小虎',
-          staff: '测试组一',
-          group: '对讲组10',
-          EquipmentState: '离线',
-    
-        },{
-         imei: '21424152312321312',
-          Equipment: '王小虎',
-          staff: '测试组一',
-          group: '对讲组10',
-          EquipmentState: '离线',
-    
-        },{
-         imei: '21424152312321312',
-          Equipment: '王小虎',
-          staff: '测试组一',
-          group: '对讲组10',
-          EquipmentState: '离线',
-    
-        },{
-         imei: '21424152312321312',
-          Equipment: '王小虎',
-          staff: '测试组一',
-          group: '对讲组10',
-          EquipmentState: '离线',
-    
-        },{
-         imei: '21424152312321312',
-          Equipment: '王小虎',
-          staff: '测试组一',
-          group: '对讲组10',
-          EquipmentState: '离线',
-    
-        },],
+        tableData: [
+            {
+            imei: '21424152312321312',
+              Equipment: '王小虎',
+              staff: '测试组一',
+              group: '对讲组10',
+              EquipmentState: '离线',
+        
+            },{
+            imei: '21424152312321312',
+              Equipment: '王小虎',
+              staff: '测试组一',
+              group: '对讲组10',
+              EquipmentState: '离线',
+        
+            },{
+            imei: '21424152312321312',
+              Equipment: '王小虎',
+              staff: '测试组一',
+              group: '对讲组10',
+              EquipmentState: '离线',
+        
+            },{
+            imei: '21424152312321312',
+              Equipment: '王小虎',
+              staff: '测试组一',
+              group: '对讲组10',
+              EquipmentState: '离线',
+        
+            },{
+            imei: '21424152312321312',
+              Equipment: '王小虎',
+              staff: '测试组一',
+              group: '对讲组10',
+              EquipmentState: '离线',
+        
+            },{
+            imei: '21424152312321312',
+              Equipment: '王小虎',
+              staff: '测试组一',
+              group: '对讲组10',
+              EquipmentState: '离线',
+        
+            },{
+            imei: '21424152312321312',
+              Equipment: '王小虎',
+              staff: '测试组一',
+              group: '对讲组10',
+              EquipmentState: '离线',
+        
+            },{
+            imei: '21424152312321312',
+              Equipment: '王小虎',
+              staff: '测试组一',
+              group: '对讲组10',
+              EquipmentState: '离线',
+        
+            },{
+            imei: '21424152312321312',
+              Equipment: '王小虎',
+              staff: '测试组一',
+              group: '对讲组10',
+              EquipmentState: '离线',
+        
+            },{
+            imei: '21424152312321312',
+              Equipment: '王小虎',
+              staff: '测试组一',
+              group: '对讲组10',
+              EquipmentState: '离线',
+        
+            },{
+            imei: '21424152312321312',
+              Equipment: '王小虎',
+              staff: '测试组一',
+              group: '对讲组10',
+              EquipmentState: '离线',
+        
+            },{
+            imei: '21424152312321312',
+              Equipment: '王小虎',
+              staff: '测试组一',
+              group: '对讲组10',
+              EquipmentState: '离线',
+        
+            },{
+            imei: '21424152312321312',
+              Equipment: '王小虎',
+              staff: '测试组一',
+              group: '对讲组10',
+              EquipmentState: '离线',
+        
+            },{
+            imei: '21424152312321312',
+              Equipment: '王小虎',
+              staff: '测试组一',
+              group: '对讲组10',
+              EquipmentState: '离线',
+        
+            },{
+            imei: '21424152312321312',
+              Equipment: '王小虎',
+              staff: '测试组一',
+              group: '对讲组10',
+              EquipmentState: '离线',
+        
+            },{
+            imei: '21424152312321312',
+              Equipment: '王小虎',
+              staff: '测试组一',
+              group: '对讲组10',
+              EquipmentState: '离线',
+        
+            },
+        ],
         multipleSelection: [],
         currentPage: 1,
         pagesize:10,

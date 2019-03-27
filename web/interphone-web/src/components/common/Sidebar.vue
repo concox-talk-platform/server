@@ -42,7 +42,7 @@
         height: 38px;
         line-height: 38px;
         background-color: #e4eaf2;
-        border-bottom: 4px solid #fa5300;
+        border-bottom: 4px solid #409eff;
         box-sizing: border-box;
     }
     .li{
@@ -57,14 +57,14 @@
     font-size: 16px;
     }
     .li:hover{
-        background-color: #f96d02;
+        background-color: #6b9eff;
         color: white ;
         /* font-weight: 600; */
         
     }
 
     .router-link-active{
-        background-color:#f96d02;
+        background-color:#6b9eff;
         color: white  ;
         /* font-weight: 600; */
     }
