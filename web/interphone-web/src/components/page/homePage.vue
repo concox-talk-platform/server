@@ -4,30 +4,20 @@
         <div class="client_left_tittle">
             <i class="el-icon-caret-bottom client_left_icon"></i>
             <span class="client_left_name">{{ $t("client_lang.client_list") }} </span>
+            <div class="client_left_import" @click="device_import">{{ $t("client_lang.import") }}</div>            
             <div class="client_left_regiter" @click="register">{{ $t("client_lang.client_add") }}</div>            
         </div>
         <div class="client_left_body">
-            <el-input
-            :placeholder="$t('ztree.filter')"
-            v-model="filterText">
+            <el-input :placeholder="$t('ztree.filter')" v-model="filterText">
             </el-input>
-
-            <el-tree
-            class="filter-tree"
-            :data="ztree_data"
-            :props="defaultProps"
-            default-expand-all
-            :filter-node-method="filterNode"
-            ref="ztree">
+            <el-tree @node-click="handleNodeClick"  class="filter-tree" :data="ztree_data" :props="defaultProps" default-expand-all :filter-node-method="filterNode" ref="ztree">
             </el-tree>
-
         </div>
     </div>
     <div class="client_right">
         <div class="client_details">
             <div class="account_info"><span class="account_info_tittle">{{$t('account.account_information')}}</span></div> 
             <div class="account_detailed_info">
-                <!-- <div class="account_detailed_tittle"><span class="account_detailed_name">小明</span></div> -->
                <table>
                    <tbody>
                        <tr>
@@ -74,24 +64,31 @@
             <el-tabs v-model="activeName"  @tab-click="handleClick">
                 <el-tab-pane :label="$t('information.equipment')" name="first">
                     <div class="equipment_table">
-                                <el-table ref="multipleTable" :data="tableData.slice((currentPage-1)*pagesize,currentPage*pagesize)" tooltip-effect="dark" style="width: 100%"  @selection-change="handleSelectionChange">
-                                    <el-table-column type="selection" width="55" ></el-table-column>
-                                    <el-table-column  type="index" width="80" :label="$t('table.number')"></el-table-column>
-                                    <el-table-column prop="imei" label="IMEI" width="240"> </el-table-column>
-                                    <el-table-column prop="version" :label="$t('table.model')" width="240" > </el-table-column>
-                                    <el-table-column prop="device_name" :label="$t('table.name')" width="240" > </el-table-column>
-                                    <el-table-column prop="time" :label="$t('table.time')" width="240"> </el-table-column>
-                                    <el-table-column :label="$t('table.operation')">
-                                        <template slot-scope="scope">
-                                                    <el-button size="mini" @click="andexporth(scope.$index, scope.row)">{{$t('table.export')}}</el-button>
-
-                                            </template>
-                                    </el-table-column>
-                                </el-table>
-                                <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage" :page-sizes="[10, 20, 30, 40]"
-                                :page-size="10" layout="total, sizes, prev, pager, next, jumper" :total="400">
-                                </el-pagination>                        
-                   
+                        <div class="transfer_tittle">
+                            <span class="mass_transfer" @click="transfer">{{$t('table.mass')}}</span>
+                        </div>
+                        <!-- 完整分页 -->
+                        <el-table ref="multipleTable" :data="tableData.slice((currentPage-1)*pagesize,currentPage*pagesize)" tooltip-effect="dark"
+                         :empty-text="$t('table.no_data')" style="width: 100%"  @selection-change="handleSelectionChange">
+                            <el-table-column type="selection" width="55" ></el-table-column>
+                            <el-table-column  type="index" width="80" :label="$t('table.number')"></el-table-column>
+                            <el-table-column prop="imei" label="IMEI" width="240"> </el-table-column>
+                            <el-table-column prop="version" :label="$t('table.model')" width="240" > </el-table-column>
+                            <el-table-column prop="device_name" :label="$t('table.name')" width="240" > </el-table-column>
+                            <el-table-column prop="time" :label="$t('table.time')" width="240"> </el-table-column>
+                            <el-table-column :label="$t('table.operation')">
+                                <template slot-scope="scope">
+                                            <el-button size="mini" @click="device_export(scope.$index, scope.row)">{{$t('table.export')}}</el-button>
+                                    </template>
+                            </el-table-column>
+                        </el-table>
+                        <!-- 完整分页 -->
+                        <!-- <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage" :page-sizes="[10, 20, 30, 40]"
+                        :page-size="10" layout="total, sizes, prev, pager, next, jumper" :total="400" >
+                        </el-pagination>       -->
+                        <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage" :page-sizes="[10, 20, 30, 40]"
+                        :page-size="10" layout="prev, pager, next" :total="400" >
+                        </el-pagination>                       
                     </div>
                 </el-tab-pane>
                 <el-tab-pane :label="$t('information.data')" name="second">
@@ -127,12 +124,11 @@
                         </div>
                     </div>
                 </el-tab-pane>
-          
             </el-tabs>
         </div>
     </div>
   <!-- 注册 -->
-        <el-dialog :title="$t('reg_message.title')" :visible.sync="registerVisible">
+        <el-dialog :title="$t('reg_message.title')" :visible.sync="registerVisible" :show-close="false">
             <el-form ref="registerForm" :model="registerForm"  :rules="register_rules" label-width="136px" @submit.native.prevent>
                 <el-form-item :label="$t('reg_message.name')" prop="register_name">
                     <el-input ref="register_name" v-model="registerForm.register_name" :placeholder="$t('prompt_message.name')"></el-input>
@@ -168,7 +164,47 @@
                 <el-button @click="register_Cancle">{{$t('button_message.cancel')}}</el-button>
                 <el-button type="primary" @click="submit_register('registerForm')">{{$t('button_message.sign_up')}}</el-button>
             </div>
-        </el-dialog>     
+        </el-dialog> 
+  <!-- 转移 -->
+        <el-dialog :title="$t('table.info')" :visible.sync="transfer_dialog" width="30%" :show-close="false">
+            <el-select v-model="customer" filterable :placeholder="$t('table.select')">
+                <el-option  v-for="item in customer_List" :key="item.id" :label="item.label" :value="item.id">
+                </el-option>
+            </el-select>
+            <el-table :data="gridData" :empty-text="$t('table.no_data')">
+                <el-table-column property="imei" label="IMEI"  width="200"></el-table-column>
+                <el-table-column property="version" :label="$t('table.model')"  width="150"></el-table-column>
+                <el-table-column property="device_name" :label="$t('table.name')"  width="150"></el-table-column>
+            </el-table>
+        <span slot="footer" class="dialog-footer">
+            <el-button @click="dialig_hidden">{{$t('button_message.cancel')}}</el-button>
+            <el-button type="primary" @click="submit_transfer">{{$t('button_message.confirm')}}</el-button>
+        </span>
+        </el-dialog>
+      <!-- 超级管理员导入设备 -->
+      <el-dialog :title="$t('table.new_device')" :visible.sync="import_show" width="30%"  :show-close="false">
+        <div class="imei_div">
+            <el-button @click="add_imei">{{$t('group.add')}}</el-button>
+            <el-table :data="imei_data" :empty-text="$t('table.no_data')">
+                    <el-table-column prop="iemi" label="IMEI">
+                    <template  slot-scope="scope">
+                    <el-input v-model="imei_data[scope.$index].iemi"></el-input>
+                    </template>
+                    </el-table-column>
+                    <el-table-column prop="command" :label="$t('table.operation')">
+                    <template  slot-scope="scope">
+                    <el-button @click="delete_imei(scope.$index)">{{$t('group.remove')}}</el-button>
+                    </template>
+                    </el-table-column>
+            </el-table>
+
+        </div>
+        <span slot="footer" class="dialog-footer">
+            <el-button @click="import_cancle">{{$t('button_message.cancel')}}</el-button>
+            <el-button type="primary" @click="import_submit">{{$t('button_message.confirm')}}</el-button>
+        </span>
+        </el-dialog>
+        
 </div>
     
 </template>
@@ -234,44 +270,45 @@ export default {
                 ], 
             // 树组件数据
             filterText: '',
-                    ztree_data: [{
-                        id: 1,
-                        label: '一级 1',
-                        children: [{
-                            id: 4,
-                            label: '二级 1-1',
-                            children: [{
-                            id: 9,
-                            label: '三级 1-1-1'
-                            }, {
-                            id: 10,
-                            label: '三级 1-1-2'
-                            }]
-                        }]
-                        }, {
-                        id: 2,
-                        label: '一级 2',
-                        children: [{
-                            id: 5,
-                            label: '二级 2-1'
-                        }, {
-                            id: 6,
-                            label: '二级 2-2'
-                        }]
-                        }, {
-                        id: 3,
-                        label: '一级 3',
-                        children: [{
-                            id: 7,
-                            label: '二级 3-1'
-                        }, {
-                            id: 8,
-                            label: '二级 3-2'
-                        }]
-                    }],
+                    // ztree_data: [{
+                    //     id: 1,
+                    //     label: '一级 1',
+                    //     children: [{
+                    //         id: 4,
+                    //         label: '二级 1-1',
+                    //         children: [{
+                    //         id: 9,
+                    //         label: '三级 1-1-1'
+                    //         }, {
+                    //         id: 10,
+                    //         label: '三级 1-1-2'
+                    //         }]
+                    //     }]
+                    //     }, {
+                    //     id: 2,
+                    //     label: '一级 2',
+                    //     children: [{
+                    //         id: 5,
+                    //         label: '二级 2-1'
+                    //     }, {
+                    //         id: 6,
+                    //         label: '二级 2-2'
+                    //     }]
+                    //     }, {
+                    //     id: 3,
+                    //     label: '一级 3',
+                    //     children: [{
+                    //         id: 7,
+                    //         label: '二级 3-1'
+                    //     }, {
+                    //         id: 8,
+                    //         label: '二级 3-2'
+                    //     }]
+                    // }],
+                    // ztree_data:[],
                     defaultProps: {
                     children: 'children',
-                    label: 'label'
+                    label: 'account_name'
                     },
             // 登录信息
             information_name:'程涛',
@@ -298,28 +335,52 @@ export default {
             },
             // 设备表格
          tableData: [
+                    {imei: '31424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+                    {imei: '26424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+                    {imei: '39424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+                    {imei: '51424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+                    {imei: '61424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
                     {imei: '21424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '21424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '21424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '21424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '21424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '21424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '21424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '21424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '21424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '21424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '21424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '21424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '21424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '21424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '21424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '21424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '21424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},    
+                    {imei: '12142415232321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+                    {imei: '23424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+                    {imei: '12424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+                    {imei: '45424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+                    {imei: '25424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+                    {imei: '11424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+                    {imei: '12424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+                    {imei: '13424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+                    {imei: '14424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+                    {imei: '15424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+                    {imei: '16424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},    
         ],
         multipleSelection: [],
         currentPage: 1,
         pagesize:10,
-             
+        // 转移设备
+        transfer_dialog: false,
+        device_data:[],
+        gridData:[],
+        // 选择客户
+        customer: '',
+        customer_List:[
+            { id:1,label:'李强'},
+            { id:2,label:'李爱迪生'},
+            { id:5,label:'李壹拾贰'},
+            { id:21,label:'李搞'},
+            { id:123,label:'李安抚'},
+            { id:24,label:'李不得'},
+            { id:543,label:'李啊噶'},
+            { id:43,label:'李内部'},
+            { id:53,label:'李更好'},
+            { id:121,label:'李发烧'},
+            { id:56,label:'李尕'},
+            { id:78,label:'李办法'},
+            { id:9,label:'李班'},
+        ],
+        // 管理员导入设备
+        import_show:false,
+        // 导入imei号
+        imei_data:[],   
         
         }
     },
@@ -435,6 +496,16 @@ export default {
             handleClick(tab, event) {
                 window.console.log(tab, event);
             },
+            // 渲染个人信息
+            apply_info(){
+            let personal_info = JSON.parse(localStorage.getItem('account_info'))          
+            let device_info = JSON.parse(localStorage.getItem('device_list'))          
+            this.information_name = personal_info.nick_name;
+            this.information_login = personal_info.username;
+            this.information_phone = personal_info.phone;
+            this.information_adress = personal_info.address;
+            this.information_number = device_info.length;
+            },
             // 修改下级信息
             subordinate_submit(){
                 let subordinate_info = {};
@@ -473,29 +544,137 @@ export default {
                 window.console.log(subordinate_info)
             }, 
             // 设备表格
-                  handleSelectionChange(val) {
-                    this.multipleSelection = val;
-                    },
-                    andexport(index, row) {
-                        window.console.log(index, row);
-                        // window.console.log(this.multipleSelection);                        
-                    },
-                    handleSizeChange(val) {
-                        window.console.log(`每页 ${val} 条`);
-                        // this.currentPage = currentPage;
-                        this.pagesize = val;
-                    },
-                    handleCurrentChange(currentPage) {
-                    //    window.console.log(`当前页: ${val}`);
-                    this.currentPage =currentPage
-                    }
-           
+            handleSelectionChange(val) {
+            this.multipleSelection = val;
+            window.console.log(this.multipleSelection )
+            this.device_data=this.multipleSelection
+            },
+            device_export(index, row) {
+                this.transfer_dialog=true;
+                window.console.log(row);
+                this.gridData=[];
+                this.gridData.push(row)
+                // window.console.log(this.multipleSelection);                        
+            },
+            // 完整分页
+            handleSizeChange(val) {
+                window.console.log(`每页 ${val} 条`);
+                // this.currentPage = currentPage;
+                this.pagesize = val;
+            },
+            handleCurrentChange(currentPage) {
+            //    window.console.log(`当前页: ${val}`);
+            this.currentPage =currentPage
+            },
+            transfer(){
+                window.console.log(this.multipleSelection)
+                if(this.multipleSelection.length !== 0){
+                    window.console.log(this.multipleSelection);
+                    this.transfer_dialog=true;
+                    this.gridData=this.device_data
+                }else{
+                    this.$message({
+                        message: this.$t('table.device'),
+                        type: 'warning'
+                    });
+                }
+            },
+            dialig_hidden(){
+                this.transfer_dialog=false; 
+                this.customer='';
+                
+            },
+            // 转移设备
+            submit_transfer(done){
+                this.$confirm(this.$t('table.message'),{
+                   confirmButtonText: this.$t("button_message.confirm"),
+                   cancelButtonText: this.$t("button_message.cancel")
+                })
+                .then(_ => {
+                    window.console.log(_)
+                    window.console.log(this.customer)
+                    let transinformation={}
+                    transinformation.id=this.customer;
+                    transinformation.device=this.gridData;
+                    window.console.log(transinformation)
+                    done();
+                })
+                .catch(_ => {
+                    window.console.log(_)
+                });
+            },
+            // 超级管理员导入设备
+            device_import(){
+                window.console.log(222);
+                window.console.log(this.$store.state.User.subordinate);
+                // window.console.log(this.$store.state.User.subordinate);
+                // this.ztree_data.push(this.$store.state.User.subordinate)
+                // window.console.log(this.$store.state.User.information);
+                // this.ztree_data=this.$store.state.User.subordinate.tree_data
+                this.import_show=true;
+
+            },
+            import_cancle(){
+                 this.import_show=false;
+                 this.imei_data=[];
+            },
+            import_submit(){
+                this.$confirm(this.$t('table.lead'),{
+                   confirmButtonText: this.$t("button_message.confirm"),
+                    cancelButtonText: this.$t("button_message.cancel")
+                })
+                .then(_ => {
+                    window.console.log(this.imei_data)
+                    window.console.log(_)
+                    let decive_data = {};
+                    decive_data.imei =this.imei_data;
+                    window.console.log(decive_data)
+                    this.import_show=false;
+                    this.imei_data=[];
+                 
+                    //  done();
+                })
+                .catch(_ => {
+                    window.console.log(_)
+                });
+            },
+            // 添加imei
+            add_imei(){
+              this.imei_data.push({})
+            },
+            delete_imei(index){
+              this.imei_data.splice(index,1)
+            },
+            // ztree操作
+             handleNodeClick(data) {
+                    window.console.log(data);
+                } ,
+        //         updata(){
+        //    ztree_data.push(this.$store.state.User.subordinate)
+        //         }
+        
     },
-    watch: {
-      filterText(val) {
-        this.$refs.ztree.filter(val);
-      }
+         watch: {
+            filterText(val) {
+                this.$refs.ztree.filter(val);
+            },
+
+        // updata(){
+        //    this.ztree_data.push(this.$store.state.User.subordinate)
+        //         }
     },
+    computed:{
+        
+        ztree_data(){
+            let trees_data=[];
+            trees_data.push(this.$store.state.User.subordinate)
+            return trees_data;
+        }
+    },
+    created(){
+        this.apply_info()
+    }
+ 
 }
 </script>
 <style>
@@ -535,12 +714,27 @@ background-color: white;
     font-size: 12px;
     border: 1px solid #aab7c9;
     padding: 0px 10px 0px 10px;
+    border-radius: 3px;
     position: absolute;
     right: 13px;
     top: 8px;
     cursor: pointer;
 }
 .client_left_regiter:hover{
+    color: #0072bd
+}
+.client_left_import{
+    display: inline-block;
+    font-size: 12px;
+    border: 1px solid #aab7c9;
+    padding: 0px 10px 0px 10px;
+    border-radius: 3px;
+    position: absolute;
+    right: 70px;
+    top: 8px;
+    cursor: pointer; 
+}
+.client_left_import:hover{
     color: #0072bd
 }
 .el-dialog{
@@ -610,6 +804,26 @@ background-color: white;
 .equipment_table{
  height: 550px;
  overflow: auto;
+}
+.transfer_tittle{
+    height: 27px;
+    line-height: 18px;
+    border-bottom: 1px solid #e4e7ed
+}
+.mass_transfer{
+    font-size: 14px;
+    padding-left: 5px;
+    padding-right: 5px;
+    border-radius: 3px;
+    cursor: pointer;
+    border: 1px solid #e4e7ed;
+}
+.mass_transfer:hover{
+    color: #409eff;
+}
+.imei_div{
+    max-height: 400px;
+    overflow: auto;
 }
 </style>
 

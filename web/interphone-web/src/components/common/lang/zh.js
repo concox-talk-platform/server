@@ -92,7 +92,9 @@ module.exports = {
            // 我的用户
     client_lang: {
         client_list: '客户列表',
-        client_add: '添加'
+        client_add: '添加',
+        import: '导入新设备'
+
     },
     // 操作组
     control: {
@@ -121,7 +123,15 @@ module.exports = {
         name: '设备名',
         time: '导入时间',
         operation :'操作',
-        export: '导出'
+        export: '导出',
+        mass:'批量转移',
+        device: '请选择转移的设备',
+        info:'转移信息',
+        message:'确定转出?',
+        select: '请选择',
+        new_device:'导入设备',
+        lead:'确定导入?',
+        no_data:"暂无数据",
      }
 
 }

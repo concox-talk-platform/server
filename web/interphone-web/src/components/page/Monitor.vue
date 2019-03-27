@@ -71,7 +71,7 @@
                                    <img src="../../assets/img/inter.png" alt="">
                                 </div>
                                 <div class="member_name">
-                                    {{item.user_name.String}}
+                                    {{item.user_name}}
                                 </div> 
                             </li>                                          
                                                                                      
@@ -119,7 +119,7 @@
                                 <img src="../../assets/img/inter.png" alt="">
                             </div>
                             <div class="device_name">
-                                {{item.user_name.String}}
+                                {{item.user_name}}
                             </div> 
                             <div class="control_menum" v-show="control_show">
                                 <div class="control_voice">语音通话</div>
@@ -160,7 +160,7 @@
        <!-- 修改组成员弹出框 -->
 
             <el-dialog
-                width="31%" :title="$t('group.modified_member')" :visible.sync="modified_member_show" append-to-body>
+                width="31%" :title="$t('group.modified_member')" :visible.sync="modified_member_show" append-to-body >
             <!-- 左右列表移动 -->
                 <el-transfer
                     style="text-align: left; display: inline-block"
@@ -444,11 +444,12 @@ export default {
             },
             noData(){
                 let  transfer_name=this.$store.state.Equipment.device;
+                // window.console.log(transfer_name)
                 let transfer_newData = [];
                 transfer_name.forEach((obj) => {
                     var  transfer_obj ={};
                     transfer_obj.id = obj.id;
-                    transfer_obj.name =obj.user_name.String;
+                    transfer_obj.name =obj.user_name;
                     transfer_newData.push(transfer_obj)
                 });
                
@@ -461,7 +462,7 @@ export default {
                 modified_name.forEach((obj) => {
                     var  modified_obj ={};
                     modified_obj.id = obj.id;
-                    modified_obj.name =obj.user_name.String;
+                    modified_obj.name =obj.user_name;
                     modified_newData.push(modified_obj)
                 });
                

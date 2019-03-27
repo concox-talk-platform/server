@@ -143,8 +143,44 @@
                         sessionStorage.setItem('setSession_id', response.data.session_id);
                         window.console.log( sessionStorage.getItem('setSession_id'));
                         // localStorage.setItem('loginName', this.ruleForm.username.trim());            
-                        sessionStorage.setItem('loginName', this.ruleForm.username.trim());            
-                         this.$router.push('/homePage');
+                        sessionStorage.setItem('loginName', this.ruleForm.username.trim());  
+                        this.$axios.get('/account/'+sessionStorage.getItem('loginName'),
+                            { headers: 
+                            {
+                            "Authorization" : sessionStorage.getItem('setSession_id')
+                            }
+                            })
+                            .then((response) =>{
+                             window.console.log(response);
+                            sessionStorage.setItem('id', response.data.account_info.id);
+                            localStorage.setItem('account_info', JSON.stringify(response.data.account_info));
+                            localStorage.setItem('device_list', JSON.stringify(response.data.device_list));
+                            this.$store.commit("groupList",response.data.group_list);
+                            this.$router.push('/homePage');
+                            this.$store.commit("deviceList",response.data.device_list);
+                            this.$store.commit("information",response.data.account_info);
+                                this.$axios.get('/account_class/'+response.data.account_info.id,
+                                { headers: 
+                                {
+                                // "Authorization" : localStorage.getItem('setSession_id')
+                                "Authorization" : sessionStorage.getItem('setSession_id')
+                                }
+                                })
+                                .then((response) =>{
+                                //  localStorage.setItem('id', response.data.account_info.id);    
+                                window.console.log(response);
+                                this.$store.commit("subordinate",response.data.tree_data);
+                        
+                                })
+                                .catch(function (error) {
+                                window.console.log(error);
+                                });
+
+                            })
+                            .catch(function (error) {
+                            window.console.log(error);
+                            });          
+                        //  this.$router.push('/homePage');
                         }.bind(this))
                         .catch( (error) => {
                          window.console.log(error.response.data);
