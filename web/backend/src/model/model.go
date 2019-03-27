@@ -16,11 +16,21 @@ type AccountPwd struct {
 	ConfirmPwd string `json:"confirm_pwd"`
 }
 
+type AccountDeviceTransReq struct {
+	Devices []*Device `json:"devices"`
+	Receiver DeviceReceiver `json:"receiver"`
+}
+
+
+
 // validate
 type AccountValidate struct {
 	Username string `valid:", between=6|15"`
 	Pwd      string `valid:", between=6|15"`
 }
+
+
+
 
 //response
 type Message struct {
@@ -58,6 +68,12 @@ type SessionInfo struct {
 	UserPwd   string `json:"user_pwd"`
 	AccountId int    `json:"account_id"`
 	TTL       string `json:"ttl"`
+}
+
+
+type DeviceReceiver struct {
+	AccountId int `json:"account_id"`
+	AccountName string `json:"account_name"`
 }
 
 // device

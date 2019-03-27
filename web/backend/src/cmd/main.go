@@ -48,6 +48,10 @@ func Prepare() *gin.Engine {
 
 	engine.POST("/group/update", controllers.UpdateGroup)
 
+	engine.GET("/account_device/:accountId", controllers.GetAccountDevice)
+
+	engine.POST("/account_device/:accountId", controllers.TransAccountDevice)
+
 	return engine
 }
 

@@ -287,3 +287,65 @@ func GetAccountClass(c *gin.Context) {
 		"tree_data": resp,
 	})
 }
+
+func GetAccountDevice(c *gin.Context)  {
+	accountId := c.Param("accountId")
+
+	// 使用session来校验用户 TODO 考虑加一个
+	aid, _ := strconv.Atoi(accountId)
+	//if !service.ValidateAccountSession(c.Request, aid) {
+	//	c.JSON(http.StatusUnauthorized, model.ErrorNotAuthSession)
+	//	return
+	//}
+	// 获取账户信息
+	ai, err := ta.GetAccount(aid)
+	if err != nil {
+		log.Printf("Error in GetAccountInfo: %s", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":      "get accountInfo DB error",
+			"error_code": "007",
+		})
+		return
+	}
+	// 获取所有设备
+	deviceAll, err := td.SelectDeviceByAccountId(ai.Id)
+	if err != nil {
+		log.Fatalf("db error : %s", err)
+		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"account_info" : ai,
+		"devices" : deviceAll,
+	})
+}
+
+// 转移设备
+func TransAccountDevice(c *gin.Context)  {
+	aidStr := c.Param("accountId")
+	accountDevices := &model.AccountDeviceTransReq{}
+	if err := c.BindJSON(accountDevices); err != nil {
+		log.Printf("json parse fail , error : %s", err)
+		c.JSON(http.StatusBadRequest, model.ErrorRequestBodyParseFailed)
+		return
+	}
+
+	// 使用session来校验用户
+	aid, _ := strconv.Atoi(aidStr)
+	if !service.ValidateAccountSession(c.Request, aid) {
+		c.JSON(http.StatusUnauthorized, model.ErrorNotAuthSession)
+		return
+	}
+
+	// 更新设备
+	if err := td.MultiUpdateDevice(accountDevices); err != nil {
+		log.Fatalf("db error : %s", err)
+		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"result" : "success",
+		"msg" : "trans successful",
+	})
+}

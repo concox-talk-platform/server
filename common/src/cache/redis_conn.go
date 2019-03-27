@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	DEFAULT_REDIS_CONFIG = "./redis.ini"
+	DEFAULT_REDIS_CONFIG = "redis.ini"
 )
 
 var RedisPool *redis.Pool

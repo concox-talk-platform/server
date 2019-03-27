@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	DEFAULT_DB_CONFIG = "./db.ini"
+	DEFAULT_DB_CONFIG = "db.ini"
 )
 
 // db 包装类

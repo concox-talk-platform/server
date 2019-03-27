@@ -164,6 +164,8 @@ func SelectDeviceByKey(key interface{}) (*model.Device, error) {
 	return res, nil
 }
 
+
+// 用过用户名查重，用在app GRpc注册
 func GetAdviceByName(userName string) (int, error) {
 	stmtOut, err := dbConn.Prepare("SELECT count(id) FROM device WHERE user_name = ?")
 	if err != nil {
@@ -184,3 +186,24 @@ func GetAdviceByName(userName string) (int, error) {
 	}()
 	return res, nil
 }
+
+// 批量转移设备
+func MultiUpdateDevice(accountDevices *model.AccountDeviceTransReq) error {
+	var ub = dbs.NewUpdateBuilder()
+	ub.Table("device")
+	ub.SET("account_id", accountDevices.Receiver.AccountId)
+	dImeiArr := make([]string, 0)
+	for _, v := range accountDevices.Devices {
+		dImeiArr = append(dImeiArr, v.IMei)
+	}
+	ub.Where(dbs.IN("imei", dImeiArr))
+
+	if _, err := ub.Exec(dbConn); err != nil {
+		log.Println("multi update device error :", err)
+		return err
+	}
+
+	return nil
+}
+
+

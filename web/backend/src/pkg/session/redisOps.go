@@ -13,7 +13,7 @@ import (
 	"server/common/src/cache"
 )
 
-var rdsConn = cache.GetRedisClient()
+//var rdsConn =
 // 添加一个session
 func InsertSession(sInfo *model.SessionInfo) error {
 	// 将session转换成json数据，注意：转换后的value是一个byte数组
@@ -21,7 +21,7 @@ func InsertSession(sInfo *model.SessionInfo) error {
 	if err != nil {
 		return err
 	}
-	if _, err := rdsConn.Do("SET", sInfo.SessionID, value, "ex", 60*60*3); err != nil {
+	if _, err := cache.GetRedisClient().Do("SET", sInfo.SessionID, value, "ex", 60*60*3); err != nil {
 		return err
 	}
 	log.Printf("Insert generate new sessionid : %s", sInfo.SessionID)
@@ -32,7 +32,7 @@ func InsertSession(sInfo *model.SessionInfo) error {
 
 // 删除缓存中的session
 func DeleteSession(sid string) error {
-	if _, err := rdsConn.Do("DEL", sid); err != nil {
+	if _, err := cache.GetRedisClient().Do("DEL", sid); err != nil {
 		log.Printf("[REDIS OPS] delete sesion : %s", err)
 		return err
 	}
@@ -43,7 +43,7 @@ func DeleteSession(sid string) error {
 
 // 更新缓存中的session
 func UpdateSession(oldSInfo, newSInfo *model.SessionInfo) error {
-	if _, err := rdsConn.Do("DEL", oldSInfo.SessionID); err != nil {
+	if _, err := cache.GetRedisClient().Do("DEL", oldSInfo.SessionID); err != nil {
 		return err
 	}
 
@@ -52,7 +52,7 @@ func UpdateSession(oldSInfo, newSInfo *model.SessionInfo) error {
 	if err != nil {
 		return err
 	}
-	if _, err := rdsConn.Do("SET", newSInfo.SessionID, value, "ex", 60*60*3); err != nil {
+	if _, err := cache.GetRedisClient().Do("SET", newSInfo.SessionID, value, "ex", 60*60*3); err != nil {
 		return err
 	}
 
@@ -62,7 +62,7 @@ func UpdateSession(oldSInfo, newSInfo *model.SessionInfo) error {
 
 // 判断是否存在session
 func ExistsSession(sid string) (bool, error) {
-	ifExist, err := redis.Bool(rdsConn.Do("EXISTS", sid))
+	ifExist, err := redis.Bool(cache.GetRedisClient().Do("EXISTS", sid))
 	if err != nil {
 		return false, err
 	}
@@ -71,7 +71,7 @@ func ExistsSession(sid string) (bool, error) {
 
 // 获取session
 func GetSessionValue(key string) (*model.SessionInfo, error) {
-	if resBytes, err := redis.Bytes(rdsConn.Do("GET", key)); err != nil {
+	if resBytes, err := redis.Bytes(cache.GetRedisClient().Do("GET", key)); err != nil {
 		return nil, err
 	} else {
 		res := &model.SessionInfo{}
