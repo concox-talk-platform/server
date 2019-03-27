@@ -10,21 +10,21 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/syssam/go-validator"
 	"log"
+	"model"
 	"net/http"
-	"server/web/backend/src/model"
-	"server/web/backend/src/pkg"
-	"server/web/backend/src/service"
+	ta "pkg/account"
+	"service"
 )
 
 // 创建账户
 func SignUp(c *gin.Context) {
 	// 1. 取出Post中的表单内容
-	uBody := &model.AccountCredential{}
+	uBody := &model.Account{}
 	if err := c.BindJSON(uBody); err != nil {
 		log.Fatalf("解析错误")
 	}
 	// 2. TODO 数据格式合法性校验
-	aCount, err := pkg.GetAccountByName(uBody.Username)
+	aCount, err := ta.GetAccountByName(uBody.Username)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
@@ -37,7 +37,7 @@ func SignUp(c *gin.Context) {
 	}
 
 	// 3. 添加账户
-	if err := pkg.AddAccountCredential(uBody.Username, uBody.Pwd); err != nil {
+	if err := ta.AddAccount(&model.Account{Username: uBody.Username, Pwd: uBody.Pwd}); err != nil {
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
 	}
@@ -53,7 +53,7 @@ func SignUp(c *gin.Context) {
 // 登录
 func SignIn(c *gin.Context) {
 	// 1. 取出Post请求中的body内容
-	signINBody := &model.AccountCredential{}
+	signINBody := &model.Account{}
 	if err := c.BindJSON(signINBody); err != nil {
 		log.Printf("%s", err)
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -72,7 +72,7 @@ func SignIn(c *gin.Context) {
 	}
 
 	// 3. 数据库查询密码，看是否和发过来的相同
-	uInfo, err := pkg.GetAccount(signINBody.Username)
+	uInfo, err := ta.GetAccount(signINBody.Username)
 	if err != nil && err != sql.ErrNoRows {
 		log.Println("err:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -138,7 +138,7 @@ func SignIn(c *gin.Context) {
 // 退出登录
 func SignOut(c *gin.Context) {
 	// 1. 取出body中的内容
-	signOutBody := &model.AccountCredential{}
+	signOutBody := &model.Account{}
 	if err := c.BindJSON(signOutBody); err != nil {
 		log.Printf("%s", err)
 		c.JSON(http.StatusBadRequest, model.ErrorRequestBodyParseFailed)

@@ -6,14 +6,15 @@
 package service
 
 import (
-	"server/web/backend/src/model"
-	"server/web/backend/src/pkg"
-	"server/web/backend/src/utils"
 	"log"
+	"model"
 	"net/http"
+	s "pkg/session"
 	"strconv"
 	"time"
+	"utils"
 )
+
 var HEADER_FIELD_SESSION = "Authorization"
 
 func GetSessionId(r *http.Request) string {
@@ -38,7 +39,7 @@ func ValidateAccountSession(r *http.Request, value interface{}) bool {
 	// 2. 判断session和发送过来的用户名或者账户id是否匹配
 	log.Printf("sid : %s", sid)
 	log.Printf("value: %s", value)
-	sObj, err := pkg.GetSessionValue(sid)
+	sObj, err := s.GetSessionValue(sid)
 	log.Println(sObj)
 	switch v := value.(type) {
 	case int:
@@ -86,7 +87,7 @@ func GenerateNewSessionId(un string) string {
 	sInfo := &model.SessionInfo{SessionID: sid, UserName: un, TTL: ttlStr}
 
 	// 把sessionId放进redis缓存
-	if err := pkg.InsertSession(sInfo); err != nil {
+	if err := s.InsertSession(sInfo); err != nil {
 		return ""
 	}
 	return sid
@@ -107,7 +108,7 @@ func UpdateUserSessionId(oldSInfo *model.SessionInfo) (string, error) {
 	}
 	//log.Printf("old session: %s", oldSInfo.SessionID)
 	//log.Printf("new session: %s", newSInfo.SessionID)
-	if err := pkg.UpdateSession(oldSInfo, newSInfo); err != nil {
+	if err := s.UpdateSession(oldSInfo, newSInfo); err != nil {
 		return "", err
 	}
 
@@ -116,7 +117,7 @@ func UpdateUserSessionId(oldSInfo *model.SessionInfo) (string, error) {
 
 // 判断session 是否存在
 func IsExistsSession(sid string) (bool, error) {
-	ifExist, err := pkg.ExistsSession(sid)
+	ifExist, err := s.ExistsSession(sid)
 	if err != nil {
 		return false, err
 	}
@@ -125,7 +126,7 @@ func IsExistsSession(sid string) (bool, error) {
 
 // 删除session
 func DeleteSessionInfo(sid string) error {
-	if err := pkg.DeleteSession(sid); err != nil {
+	if err := s.DeleteSession(sid); err != nil {
 		return err
 	}
 	return nil

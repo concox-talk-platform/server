@@ -7,11 +7,14 @@ package device
 
 import (
 	"database/sql"
+	"db"
 	"github.com/smartwalle/dbs"
 	"log"
 	"model"
 	"time"
 )
+
+var dbConn = db.DBHandler
 
 // 增加设备
 func AddDevice(d *model.Device) error {
@@ -48,7 +51,7 @@ func AddDevice(d *model.Device) error {
 // 查找设备
 func SelectDeviceByAccountId(aid int) (interface{}, error) {
 	var stmtOut *sql.Stmt
-
+	var err error
 	stmtOut, err = dbConn.Prepare("SELECT id, imei, user_name, user_passwd, account_id, stat, active_stat, bind_stat, create_time, last_login_time, change_time FROM device WHERE account_id = ?")
 
 	if err != nil {
@@ -114,6 +117,7 @@ func Updatedevice(d *model.Device) error {
 // 通过关键词查找用户名
 func SelectDeviceByKey(key interface{}) (*model.Device, error) {
 	var stmtOut *sql.Stmt
+	var err error
 	switch t := key.(type) {
 	case int:
 		stmtOut, err = dbConn.Prepare("SELECT id, imei, user_name, user_passwd, account_id, stat, active_stat, bind_stat, create_time, last_login_time, change_time FROM device WHERE account_id = ?")
@@ -133,7 +137,7 @@ func SelectDeviceByKey(key interface{}) (*model.Device, error) {
 		userName, pwd, iMei                                    string
 		status, bindStatus, aStatus, cTime, llTime, changeTime sql.NullString
 	)
-	err := stmtOut.QueryRow(key).Scan(&id, &iMei, &userName, &pwd, &accountId, &status, &aStatus, &bindStatus, &cTime, &llTime, &changeTime)
+	err = stmtOut.QueryRow(key).Scan(&id, &iMei, &userName, &pwd, &accountId, &status, &aStatus, &bindStatus, &cTime, &llTime, &changeTime)
 	if err != nil{
 		return nil, err
 	}

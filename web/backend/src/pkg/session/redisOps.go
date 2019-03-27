@@ -7,11 +7,13 @@ package session
 
 import (
 	"encoding/json"
-	"model"
 	"github.com/gomodule/redigo/redis"
 	"log"
+	"model"
+	"server/common/src/cache"
 )
 
+var rdsConn = cache.GetRedisClient()
 // 添加一个session
 func InsertSession(sInfo *model.SessionInfo) error {
 	// 将session转换成json数据，注意：转换后的value是一个byte数组
@@ -30,8 +32,8 @@ func InsertSession(sInfo *model.SessionInfo) error {
 
 // 删除缓存中的session
 func DeleteSession(sid string) error {
-	log.Printf("[REDIS OPS] delete sesion : %s", err)
 	if _, err := rdsConn.Do("DEL", sid); err != nil {
+		log.Printf("[REDIS OPS] delete sesion : %s", err)
 		return err
 	}
 

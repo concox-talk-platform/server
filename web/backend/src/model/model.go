@@ -8,16 +8,6 @@ package model
 import "database/sql"
 
 // request
-// updateAccount modal
-type Account struct {
-	Id       string `json:"id"`
-	NickName string `json:"nick_name"`
-	Phone    string `json:"phone"`
-	Email    string `json:"email"`
-	Address  string `json:"address"`
-	Remark   string `json:"remark"`
-}
-
 // update pwd modal
 type AccountPwd struct {
 	Id         string `json:"id"`
@@ -33,13 +23,6 @@ type AccountValidate struct {
 }
 
 //response
-type AccountInfo struct {
-	Id          int    `json:"id"`
-	Username    string `json:"username"`
-	PrivilegeId int    `json:"privilege_id"`
-	IdCard      string `json:"id_card"`
-}
-
 type Message struct {
 	Result  bool   `json:"result"`
 	Type    string `json:"type"`
@@ -47,10 +30,17 @@ type Message struct {
 	//Sticky string `json:"sticky"`
 }
 
+// 账户层级关系
+type AccountClass struct {
+	Id int `json:"id"`
+	AccountName string `json:"account_name"`
+	Children []*AccountClass `json:"children"`
+}
+
 // 返回账户及其账户下所有的组和
 type AccountGroupsResp struct {
 	Message     string             `json:"message"`
-	AccountInfo *AccountCredential `json:"account_info"`
+	AccountInfo *Account `json:"account_info"`
 	GroupList   []*GroupList       `json:"group_list"`
 	DeviceList  []*Device          `json:"device_list"`
 }
@@ -93,11 +83,11 @@ type GroupInfo struct {
 	CTime     string `json:"c_time"`
 }
 
-type AccountCredential struct {
+type Account struct {
 	Id          int    `json:"id"`
 	Pid         int    `json:"pid"`
 	Username    string `json:"username"`
-	Nick_name   string `json:"nick_name"`
+	NickName   string `json:"nick_name"`
 	Pwd         string `json:"pwd"`
 	Email       string `json:"email"`
 	PrivilegeId int    `json:"privilege_id"`
@@ -109,4 +99,13 @@ type AccountCredential struct {
 	Phone       string `json:"phone"`
 	Remark      string `json:"remark"`
 	Address     string `json:"address"`
+}
+
+type AccountUpdate struct {
+	Id       string `json:"id"`
+	NickName string `json:"nick_name"`
+	Phone    string `json:"phone"`
+	Email    string `json:"email"`
+	Address  string `json:"address"`
+	Remark   string `json:"remark"`
 }
