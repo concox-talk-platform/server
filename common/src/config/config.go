@@ -100,7 +100,7 @@ func (cfg *RedisConfig) LoadConfig(section, path string) error {
 	}
 
 	sec := config.Section(section)
-	if sec != nil {
+	if sec == nil {
 		return fmt.Errorf("section(%s) not exist", section)
 	}
 

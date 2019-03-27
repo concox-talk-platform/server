@@ -13,13 +13,12 @@ import (
     "log"
 )
 
-
 func CreateGroup(uid int64, groupName string, db *sql.DB) error {
     if db == nil {
         return fmt.Errorf("db is nil")
     }
     
-    res, err := db.Exec("INSERT INTO group(group_name) VALUES(?)", groupName)
+    res, err := db.Exec("INSERT INTO user_group(group_name) VALUES(?)", groupName)
     if err != nil {
         log.Printf("query error(%s)\n", err)
         return err
@@ -71,7 +70,7 @@ func RemoveGroup(gid uint64, db *sql.DB) error {
         return fmt.Errorf("db is nil")
     }
 
-    sql := fmt.Sprintf("DELETE FROM group WHERE id=%d", gid)
+    sql := fmt.Sprintf("DELETE FROM user_group WHERE id=%d", gid)
     _, err := db.Query(sql)
     if err != nil {
         log.Printf("remove group(%d) error: %s\n", gid, err)
@@ -102,7 +101,7 @@ func GetGroupList(uid uint64, db *sql.DB) (*pb.GroupListRsp, error) {
     }
 
     sql := fmt.Sprintf("SELECT g.id, g.name " +
-        "FROM group AS g RIGHT LEFT JOIN group_device AS gd " +
+        "FROM user_group AS g RIGHT LEFT JOIN group_device AS gd " +
         "ON g.id=gd.group_id WHERE gd.device_id=%d", uid)
 
     rows, err := db.Query(sql)
@@ -133,7 +132,7 @@ func SearchGroup(target string, db *sql.DB) (*pb.GroupListRsp, error) {
         return nil, fmt.Errorf("db is nil")
     }
 
-    sql := fmt.Sprintf("SELECT id, group_name FROM group WHERE group_name LIKE '%%s%'", target)
+    sql := fmt.Sprintf("SELECT id, group_name FROM user_group WHERE group_name LIKE '%%s%'", target)
     rows, err := db.Query(sql)
     if err != nil {
         log.Printf("query(%s), error(%s)\n", sql, err)

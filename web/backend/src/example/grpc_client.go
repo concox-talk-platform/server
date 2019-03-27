@@ -29,5 +29,5 @@ func main() {
 		log.Fatal("could not create group: %v", err)
 	}
 
-	log.Printf("Create group ok: %v\n", r)
+	log.Printf("Create group ok: %s\n", r)
 }
