@@ -10,6 +10,7 @@ import (
 func (serv *TalkCloudService) CreateGroup(ctx context.Context, req *pb.GroupNewReq) (*pb.GroupNewRsp, error) {
 	err := group.CreateGroup(int64(req.Uid), req.GroupName, db.DBHandler)
 	rsp := new(pb.GroupNewRsp)
+	rsp.Err = new(pb.ErrorMsg)
 	rsp.Err.Code = 0
 	rsp.Err.Msg = ""
 
@@ -25,6 +26,7 @@ func (serv *TalkCloudService) JoinGroup(ctx context.Context, req *pb.GrpUserAddR
 	err := group.AddGroupUser(int64(req.Uid), int64(req.Gid), group.GROUP_NORMAL_USER, db.DBHandler)
 
 	rsp := new(pb.GrpUserAddRsp)
+	rsp.Err = new(pb.ErrorMsg)
 	rsp.Err.Code = 0
 	rsp.Err.Msg = ""
 	if err != nil {
@@ -38,6 +40,7 @@ func (serv *TalkCloudService) JoinGroup(ctx context.Context, req *pb.GrpUserAddR
 func (serv *TalkCloudService) RemoveGrpUser(ctx context.Context, req *pb.GrpUserDelReq) (*pb.GrpUserDelRsp, error) {
 	err := group.RemoveGroupUser(req.Uid, req.Gid, db.DBHandler)
 	rsp := new(pb.GrpUserDelRsp)
+	rsp.Err = new(pb.ErrorMsg)
 	rsp.Err.Code = 0
 	rsp.Err.Msg = ""
 	if err != nil {
@@ -56,6 +59,7 @@ func (serv *TalkCloudService) RemoveGrp(ctx context.Context, req *pb.GroupDelReq
 	// clear group user first
 	err := group.ClearGroupUser(req.Gid, db.DBHandler)
 	rsp := new(pb.GroupDelRsp)
+	rsp.Err = new(pb.ErrorMsg)
 
 	if err != nil {
 		rsp.Err.Code = -1

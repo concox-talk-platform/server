@@ -10,6 +10,7 @@ func (serv *TalkCloudService) AddFriend(ctx context.Context, req *pb.FriendNewRe
 
 	_, err := user_friend.AddFriend(req.Uid, req.Fuid, db.DBHandler)
 	rsp := new(pb.FriendNewRsp)
+	rsp.Err = new(pb.ErrorMsg)
 	rsp.Err.Code = 0
 	rsp.Err.Msg = ""
 	if err != nil {
@@ -23,6 +24,7 @@ func (serv *TalkCloudService) AddFriend(ctx context.Context, req *pb.FriendNewRe
 func (serv *TalkCloudService) DelFriend(ctx context.Context, req *pb.FriendDelReq) (*pb.FriendDelRsp, error) {
 	_, err := user_friend.RemoveFriend(req.Uid, req.Fuid, db.DBHandler)
 	rsp := new(pb.FriendDelRsp)
+	rsp.Err = new(pb.ErrorMsg)
 	rsp.Err.Code = 0
 	rsp.Err.Msg = ""
 
