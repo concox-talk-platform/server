@@ -8,10 +8,14 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 	"log"
+	"model"
 	"net/http"
-	"server/web/backend/src/model"
-	"server/web/backend/src/pkg"
-	"server/web/backend/src/service"
+	ta "pkg/account" // table account
+	td "pkg/device"
+	tg "pkg/group"         // table group
+	tgd "pkg/group_device" // table group_device
+
+	"service"
 	"strconv"
 )
 
@@ -36,7 +40,7 @@ func GetAccountInfo(c *gin.Context) {
 	}
 
 	// 获取账户信息
-	ai, err := pkg.GetAccount(aName)
+	ai, err := ta.GetAccount(aName)
 	if err != nil {
 		log.Printf("Error in GetAccountInfo: %s", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -46,7 +50,7 @@ func GetAccountInfo(c *gin.Context) {
 		return
 	}
 	// 获取所有设备,并且在组里面
-	deviceAll, err := pkg.SelectDeviceByAccountId(ai.Id)
+	deviceAll, err := td.SelectDeviceByAccountId(ai.Id)
 	if err != nil {
 		log.Printf("Error in GetGroups: %s", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -57,10 +61,10 @@ func GetAccountInfo(c *gin.Context) {
 	}
 
 	// 获取群组信息
-	groups, err := pkg.SelectGroupsByAccountId(ai.Id)
+	groups, err := tg.SelectGroupsByAccountId(ai.Id)
 	var gList []*model.GroupList
 	for i := 0; i < len(groups); i++ {
-		ds, err := pkg.SelectDevicesByGroupId((*groups[i]).Id)
+		ds, err := tgd.SelectDevicesByGroupId((*groups[i]).Id)
 		if err != nil {
 			log.Printf("Error in Get Group devices: %s", err)
 		}
@@ -81,7 +85,7 @@ func GetAccountInfo(c *gin.Context) {
 				ChangeTime:   d.ChangeTime,
 			})
 		}
-		ids, err := pkg.SelectDeviceIdsByGroupId((*groups[i]).Id)
+		ids, err := tgd.SelectDeviceIdsByGroupId((*groups[i]).Id)
 		if err != nil {
 			log.Printf("Error in GetGroups: %s", err)
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -104,7 +108,7 @@ func GetAccountInfo(c *gin.Context) {
 
 // 更新账户信息
 func UpdateAccountInfo(c *gin.Context) {
-	accInf := &model.Account{}
+	accInf := &model.AccountUpdate{}
 	if err := c.BindJSON(accInf); err != nil {
 		log.Printf("%s", err)
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -142,7 +146,7 @@ func UpdateAccountInfo(c *gin.Context) {
 		return
 	}
 
-	if err := pkg.UpdateAccount(accInf); err != nil {
+	if err := ta.UpdateAccount(accInf); err != nil {
 		log.Println("Update account error :", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":      "get devices DB error",
@@ -183,7 +187,7 @@ func UpdateAccountPwd(c *gin.Context) {
 	}
 
 	// 判断密码是否正确
-	pwd, err := pkg.GetAccountCredential(aid)
+	pwd, err := ta.GetAccountPwdByKey(aid)
 	if err != nil {
 		log.Fatalf("db error : %s", err)
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
@@ -219,7 +223,7 @@ func UpdateAccountPwd(c *gin.Context) {
 
 	// 更新密码
 	id, _ := strconv.Atoi(accPwd.Id)
-	if err := pkg.UpdateAccountPwd(accPwd.NewPwd, id); err != nil {
+	if err := ta.UpdateAccountPwd(accPwd.NewPwd, id); err != nil {
 		log.Println("Update account errr :", err)
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
@@ -229,4 +233,119 @@ func UpdateAccountPwd(c *gin.Context) {
 			"msg":    "Password changed successfully",
 		})
 	}
+}
+
+// 获取账户下级目录
+func GetAccountClass(c *gin.Context) {
+	accountId := c.Param("accountId")
+
+	// 使用session来校验用户
+	aid, _ := strconv.Atoi(accountId)
+	if !service.ValidateAccountSession(c.Request, aid) {
+		c.JSON(http.StatusUnauthorized, model.ErrorNotAuthSession)
+		return
+	}
+
+	// 查询数据返回
+	root, err := ta.GetAccount(aid)
+	if err != nil {
+		log.Fatalf("db error : %s", err)
+		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
+		return
+	}
+
+	resElem, err := ta.SelectChildByPId(aid)
+	if err != nil {
+		log.Fatalf("db error : %s", err)
+		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
+		return
+	}
+
+	cList := make([]*model.AccountClass, 0)
+	for i := 0; i < len(resElem); i++ {
+		child, err := ta.GetAccount((*resElem[i]).Id)
+		if err != nil {
+			log.Fatalf("db error : %s", err)
+			c.JSON(http.StatusInternalServerError, model.ErrorDBError)
+			return
+		}
+
+		cList = append(cList, &model.AccountClass{
+			Id:          child.Id,
+			AccountName: child.Username,
+		})
+	}
+
+	resp := &model.AccountClass{
+		Id:          aid,
+		AccountName: root.Username,
+		Children:    cList,
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"result":    "success",
+		"tree_data": resp,
+	})
+}
+
+func GetAccountDevice(c *gin.Context)  {
+	accountId := c.Param("accountId")
+
+	// 使用session来校验用户 TODO 考虑加一个
+	aid, _ := strconv.Atoi(accountId)
+	//if !service.ValidateAccountSession(c.Request, aid) {
+	//	c.JSON(http.StatusUnauthorized, model.ErrorNotAuthSession)
+	//	return
+	//}
+	// 获取账户信息
+	ai, err := ta.GetAccount(aid)
+	if err != nil {
+		log.Printf("Error in GetAccountInfo: %s", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":      "get accountInfo DB error",
+			"error_code": "007",
+		})
+		return
+	}
+	// 获取所有设备
+	deviceAll, err := td.SelectDeviceByAccountId(ai.Id)
+	if err != nil {
+		log.Fatalf("db error : %s", err)
+		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"account_info" : ai,
+		"devices" : deviceAll,
+	})
+}
+
+// 转移设备
+func TransAccountDevice(c *gin.Context)  {
+	aidStr := c.Param("accountId")
+	accountDevices := &model.AccountDeviceTransReq{}
+	if err := c.BindJSON(accountDevices); err != nil {
+		log.Printf("json parse fail , error : %s", err)
+		c.JSON(http.StatusBadRequest, model.ErrorRequestBodyParseFailed)
+		return
+	}
+
+	// 使用session来校验用户
+	aid, _ := strconv.Atoi(aidStr)
+	if !service.ValidateAccountSession(c.Request, aid) {
+		c.JSON(http.StatusUnauthorized, model.ErrorNotAuthSession)
+		return
+	}
+
+	// 更新设备
+	if err := td.MultiUpdateDevice(accountDevices); err != nil {
+		log.Fatalf("db error : %s", err)
+		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"result" : "success",
+		"msg" : "trans successful",
+	})
 }

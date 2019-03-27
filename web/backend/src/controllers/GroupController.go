@@ -8,9 +8,9 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 	"log"
+	"model"
 	"net/http"
-	"server/web/backend/src/model"
-	"server/web/backend/src/pkg"
+	tg "pkg/group"
 )
 
 // 创建群组
@@ -33,7 +33,7 @@ func CreateGroup(c *gin.Context) {
 	}
 
 	// 创建群组
-	if err := pkg.CreateGroup(gInfo); err != nil {
+	if err := tg.CreateGroupByWeb(gInfo); err != nil {
 		log.Printf("create group fail , error: %s", err)
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return

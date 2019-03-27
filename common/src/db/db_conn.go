@@ -7,6 +7,10 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+const (
+	DEFAULT_DB_CONFIG = "db.ini"
+)
+
 // db 包装类
 type SDBManager struct {
 	DB *sql.DB
@@ -17,16 +21,19 @@ type SDBContainer struct {
 	dbc map[string]*SDBManager
 }
 
-var DBC SDBContainer
-var DBHandler *sql.DB
+var (
+	DBC SDBContainer
+	DBHandler *sql.DB
+	Err error
+)
+
 
 func init() {
-	//DBC.dbc = make(map[string]*SDBManager)
 	if DBHandler != nil {
 		return
 	}
 
-	DBHandler = nil
+	DBHandler, Err = CreateDBHandler("db", DEFAULT_DB_CONFIG)
 }
 
 // simple version

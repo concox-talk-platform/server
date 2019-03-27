@@ -6,13 +6,13 @@
 package main
 
 import (
+	"controllers"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"io"
 	"log"
 	"net/http"
 	"os"
-	"server/web/backend/src/controllers"
 	"strings"
 )
 
@@ -21,7 +21,7 @@ func Prepare() *gin.Engine {
 	// 禁用控制台颜色
 	gin.DisableConsoleColor()
 	// 创建记录日志的文件
-	f, _ := os.Create("backend-api.log")
+	f, _ := os.Create("backend-web.log")
 	gin.DefaultWriter = io.MultiWriter(f)
 
 	engine := gin.Default()
@@ -38,6 +38,8 @@ func Prepare() *gin.Engine {
 
 	engine.GET("/account/:account_name", controllers.GetAccountInfo)
 
+	engine.GET("/account_class/:accountId",controllers.GetAccountClass)
+
 	engine.POST("/account/info/update", controllers.UpdateAccountInfo)
 
 	engine.POST("/account/pwd/update", controllers.UpdateAccountPwd)
@@ -45,6 +47,10 @@ func Prepare() *gin.Engine {
 	engine.POST("/group", controllers.CreateGroup)
 
 	engine.POST("/group/update", controllers.UpdateGroup)
+
+	engine.GET("/account_device/:accountId", controllers.GetAccountDevice)
+
+	engine.POST("/account_device/:accountId", controllers.TransAccountDevice)
 
 	return engine
 }
