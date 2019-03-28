@@ -126,16 +126,23 @@ message UserSearchReq {
 message UserRecord {
     uint64 uid = 1;
     string name = 2;
+    uint64 user_type = 3;
+    uint64 grp_role = 4;
 }
 
 message UserSearchRsp {
     repeated UserRecord user_list = 1;
 }
-
 /**************** Group *****************/
+enum UserType {
+    NORMAL_USER = 0; // 普通用户
+    MANAGER_USER = 1; // 管理员用户
+}
+
 message GroupNewReq {
     uint64 uid = 1;
     string group_name = 2;
+    UserType usr_type = 3;
 }
 
 message GroupNewRsp {
@@ -199,4 +206,10 @@ message GroupListRsp {
 message GrpSearchReq {
     uint64 uid = 1;
     string target = 2;
+}
+
+message GrpMemberList {
+    uint64 gid = 1;
+    string group_name = 2;
+    repeated UserRecord usr_list = 3;
 }

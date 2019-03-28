@@ -13,12 +13,12 @@ import (
     "log"
 )
 
-func CreateGroup(uid int64, groupName string, db *sql.DB) error {
+func CreateGroup(uid, user_type int64, groupName string, db *sql.DB) error {
     if db == nil {
         return fmt.Errorf("db is nil")
     }
     
-    res, err := db.Exec("INSERT INTO user_group(group_name) VALUES(?)", groupName)
+    res, err := db.Exec("INSERT INTO user_group(account_id,user_type,group_name) VALUES(?,?,?)", uid, user_type, groupName)
     if err != nil {
         log.Printf("query error(%s)\n", err)
         return err
@@ -30,15 +30,15 @@ func CreateGroup(uid int64, groupName string, db *sql.DB) error {
         return err
     }
     
-    return AddGroupUser(uid, group_id, GROUP_MANAGER, db)
+    return AddGroupMember(uid, group_id, GROUP_MANAGER, db)
 }
 
-func AddGroupUser(uid, gid int64, userType RoleType,  db *sql.DB) error {
+func AddGroupMember(uid, gid int64, userType RoleType,  db *sql.DB) error {
     if db == nil {
         return fmt.Errorf("db is nil")
     }
     
-    sql := fmt.Sprintf("INSERT INTO group_device(group_id, device_id, role_type) VALUES(%d, %d, %d)", gid, uid, userType)
+    sql := fmt.Sprintf("INSERT INTO group_member(gid, uid, role_type) VALUES(%d, %d, %d)", gid, uid, userType)
     rows, err := db.Query(sql)
     if err != nil {
         log.Printf("query(%s), error(%s)", sql, err)
@@ -50,12 +50,12 @@ func AddGroupUser(uid, gid int64, userType RoleType,  db *sql.DB) error {
     return nil
 }
 
-func RemoveGroupUser(uid, gid uint64, db *sql.DB) error {
+func RemoveGroupMember(uid, gid uint64, db *sql.DB) error {
     if db == nil {
         return fmt.Errorf("db is nil")
     }
 
-    sql := fmt.Sprintf("DELETE FROM group_device WHERE device_id=%d AND group_id=%d", uid, gid)
+    sql := fmt.Sprintf("DELETE FROM group_member WHERE uid=%d AND gid=%d", uid, gid)
     _, err := db.Query(sql)
     if err != nil {
         log.Printf("query(%s), error(%s)", sql, err)
@@ -80,12 +80,12 @@ func RemoveGroup(gid uint64, db *sql.DB) error {
     return nil
 }
 
-func ClearGroupUser(gid uint64, db *sql.DB) error {
+func ClearGroupMember(gid uint64, db *sql.DB) error {
     if db == nil {
         return fmt.Errorf("db is nil")
     }
 
-    sql := fmt.Sprintf("DELETE FROM group_device WHERE group_id=%d", gid)
+    sql := fmt.Sprintf("DELETE FROM group_member WHERE gid=%d", gid)
     _, err := db.Query(sql)
     if err != nil {
         log.Printf("clear gruop(%d) user error: %s\n", gid, err)
@@ -100,9 +100,9 @@ func GetGroupList(uid uint64, db *sql.DB) (*pb.GroupListRsp, error) {
         return nil, fmt.Errorf("db is nil")
     }
 
-    sql := fmt.Sprintf("SELECT g.id, g.name " +
-        "FROM user_group AS g RIGHT LEFT JOIN group_device AS gd " +
-        "ON g.id=gd.group_id WHERE gd.device_id=%d", uid)
+    sql := fmt.Sprintf("SELECT g.id, g.group_name " +
+        "FROM user_group AS g RIGHT LEFT JOIN group_member AS gm " +
+        "ON g.id=gm.group_id WHERE gm.uid=%d", uid)
 
     rows, err := db.Query(sql)
     if err != nil {
@@ -136,6 +136,7 @@ func SearchGroup(target string, db *sql.DB) (*pb.GroupListRsp, error) {
     rows, err := db.Query(sql)
     if err != nil {
         log.Printf("query(%s), error(%s)\n", sql, err)
+        return nil, err
     }
 
     defer rows.Close()
@@ -153,4 +154,36 @@ func SearchGroup(target string, db *sql.DB) (*pb.GroupListRsp, error) {
     }
 
     return groups, nil
+}
+
+func GetGruopMembers(gid uint64, db *sql.DB) (*pb.GrpMemberList, error){
+    if db == nil {
+        return nil, fmt.Errorf("db is nil")
+    }
+
+    sql := fmt.Sprintf("SELECT u.id, u.name, u.user_type, gm.role_type " +
+        "FROM user AS u RIGHT JOIN group_member AS gm ON gm.uid=u.id WHERE gm.gid=%d AND gm.stat=1", gid)
+
+    rows, err := db.Query(sql)
+    if err != nil {
+        log.Printf("query(%s), error(%s)\n", sql, err)
+        return nil, err
+    }
+
+    defer rows.Close()
+
+    grpMems := new(pb.GrpMemberList)
+    grpMems.Gid = gid
+
+    for rows.Next() {
+        gm := new(pb.UserRecord)
+        err = rows.Scan(&gm.Uid, &gm.Name, &gm.UserType, &gm.GrpRole)
+        if err != nil {
+            return nil, err
+        }
+
+        grpMems.UsrList = append(grpMems.UsrList, gm)
+    }
+
+    return grpMems, nil
 }
