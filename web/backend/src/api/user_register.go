@@ -2,19 +2,18 @@ package api
 
 import (
 	"api/talk_cloud"
+	pb "api/talk_cloud"
 	"context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"log"
 	"math/rand"
-	"net"
-	pb "api/talk_cloud"
 	"model"
 	d "pkg/device"
 	s "pkg/session"
-	"utils"
 	"strconv"
 	"time"
+	"utils"
 )
 
 const (
@@ -171,18 +170,3 @@ func (serv *TalkCloudService) Logout(ctx context.Context, req *pb.LogoutReq) (*t
 //}
 
 // Test
-func maint() {
-	groupServer := grpc.NewServer()
-	talk_cloud.RegisterTalkCloudServer(groupServer, &TalkCloudService{})
-
-	lis, err := net.Listen("tcp", ":"+SERVICEPORT)
-	if err != nil {
-		log.Fatalf("group net listen err: %v", err)
-	}
-
-	if err := groupServer.Serve(lis); err != nil {
-		log.Fatalf("监听失败")
-	} else {
-		log.Println("listing")
-	}
-}
