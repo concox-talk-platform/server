@@ -115,6 +115,7 @@ import vSidebar from './Sidebar.vue';
                 fullscreen: false,
                 // name: 'linxin',
                 dialogFormVisible: false,
+                lang:sessionStorage.getItem('lang'),
                 pwdVisible:false,
                 accountInfo: {
                     name:'',
@@ -175,7 +176,8 @@ import vSidebar from './Sidebar.vue';
                         sessionStorage.setItem('lang', 'en-US');
                         // localStorage.setItem('language', 'Change Language');
                         sessionStorage.setItem('language', 'Change Language');
-                        this.$router.go(0);    
+                        window.console.log(this.lang)
+                        // this.$router.go(0);    
                     }else {
                         this.lang = 'zh-CN';
                         this.$i18n.locale = this.lang;//关键语句
@@ -183,13 +185,18 @@ import vSidebar from './Sidebar.vue';
                         sessionStorage.setItem('language', '切换语言');
                         // localStorage.setItem('lang', 'zh-CN');
                         sessionStorage.setItem('lang', 'zh-CN');
-                        this.$router.go(0);
+                        // this.$router.go(0);
                     }
+            },
+            session_language(){
+                this.$i18n.locale = sessionStorage.getItem('lang');
             },
             FormVisible(){
                this.dialogFormVisible=true;
-                window.console.log(this.$store.state.User.information)
-                let personal_details = this.$store.state.User.information
+                // window.console.log(this.$store.state.User.information)
+                // let personal_details = this.$store.state.User.information
+                let personal_details = JSON.parse(localStorage.getItem('account_info'))
+                // let personal_details = this.$store.state.User.information
                 this.accountInfo.name = personal_details.nike_name;
                 this.accountInfo.phone = personal_details.phone;
                 this.accountInfo.email = personal_details.email;
@@ -334,6 +341,9 @@ import vSidebar from './Sidebar.vue';
 
         // // this.accountInfo.name=
         // },
+        beforeMount(){
+            this.session_language()
+        },
         mounted(){
             //  this.accountInfo.name=this.$store.state.User.information.nike_name;
             //     this.accountInfo.phone=this.$store.state.User.information.phone;

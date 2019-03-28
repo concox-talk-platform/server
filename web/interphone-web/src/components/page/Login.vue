@@ -1,7 +1,6 @@
 <template>
     <div class="login-wrap">
         <div class="ms-login">
-            
             <div class="ms-title">{{ $t("title.logo_name") }}</div>
             <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="0px" class="ms-content">
                 <el-form-item prop="username">
@@ -14,7 +13,6 @@
                         <el-button slot="prepend" icon="el-icon-edit"></el-button>
                     </el-input>
                 </el-form-item>
-                 
                  <!-- <div class="register" @click="register">{{ $t("reg_message.enroll") }}</div> -->
                 <div class="login-btn">
                     <el-button type="primary" @click="submitForm('ruleForm')">{{ $t("button_message.launcher") }}</el-button>
@@ -68,8 +66,9 @@
                 language:'Change Language',
                 ruleForm: {
                     username: '',
-                    password: ''
+                    password: '',
                 },
+                lang: 'en-US',
                 // 规则
                 rules: {
                     username: [
@@ -77,28 +76,27 @@
                     ],
                     password: [
                         { required: true, message:this.$t('prompt_message.pwd'), trigger: 'blur' }
-                      
                     ]
                 },
                 // 账户类型
                 Account_typedata:
                     [
-                    {
-                        Account_type:this.$t('reg_message.dealer'),
-                        value: 1,
-                    },
-                    {
-                        Account_type:this.$t('reg_message.company'),
-                        value: 2,
-                    },
-                    {
-                       Account_type:this.$t('reg_message.administrator'),
-                        value: 3
-                    },
-                    {
-                        Account_type:this.$t('reg_message.dispatcher'),
-                        value: 4
-                    }
+                        {
+                            Account_type:this.$t('reg_message.dealer'),
+                            value: 1,
+                        },
+                        {
+                            Account_type:this.$t('reg_message.company'),
+                            value: 2,
+                        },
+                        {
+                        Account_type:this.$t('reg_message.administrator'),
+                            value: 3
+                        },
+                        {
+                            Account_type:this.$t('reg_message.dispatcher'),
+                            value: 4
+                        }
                     ]
                     
             }
@@ -109,7 +107,7 @@
         methods: {
             // 切换语言
             change_language(){
-                 if ( this.lang === 'zh-CN' ) {
+                    if ( this.lang === 'zh-CN' ) {
                         this.lang = 'en-US';
                         this.$i18n.locale = this.lang;//关键语句
                         // localStorage.setItem('lang', 'en-US');
@@ -117,18 +115,16 @@
                         // localStorage.setItem('language', 'Change Language');
                         sessionStorage.setItem('language', 'Change Language');
                         this.language = 'Change Language'
-
                     }else {
                         this.lang = 'zh-CN';
                         this.$i18n.locale = this.lang;//关键语句
                         // localStorage.setItem('language', '切换语言');
                         sessionStorage.setItem('language', '切换语言');
                         // localStorage.setItem('lang', 'zh-CN');
-                         this.language = '切换语言'
+                            this.language = '切换语言'
                         sessionStorage.setItem('lang', 'zh-CN');
                     }
             },
-
             // 登录
             submitForm(ruleForm) {
                 this.$refs[ruleForm].validate((valid) => {
@@ -142,6 +138,7 @@
                         // localStorage.setItem('setSession_id', response.data.session_id);
                         sessionStorage.setItem('setSession_id', response.data.session_id);
                         window.console.log( sessionStorage.getItem('setSession_id'));
+                        window.console.log( sessionStorage.getItem('setSession_id'));
                         // localStorage.setItem('loginName', this.ruleForm.username.trim());            
                         sessionStorage.setItem('loginName', this.ruleForm.username.trim());  
                         this.$axios.get('/account/'+sessionStorage.getItem('loginName'),
@@ -153,12 +150,14 @@
                             .then((response) =>{
                              window.console.log(response);
                             sessionStorage.setItem('id', response.data.account_info.id);
+                            sessionStorage.setItem('lang', this.lang);
                             localStorage.setItem('account_info', JSON.stringify(response.data.account_info));
                             localStorage.setItem('device_list', JSON.stringify(response.data.device_list));
-                            this.$store.commit("groupList",response.data.group_list);
+                            localStorage.setItem('group_list', JSON.stringify(response.data.group_list));
+                            // this.$store.commit("groupList",response.data.group_list);
                             this.$router.push('/homePage');
-                            this.$store.commit("deviceList",response.data.device_list);
-                            this.$store.commit("information",response.data.account_info);
+                            // this.$store.commit("deviceList",response.data.device_list);
+                            // this.$store.commit("information",response.data.account_info);
                                 this.$axios.get('/account_class/'+response.data.account_info.id,
                                 { headers: 
                                 {
@@ -169,13 +168,12 @@
                                 .then((response) =>{
                                 //  localStorage.setItem('id', response.data.account_info.id);    
                                 window.console.log(response);
-                                this.$store.commit("subordinate",response.data.tree_data);
-                        
+                                localStorage.setItem('children_list', JSON.stringify(response.data.tree_data));
+                                // this.$store.commit("subordinate",response.data.tree_data);
                                 })
                                 .catch(function (error) {
                                 window.console.log(error);
                                 });
-
                             })
                             .catch(function (error) {
                             window.console.log(error);
@@ -183,13 +181,13 @@
                         //  this.$router.push('/homePage');
                         }.bind(this))
                         .catch( (error) => {
-                         window.console.log(error.response.data);
-                         if(error.response.data.error_code == '0021'){
+                        window.console.log(error.response.data);
+                        if(error.response.data.error_code == '0021'){
                                 this.$message({
                                 message: this.$t('prompt_message.account_error'),
                                 type: 'warning'
                                 });
-                         }else if(error.response.data.error_code == '0022'){
+                        }else if(error.response.data.error_code == '0022'){
                                 this.$message({
                                 message: this.$t('prompt_message.login_error'),
                                 type: 'warning'
@@ -207,10 +205,9 @@
         }
     }
 </script>
-
 <style>
      .language{
-              font-size: 14px;
+            font-size: 14px;
             color: white;
             display: inline-block;
             float: right;
@@ -263,7 +260,6 @@
     .el-alert .el-alert--error{
       width: 50%
     }
-
    .el-select--small{
         width: 100%;
     }

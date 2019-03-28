@@ -123,7 +123,7 @@ module.exports = {
         name: '设备名',
         time: '导入时间',
         operation :'操作',
-        export: '导出',
+        export: '转移',
         mass:'批量转移',
         device: '请选择转移的设备',
         info:'转移信息',

@@ -1,6 +1,7 @@
 const state = {
     information: '',
     subordinate: '',
+    Language: ''
     
 }
 const mutations={
@@ -10,6 +11,9 @@ const mutations={
     subordinate(state,value){
         state.subordinate=value
      },
+     Language(state,value){
+         state.Language=value;
+     }
  
 }
 export default {

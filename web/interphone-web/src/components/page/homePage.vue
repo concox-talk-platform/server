@@ -73,9 +73,9 @@
                             <el-table-column type="selection" width="55" ></el-table-column>
                             <el-table-column  type="index" width="80" :label="$t('table.number')"></el-table-column>
                             <el-table-column prop="imei" label="IMEI" width="240"> </el-table-column>
-                            <el-table-column prop="version" :label="$t('table.model')" width="240" > </el-table-column>
-                            <el-table-column prop="device_name" :label="$t('table.name')" width="240" > </el-table-column>
-                            <el-table-column prop="time" :label="$t('table.time')" width="240"> </el-table-column>
+                            <el-table-column prop="bind_status.String" :label="$t('table.model')" width="240" > </el-table-column>
+                            <el-table-column prop="user_name" :label="$t('table.name')" width="240" > </el-table-column>
+                            <el-table-column prop="crate_time.String" :label="$t('table.time')" width="240"> </el-table-column>
                             <el-table-column :label="$t('table.operation')">
                                 <template slot-scope="scope">
                                             <el-button size="mini" @click="device_export(scope.$index, scope.row)">{{$t('table.export')}}</el-button>
@@ -168,13 +168,13 @@
   <!-- 转移 -->
         <el-dialog :title="$t('table.info')" :visible.sync="transfer_dialog" width="30%" :show-close="false">
             <el-select v-model="customer" filterable :placeholder="$t('table.select')">
-                <el-option  v-for="item in customer_List" :key="item.id" :label="item.label" :value="item.id">
+                <el-option  v-for="item in customer_List" :key="item.id" :label="item.account_name" :value="item.id">
                 </el-option>
             </el-select>
             <el-table :data="gridData" :empty-text="$t('table.no_data')">
                 <el-table-column property="imei" label="IMEI"  width="200"></el-table-column>
-                <el-table-column property="version" :label="$t('table.model')"  width="150"></el-table-column>
-                <el-table-column property="device_name" :label="$t('table.name')"  width="150"></el-table-column>
+                <el-table-column property="bind_status.String" :label="$t('table.model')"  width="150"></el-table-column>
+                <el-table-column property="user_name" :label="$t('table.name')"  width="150"></el-table-column>
             </el-table>
         <span slot="footer" class="dialog-footer">
             <el-button @click="dialig_hidden">{{$t('button_message.cancel')}}</el-button>
@@ -221,6 +221,11 @@ export default {
             }
         };
         return {
+            // personal_info:JSON.parse(localStorage.getItem('account_info')),
+            personal_info:{},
+            device_info:JSON.parse(localStorage.getItem('device_list')) ,
+            childre_infor:JSON.parse(localStorage.getItem('children_list')),
+            // lang:sessionStorage.getItem('lang'),
             registerVisible:false,
             registerForm: {
                     register_Account: '',
@@ -270,46 +275,46 @@ export default {
                 ], 
             // 树组件数据
             filterText: '',
-                    // ztree_data: [{
-                    //     id: 1,
-                    //     label: '一级 1',
-                    //     children: [{
-                    //         id: 4,
-                    //         label: '二级 1-1',
-                    //         children: [{
-                    //         id: 9,
-                    //         label: '三级 1-1-1'
-                    //         }, {
-                    //         id: 10,
-                    //         label: '三级 1-1-2'
-                    //         }]
-                    //     }]
-                    //     }, {
-                    //     id: 2,
-                    //     label: '一级 2',
-                    //     children: [{
-                    //         id: 5,
-                    //         label: '二级 2-1'
-                    //     }, {
-                    //         id: 6,
-                    //         label: '二级 2-2'
-                    //     }]
-                    //     }, {
-                    //     id: 3,
-                    //     label: '一级 3',
-                    //     children: [{
-                    //         id: 7,
-                    //         label: '二级 3-1'
-                    //     }, {
-                    //         id: 8,
-                    //         label: '二级 3-2'
-                    //     }]
-                    // }],
-                    // ztree_data:[],
-                    defaultProps: {
-                    children: 'children',
-                    label: 'account_name'
-                    },
+            // ztree_data: [{
+            //     id: 1,
+            //     label: '一级 1',
+            //     children: [{
+            //         id: 4,
+            //         label: '二级 1-1',
+            //         children: [{
+            //         id: 9,
+            //         label: '三级 1-1-1'
+            //         }, {
+            //         id: 10,
+            //         label: '三级 1-1-2'
+            //         }]
+            //     }]
+            //     }, {
+            //     id: 2,
+            //     label: '一级 2',
+            //     children: [{
+            //         id: 5,
+            //         label: '二级 2-1'
+            //     }, {
+            //         id: 6,
+            //         label: '二级 2-2'
+            //     }]
+            //     }, {
+            //     id: 3,
+            //     label: '一级 3',
+            //     children: [{
+            //         id: 7,
+            //         label: '二级 3-1'
+            //     }, {
+            //         id: 8,
+            //         label: '二级 3-2'
+            //     }]
+            // }],
+            ztree_data:[],
+            defaultProps: {
+                children: 'children',
+                label: 'account_name'
+            },
             // 登录信息
             information_name:'程涛',
             information_login:'小小',
@@ -334,25 +339,26 @@ export default {
                 
             },
             // 设备表格
-         tableData: [
-                    {imei: '31424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '26424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '39424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '51424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '61424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '21424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '12142415232321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '23424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '12424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '45424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '25424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '11424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '12424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '13424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '14424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '15424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-                    {imei: '16424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},    
-        ],
+        //  daddas: [
+        //             {imei: '31424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+        //             {imei: '26424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+        //             {imei: '39424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+        //             {imei: '51424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+        //             {imei: '61424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+        //             {imei: '21424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+        //             {imei: '12142415232321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+        //             {imei: '23424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+        //             {imei: '12424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+        //             {imei: '45424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+        //             {imei: '25424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+        //             {imei: '11424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+        //             {imei: '12424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+        //             {imei: '13424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+        //             {imei: '14424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+        //             {imei: '15424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
+        //             {imei: '16424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},    
+        // ],
+        // tableData:[],
         multipleSelection: [],
         currentPage: 1,
         pagesize:10,
@@ -363,19 +369,19 @@ export default {
         // 选择客户
         customer: '',
         customer_List:[
-            { id:1,label:'李强'},
-            { id:2,label:'李爱迪生'},
-            { id:5,label:'李壹拾贰'},
-            { id:21,label:'李搞'},
-            { id:123,label:'李安抚'},
-            { id:24,label:'李不得'},
-            { id:543,label:'李啊噶'},
-            { id:43,label:'李内部'},
-            { id:53,label:'李更好'},
-            { id:121,label:'李发烧'},
-            { id:56,label:'李尕'},
-            { id:78,label:'李办法'},
-            { id:9,label:'李班'},
+            // { id:1,label:'李强',da:'1213'},
+            // { id:2,label:'李爱迪生',da:'1213'},
+            // { id:5,label:'李壹拾贰',da:'1213'},
+            // { id:21,label:'李搞',da:'1213'},
+            // { id:123,label:'李安抚',da:'1213'},
+            // { id:24,label:'李不得',da:'1213'},
+            // { id:543,label:'李啊噶',da:'1213'},
+            // { id:43,label:'李内部',da:'1213'},
+            // { id:53,label:'李更好',da:'1213'},
+            // { id:121,label:'李发烧',da:'1213'},
+            // { id:56,label:'李尕',da:'1213'},
+            // { id:78,label:'李办法',da:'1213'},
+            // { id:9,label:'李班',da:'1213'},
         ],
         // 管理员导入设备
         import_show:false,
@@ -449,7 +455,6 @@ export default {
                         }else{
                             register_info.adress=''
                         }        
-                            window.console.log(register_info)                                      
                         // this.$axios.post('/account',register_info)
                         // .then(function (response) {
                         // //  this.$router.push('/homePage');
@@ -498,13 +503,52 @@ export default {
             },
             // 渲染个人信息
             apply_info(){
-            let personal_info = JSON.parse(localStorage.getItem('account_info'))          
-            let device_info = JSON.parse(localStorage.getItem('device_list'))          
-            this.information_name = personal_info.nick_name;
-            this.information_login = personal_info.username;
-            this.information_phone = personal_info.phone;
-            this.information_adress = personal_info.address;
-            this.information_number = device_info.length;
+              this.personal_info=JSON.parse(localStorage.getItem('account_info'));
+              this.renders();
+            },
+            renders(){     
+                this.information_name = this.personal_info.nick_name;
+                this.information_login = this.personal_info.username;
+                this.information_phone = this.personal_info.phone;
+                this.information_adress = this.personal_info.address;
+                this.information_number = this.device_info.length;
+                if(sessionStorage.getItem('lang') == 'en-US'){
+                     switch(this.personal_info.role_id){
+                         case 1:
+                         this.information_type = "Dealer";
+                         break;
+                         case 2:
+                         this.information_type = "Company";
+                         break;       
+                         case 3:
+                         this.information_type = "Administrator";
+                         break;
+                         case 4:
+                         this.information_type = "Dispatcher";
+                         break;                                                                 
+                     }
+                }else{
+                     switch(this.personal_info.role_id){
+                         case 1:
+                         this.information_type = "经销商";
+                         break;
+                         case 2:
+                         this.information_type = "公司";
+                         break;       
+                         case 3:
+                         this.information_type = "管理员";
+                         break;
+                         case 4:
+                         this.information_type = "调度员";
+                         break;                                                                 
+                     }
+                }
+                this.subordinate.adress = this.personal_info.address;
+                this.subordinate.email = this.personal_info.email;
+                this.subordinate.phone = this.personal_info.phone;
+                this.subordinate.account = this.personal_info.username;
+                this.subordinate.name = this.personal_info.nick_name;
+                
             },
             // 修改下级信息
             subordinate_submit(){
@@ -541,37 +585,31 @@ export default {
                     subordinate_info.roletype=4;
                     break;
                 }
-                window.console.log(subordinate_info)
             }, 
             // 设备表格
             handleSelectionChange(val) {
             this.multipleSelection = val;
-            window.console.log(this.multipleSelection )
             this.device_data=this.multipleSelection
             },
             device_export(index, row) {
                 this.transfer_dialog=true;
-                window.console.log(row);
+                this.customer_List = this.childre_infor.children;
                 this.gridData=[];
                 this.gridData.push(row)
-                // window.console.log(this.multipleSelection);                        
             },
             // 完整分页
             handleSizeChange(val) {
-                window.console.log(`每页 ${val} 条`);
                 // this.currentPage = currentPage;
                 this.pagesize = val;
             },
             handleCurrentChange(currentPage) {
-            //    window.console.log(`当前页: ${val}`);
             this.currentPage =currentPage
             },
             transfer(){
-                window.console.log(this.multipleSelection)
                 if(this.multipleSelection.length !== 0){
-                    window.console.log(this.multipleSelection);
-                    this.transfer_dialog=true;
-                    this.gridData=this.device_data
+                    this.transfer_dialog = true;
+                    this.customer_List = this.childre_infor.children;
+                    this.gridData=this.device_data;
                 }else{
                     this.$message({
                         message: this.$t('table.device'),
@@ -592,11 +630,9 @@ export default {
                 })
                 .then(_ => {
                     window.console.log(_)
-                    window.console.log(this.customer)
                     let transinformation={}
                     transinformation.id=this.customer;
                     transinformation.device=this.gridData;
-                    window.console.log(transinformation)
                     done();
                 })
                 .catch(_ => {
@@ -605,8 +641,6 @@ export default {
             },
             // 超级管理员导入设备
             device_import(){
-                window.console.log(222);
-                window.console.log(this.$store.state.User.subordinate);
                 // window.console.log(this.$store.state.User.subordinate);
                 // this.ztree_data.push(this.$store.state.User.subordinate)
                 // window.console.log(this.$store.state.User.information);
@@ -624,11 +658,9 @@ export default {
                     cancelButtonText: this.$t("button_message.cancel")
                 })
                 .then(_ => {
-                    window.console.log(this.imei_data)
                     window.console.log(_)
                     let decive_data = {};
                     decive_data.imei =this.imei_data;
-                    window.console.log(decive_data)
                     this.import_show=false;
                     this.imei_data=[];
                  
@@ -647,32 +679,50 @@ export default {
             },
             // ztree操作
              handleNodeClick(data) {
-                    window.console.log(data);
-                } ,
-        //         updata(){
-        //    ztree_data.push(this.$store.state.User.subordinate)
-        //         }
-        
+                    this.$axios.get('/account_device/'+data.id,
+                    { headers: 
+                    {
+                    // "Authorization" : localStorage.getItem('setSession_id')
+                    "Authorization" : sessionStorage.getItem('setSession_id')
+                    }
+                    })
+                    .then((response) =>{
+                    //  localStorage.setItem('id', response.data.account_info.id);    
+                    window.console.log(response);
+                    this.personal_info = response.data.account_info
+                    this.renders();
+                    // this.device_info=response.data.devices
+                    
+                    })
+                    .catch(function (error) {
+                    window.console.log(error);
+                    });
+
+                    
+                    
+            } ,
+            get_ztreeData(){
+                this.ztree_data.push(this.childre_infor)
+            },
     },
          watch: {
             filterText(val) {
                 this.$refs.ztree.filter(val);
             },
-
-        // updata(){
-        //    this.ztree_data.push(this.$store.state.User.subordinate)
-        //         }
     },
-    computed:{
-        
-        ztree_data(){
-            let trees_data=[];
-            trees_data.push(this.$store.state.User.subordinate)
-            return trees_data;
+    computed:{    
+        tableData(){
+            return this.device_info
         }
     },
     created(){
-        this.apply_info()
+        this.apply_info();
+        window.console.log(JSON.parse(localStorage.getItem('children_list')).children)
+
+    },
+    beforeMount(){
+       this. get_ztreeData()
+       
     }
  
 }
