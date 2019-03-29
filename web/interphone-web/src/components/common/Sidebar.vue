@@ -2,8 +2,12 @@
     <div class="navigationbar">
          <div class="ul">
 
-         <router-link class="li"  v-for="(item, index) in navigationerArr" :key="index" :to="item.address">{{item.name}}</router-link>
+         <!-- <router-link class="li"  v-for="(item, index) in navigationerArr" :key="index" :to="item.address">{{item.name}}</router-link> -->
+         <router-link class="li" to="/homePage">{{$t('title.Account_center')}}</router-link>
+         <router-link class="li" to="/monitor">{{$t('title.monitor')}}</router-link>
          </div>
+
+        
     </div>
 </template>
 
@@ -11,24 +15,26 @@
     export default {
         data() {
             return {
-                navigationerArr:[
-                    {name:this.$t('title.Account_center'),address:"/homePage"},
-                    // {name:this.$t('title.control_center'),address:'/mapControl'},
-                    // {name:this.$t('title.equipment'),address:'/equipment'},
-                    // {name:this.$t('title.consumer'),address:'/usergroup'},
-                    // {name:this.$t('title.area'),address:'/area'},
-                    {name:this.$t('title.monitor'),address:'/monitor'},]
+                // navigationerArr:[
+                //     {name:this.$t('title.Account_center'),address:"/homePage"},
+                //     // {name:this.$t('title.control_center'),address:'/mapControl'},
+                //     // {name:this.$t('title.equipment'),address:'/equipment'},
+                //     // {name:this.$t('title.consumer'),address:'/usergroup'},
+                //     // {name:this.$t('title.area'),address:'/area'},
+                //     {name:this.$t('title.monitor'),address:'/monitor'},]
             }
+        },
+        methods:{
         },
         computed:{
             onRoutes(){
                 return this.$route.path.replace('/','');
-            }
+            },
+            
         },
         created(){
+            // this.language()
         },
-        methods:{
-        }
     }
 </script>
 
@@ -77,4 +83,5 @@
     .sidebar > ul {
         height:100%;
     } */
+
 </style>

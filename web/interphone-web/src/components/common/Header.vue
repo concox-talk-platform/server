@@ -113,8 +113,9 @@ import vSidebar from './Sidebar.vue';
                 nikename:sessionStorage.getItem('loginName'),
                 collapse: false,
                 fullscreen: false,
-                name: 'linxin',
+                // name: 'linxin',
                 dialogFormVisible: false,
+                lang:sessionStorage.getItem('lang'),
                 pwdVisible:false,
                 accountInfo: {
                     name:'',
@@ -175,7 +176,8 @@ import vSidebar from './Sidebar.vue';
                         sessionStorage.setItem('lang', 'en-US');
                         // localStorage.setItem('language', 'Change Language');
                         sessionStorage.setItem('language', 'Change Language');
-                        this.$router.go(0);    
+                        window.console.log(this.lang)
+                        // this.$router.go(0);    
                     }else {
                         this.lang = 'zh-CN';
                         this.$i18n.locale = this.lang;//关键语句
@@ -183,11 +185,23 @@ import vSidebar from './Sidebar.vue';
                         sessionStorage.setItem('language', '切换语言');
                         // localStorage.setItem('lang', 'zh-CN');
                         sessionStorage.setItem('lang', 'zh-CN');
-                        this.$router.go(0);
+                        // this.$router.go(0);
                     }
+            },
+            session_language(){
+                this.$i18n.locale = sessionStorage.getItem('lang');
             },
             FormVisible(){
                this.dialogFormVisible=true;
+                // window.console.log(this.$store.state.User.information)
+                // let personal_details = this.$store.state.User.information
+                let personal_details = JSON.parse(localStorage.getItem('account_info'))
+                // let personal_details = this.$store.state.User.information
+                this.accountInfo.name = personal_details.nike_name;
+                this.accountInfo.phone = personal_details.phone;
+                this.accountInfo.email = personal_details.email;
+                this.accountInfo.adress = personal_details.address;
+                this.accountInfo.remark = personal_details.remark;
             },
             changePassword(){
                 this.pwdVisible=true;
@@ -235,13 +249,14 @@ import vSidebar from './Sidebar.vue';
                 newInfor.email=this.accountInfo.email;
                 newInfor.address=this.accountInfo.adress;
                 newInfor.remark=this.accountInfo.remark;
-                this.$axios.post('/account/info/update',newInfor)
-                .then(function (response) {
-                window.console.log(response)
-                this.$router.push('/');
-                }.bind(this))
-                .catch( () => {
-                });  
+                window.console.log(newInfor)
+                // this.$axios.post('/account/info/update',newInfor)
+                // .then(function (response) {
+                // window.console.log(response)
+                // this.$router.push('/');
+                // }.bind(this))
+                // .catch( () => {
+                // });  
             },
             outlogin(){
              this.$router.push('/login');   
@@ -281,31 +296,60 @@ import vSidebar from './Sidebar.vue';
             }
         },
         // 获取用户信息
-        created(){
-            // this.$axios.get('/account/'+localStorage.getItem('loginName'),
-            this.$axios.get('/account/'+sessionStorage.getItem('loginName'),
-            { headers: 
-            {
-            // "Authorization" : localStorage.getItem('setSession_id')
-            "Authorization" : sessionStorage.getItem('setSession_id')
-             }
-             })
-            .then((response) =>{
-            //  localStorage.setItem('id', response.data.account_info.id);
-             sessionStorage.setItem('id', response.data.account_info.id);
-             this.$store.commit("groupList",response.data.group_list);
-             window.console.log(response);
-            // localStorage.setItem('id', response.data.account_info.id);
-            this.$store.commit("deviceList",response.data.device_list);
-            })
-            .catch(function (error) {
-            window.console.log(error);
-            });
-        },
+        // beforeCreate(){
+        //     // this.$axios.get('/account/'+localStorage.getItem('loginName'),
+        //     this.$axios.get('/account/'+sessionStorage.getItem('loginName'),
+        //     { headers: 
+        //     {
+        //     "Authorization" : sessionStorage.getItem('setSession_id')
+        //      }
+        //      })
+        //     .then((response) =>{
+        //      sessionStorage.setItem('id', response.data.account_info.id);
+        //      localStorage.setItem('account_info', response.data.account_info);
+        //      localStorage.setItem('device_info', response.data.account_info);
+        //      this.$store.commit("groupList",response.data.group_list);
+        //      window.console.log(response);
+        //      this.$store.commit("deviceList",response.data.device_list);
+        //      this.$store.commit("information",response.data.account_info);
+        //         // this.$axios.get('/account_class/'+response.data.account_info.id,
+        //         // { headers: 
+        //         // {
+        //         // // "Authorization" : localStorage.getItem('setSession_id')
+        //         // "Authorization" : sessionStorage.getItem('setSession_id')
+        //         // }
+        //         // })
+        //         // .then((response) =>{
+        //         // //  localStorage.setItem('id', response.data.account_info.id);    
+        //         // window.console.log(response);
+        //         // this.$store.commit("subordinate",response.data.tree_data);
+        
+        //         // })
+        //         // .catch(function (error) {
+        //         // window.console.log(error);
+        //         // });
+
+        //     })
+        //     .catch(function (error) {
+        //     window.console.log(error);
+        //     });
+        // },
+        // beforeMount(){
+        // // this.lang =localStorage.getItem('lang');
+        // this.lang =sessionStorage.getItem('lang');
+        // this.$i18n.locale = this.lang;
+
+        // // this.accountInfo.name=
+        // },
         beforeMount(){
-        // this.lang =localStorage.getItem('lang');
-        this.lang =sessionStorage.getItem('lang');
-        this.$i18n.locale = this.lang;
+            this.session_language()
+        },
+        mounted(){
+            //  this.accountInfo.name=this.$store.state.User.information.nike_name;
+            //     this.accountInfo.phone=this.$store.state.User.information.phone;
+            //     this.accountInfo.email=this.$store.state.User.information.email;
+            //     this.accountInfo.adress=this.$store.state.User.information.address;
+            //     this.accountInfo.remark=this.$store.state.User.information.remark;
         }
     }
 </script>

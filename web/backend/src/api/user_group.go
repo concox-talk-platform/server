@@ -8,7 +8,7 @@ import (
 )
 
 func (serv *TalkCloudService) CreateGroup(ctx context.Context, req *pb.GroupNewReq) (*pb.GroupNewRsp, error) {
-	err := group.CreateGroup(int64(req.Uid), req.GroupName, db.DBHandler)
+	err := group.CreateGroup(int64(req.Uid), int64(req.UsrType), req.GroupName, db.DBHandler)
 	rsp := new(pb.GroupNewRsp)
 	rsp.Err = new(pb.ErrorMsg)
 	rsp.Err.Code = 0
@@ -23,7 +23,7 @@ func (serv *TalkCloudService) CreateGroup(ctx context.Context, req *pb.GroupNewR
 }
 
 func (serv *TalkCloudService) JoinGroup(ctx context.Context, req *pb.GrpUserAddReq) (*pb.GrpUserAddRsp, error) {
-	err := group.AddGroupUser(int64(req.Uid), int64(req.Gid), group.GROUP_NORMAL_USER, db.DBHandler)
+	err := group.AddGroupMember(int64(req.Uid), int64(req.Gid), group.GROUP_NORMAL_USER, db.DBHandler)
 
 	rsp := new(pb.GrpUserAddRsp)
 	rsp.Err = new(pb.ErrorMsg)
@@ -38,7 +38,7 @@ func (serv *TalkCloudService) JoinGroup(ctx context.Context, req *pb.GrpUserAddR
 }
 
 func (serv *TalkCloudService) RemoveGrpUser(ctx context.Context, req *pb.GrpUserDelReq) (*pb.GrpUserDelRsp, error) {
-	err := group.RemoveGroupUser(req.Uid, req.Gid, db.DBHandler)
+	err := group.RemoveGroupMember(req.Uid, req.Gid, db.DBHandler)
 	rsp := new(pb.GrpUserDelRsp)
 	rsp.Err = new(pb.ErrorMsg)
 	rsp.Err.Code = 0
@@ -57,7 +57,7 @@ func (serv *TalkCloudService) ExitGrp(ctx context.Context, req *pb.UserExitReq) 
 
 func (serv *TalkCloudService) RemoveGrp(ctx context.Context, req *pb.GroupDelReq) (*pb.GroupDelRsp, error) {
 	// clear group user first
-	err := group.ClearGroupUser(req.Gid, db.DBHandler)
+	err := group.ClearGroupMember(req.Gid, db.DBHandler)
 	rsp := new(pb.GroupDelRsp)
 	rsp.Err = new(pb.ErrorMsg)
 

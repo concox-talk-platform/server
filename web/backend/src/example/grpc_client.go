@@ -24,7 +24,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
 
-	r, err := c.CreateGroup(ctx, &pb.GroupNewReq{Uid: 10, GroupName: "test_grpc"})
+	r, err := c.CreateGroup(ctx, &pb.GroupNewReq{Uid: 10, UsrType: pb.UserType_MANAGER_USER, GroupName: "test_grpc"})
 	if err != nil {
 		log.Fatal("could not create group: %v", err)
 	}

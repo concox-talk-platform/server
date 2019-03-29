@@ -88,7 +88,8 @@ module.exports = {
         // 我的用户
         client_lang: {
             client_list: 'Client list',
-            client_add: 'Add'
+            client_add: 'Add',
+            import: 'Import new device'
         },
         // 操作组
          control: {
@@ -109,16 +110,24 @@ module.exports = {
             contact: 'Contacts',
             phone:'Phone',
             adress:'Adress',
-            equipment: 'equipment',
-            data:  'personal data',
+            equipment: 'Equipment',
+            data:  'Personal data',
         },
         table:{
            number:'Number',
            model: 'Model',
            name: 'Device name',
            time: 'Import time',
-           operation :'operation',
-           export: 'export'
+           operation :'Operation',
+           export: 'Transfer',
+           mass:'Batch transfer',
+           device: 'Please select a device',
+           info:'Transinformation',
+           message:'Are you sure to transfer out?',
+           select: 'Please select',
+           new_device:'The import equipment',
+           lead:'Are you sure to import?',
+           no_data:"No data",
         }
     
 
