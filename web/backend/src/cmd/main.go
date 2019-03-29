@@ -44,13 +44,20 @@ func Prepare() *gin.Engine {
 
 	engine.POST("/account/pwd/update", controllers.UpdateAccountPwd)
 
+	engine.GET("/account_device/:accountId", controllers.GetAccountDevice)
+
+	engine.POST("/account_device/:accountId", controllers.TransAccountDevice)
+
 	engine.POST("/group", controllers.CreateGroup)
 
 	engine.POST("/group/update", controllers.UpdateGroup)
 
-	engine.GET("/account_device/:accountId", controllers.GetAccountDevice)
+	engine.GET("/group/delete", controllers.DeleteGroup)
 
-	engine.POST("/account_device/:accountId", controllers.TransAccountDevice)
+	engine.POST("/group/devices/update", controllers.UpdateGroupDevice)
+
+	engine.POST("/device/import/:account_name", controllers.ImportDeviceByRoot)
+
 
 	return engine
 }

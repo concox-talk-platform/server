@@ -12,7 +12,7 @@ import (
 	"log"
 	"model"
 	"net/http"
-	ta "pkg/account"
+	tc "pkg/customer"
 	"service"
 )
 
@@ -21,10 +21,10 @@ func SignUp(c *gin.Context) {
 	// 1. 取出Post中的表单内容
 	uBody := &model.Account{}
 	if err := c.BindJSON(uBody); err != nil {
-		log.Fatalf("解析错误")
+		log.Printf("解析错误")
 	}
 	// 2. TODO 数据格式合法性校验
-	aCount, err := ta.GetAccountByName(uBody.Username)
+	aCount, err := tc.GetAccountByName(uBody.Username)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
@@ -37,7 +37,7 @@ func SignUp(c *gin.Context) {
 	}
 
 	// 3. 添加账户
-	if err := ta.AddAccount(&model.Account{Username: uBody.Username, Pwd: uBody.Pwd}); err != nil {
+	if err := tc.AddAccount(&model.Account{Username: uBody.Username, Pwd: uBody.Pwd}); err != nil {
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
 	}
@@ -72,7 +72,7 @@ func SignIn(c *gin.Context) {
 	}
 
 	// 3. 数据库查询密码，看是否和发过来的相同
-	uInfo, err := ta.GetAccount(signINBody.Username)
+	uInfo, err := tc.GetAccount(signINBody.Username)
 	if err != nil && err != sql.ErrNoRows {
 		log.Println("err:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{

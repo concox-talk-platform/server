@@ -10,10 +10,11 @@ import (
 	"log"
 	"model"
 	"net/http"
-	ta "pkg/account" // table account
+	tc "pkg/customer" // table customer
 	td "pkg/device"
 	tg "pkg/group"         // table group
 	tgd "pkg/group_device" // table group_device
+	tu "pkg/user"
 
 	"service"
 	"strconv"
@@ -40,7 +41,7 @@ func GetAccountInfo(c *gin.Context) {
 	}
 
 	// 获取账户信息
-	ai, err := ta.GetAccount(aName)
+	ai, err := tc.GetAccount(aName)
 	if err != nil {
 		log.Printf("Error in GetAccountInfo: %s", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -49,8 +50,8 @@ func GetAccountInfo(c *gin.Context) {
 		})
 		return
 	}
-	// 获取所有设备,并且在组里面
-	deviceAll, err := td.SelectDeviceByAccountId(ai.Id)
+	// 获取所有用户设备
+	deviceAll, err := tu.SelectUserByAccountId(ai.Id)
 	if err != nil {
 		log.Printf("Error in GetGroups: %s", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -80,7 +81,7 @@ func GetAccountInfo(c *gin.Context) {
 				Status:       d.Status,
 				ActiveStatus: d.ActiveStatus,
 				BindStatus:   d.BindStatus,
-				CrateTime:    d.CrateTime,
+				CreateTime:   d.CreateTime,
 				LLTime:       d.LLTime,
 				ChangeTime:   d.ChangeTime,
 			})
@@ -146,7 +147,7 @@ func UpdateAccountInfo(c *gin.Context) {
 		return
 	}
 
-	if err := ta.UpdateAccount(accInf); err != nil {
+	if err := tc.UpdateAccount(accInf); err != nil {
 		log.Println("Update account error :", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":      "get devices DB error",
@@ -187,9 +188,9 @@ func UpdateAccountPwd(c *gin.Context) {
 	}
 
 	// 判断密码是否正确
-	pwd, err := ta.GetAccountPwdByKey(aid)
+	pwd, err := tc.GetAccountPwdByKey(aid)
 	if err != nil {
-		log.Fatalf("db error : %s", err)
+		log.Printf("db error : %s", err)
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
 	}
@@ -223,7 +224,7 @@ func UpdateAccountPwd(c *gin.Context) {
 
 	// 更新密码
 	id, _ := strconv.Atoi(accPwd.Id)
-	if err := ta.UpdateAccountPwd(accPwd.NewPwd, id); err != nil {
+	if err := tc.UpdateAccountPwd(accPwd.NewPwd, id); err != nil {
 		log.Println("Update account errr :", err)
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
@@ -247,25 +248,25 @@ func GetAccountClass(c *gin.Context) {
 	}
 
 	// 查询数据返回
-	root, err := ta.GetAccount(aid)
+	root, err := tc.GetAccount(aid)
 	if err != nil {
-		log.Fatalf("db error : %s", err)
+		log.Printf("db error : %s", err)
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
 	}
 
-	resElem, err := ta.SelectChildByPId(aid)
+	resElem, err := tc.SelectChildByPId(aid)
 	if err != nil {
-		log.Fatalf("db error : %s", err)
+		log.Printf("db error : %s", err)
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
 	}
 
 	cList := make([]*model.AccountClass, 0)
 	for i := 0; i < len(resElem); i++ {
-		child, err := ta.GetAccount((*resElem[i]).Id)
+		child, err := tc.GetAccount((*resElem[i]).Id)
 		if err != nil {
-			log.Fatalf("db error : %s", err)
+			log.Printf("db error : %s", err)
 			c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 			return
 		}
@@ -288,7 +289,7 @@ func GetAccountClass(c *gin.Context) {
 	})
 }
 
-func GetAccountDevice(c *gin.Context)  {
+func GetAccountDevice(c *gin.Context) {
 	accountId := c.Param("accountId")
 
 	// 使用session来校验用户 TODO 考虑加一个
@@ -298,7 +299,7 @@ func GetAccountDevice(c *gin.Context)  {
 	//	return
 	//}
 	// 获取账户信息
-	ai, err := ta.GetAccount(aid)
+	ai, err := tc.GetAccount(aid)
 	if err != nil {
 		log.Printf("Error in GetAccountInfo: %s", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -308,22 +309,22 @@ func GetAccountDevice(c *gin.Context)  {
 		return
 	}
 	// 获取所有设备
-	deviceAll, err := td.SelectDeviceByAccountId(ai.Id)
+	deviceAll, err := tu.SelectUserByAccountId(ai.Id)
 	if err != nil {
-		log.Fatalf("db error : %s", err)
+		log.Printf("db error : %s", err)
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"account_info" : ai,
-		"devices" : deviceAll,
+		"account_info": ai,
+		"devices":      deviceAll,
 	})
 }
 
 // 转移设备
-func TransAccountDevice(c *gin.Context)  {
-	aidStr := c.Param("accountId")
+func TransAccountDevice(c *gin.Context) {
+	//aidStr := c.Param("accountId")
 	accountDevices := &model.AccountDeviceTransReq{}
 	if err := c.BindJSON(accountDevices); err != nil {
 		log.Printf("json parse fail , error : %s", err)
@@ -332,20 +333,37 @@ func TransAccountDevice(c *gin.Context)  {
 	}
 
 	// 使用session来校验用户
-	aid, _ := strconv.Atoi(aidStr)
-	if !service.ValidateAccountSession(c.Request, aid) {
-		c.JSON(http.StatusUnauthorized, model.ErrorNotAuthSession)
+	//aid, _ := strconv.Atoi(aidStr)
+	//if !service.ValidateAccountSession(c.Request, aid) {
+	//	c.JSON(http.StatusUnauthorized, model.ErrorNotAuthSession)
+	//	return
+	//}
+
+	for _, v := range accountDevices.Devices {
+		if v.IMei == "" {
+			c.JSON(http.StatusUnprocessableEntity, gin.H{
+				"error":      "Imei can't be empty.",
+				"error_code": "001",
+			})
+			return
+		}
+	}
+	if accountDevices.Receiver.AccountId == 0 {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error":      "receiver id can't be empty.",
+			"error_code": "001",
+		})
 		return
 	}
 
 	// 更新设备
 	if err := td.MultiUpdateDevice(accountDevices); err != nil {
-		log.Fatalf("db error : %s", err)
+		log.Printf("db error : %s", err)
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
-		"result" : "success",
-		"msg" : "trans successful",
+		"result": "success",
+		"msg":    "trans successful",
 	})
 }

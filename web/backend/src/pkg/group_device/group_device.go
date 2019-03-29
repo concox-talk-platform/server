@@ -15,8 +15,8 @@ import (
 var dbConn = db.DBHandler
 
 func SelectDevicesByGroupId(gid int) ([]*model.Device, error) {
-	stmtOut, err := dbConn.Prepare(`SELECT id, imei, user_name, user_passwd, account_id, stat, active_stat, bind_stat, create_time, last_login_time, change_time 
-									FROM device WHERE id IN (SELECT device_id FROM group_device WHERE group_id = ?);`)
+	stmtOut, err := dbConn.Prepare(`SELECT id, imei, name, passwd, cid, create_time, last_login_time, change_time 
+									FROM user WHERE id IN (SELECT device_id FROM group_device WHERE group_id = ?);`)
 	if err != nil {
 		return nil, err
 	}
@@ -30,8 +30,8 @@ func SelectDevicesByGroupId(gid int) ([]*model.Device, error) {
 	for rows.Next() {
 		var id, accountId int
 		var iMei, userName, pwd string
-		var status, bindStatus, aStatus, cTime, llTime, changeTime sql.NullString
-		if err := rows.Scan(&id, &iMei, &userName, &pwd, &accountId, &status, &aStatus, &bindStatus, &cTime, &llTime, &changeTime); err != nil {
+		var cTime, llTime, changeTime sql.NullString
+		if err := rows.Scan(&id, &iMei, &userName, &pwd, &accountId, &cTime, &llTime, &changeTime); err != nil {
 			return res, err
 		}
 
@@ -39,8 +39,8 @@ func SelectDevicesByGroupId(gid int) ([]*model.Device, error) {
 			Id: id, IMei: iMei,
 			UserName: userName, PassWord: pwd,
 			AccountId: accountId,
-			Status:    status, ActiveStatus: aStatus, BindStatus: bindStatus,
-			CrateTime: cTime, LLTime: llTime, ChangeTime: changeTime,
+			//Status:    status, ActiveStatus: aStatus, BindStatus: bindStatus,
+			CreateTime: cTime, LLTime: llTime, ChangeTime: changeTime,
 		}
 		res = append(res, d)
 	}

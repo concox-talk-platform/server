@@ -15,7 +15,7 @@ func main() {
 	// Set up a connection to the server
 	conn, err := grpc.Dial(ADDR, grpc.WithInsecure())
 	if err != nil {
-		log.Fatalf("did not connect: %v", err)
+		log.Printf("did not connect: %v", err)
 	}
 
 	defer conn.Close()

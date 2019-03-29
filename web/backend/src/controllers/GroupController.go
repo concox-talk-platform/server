@@ -45,11 +45,17 @@ func CreateGroup(c *gin.Context) {
 	})
 }
 
-// TODO 群组的成员更新
+// TODO 群组更新 目前web只用更新群组名字
 func UpdateGroup(c *gin.Context) {
 
 }
 
-func DeleteGroup() {
+// TODO 群组删除
+func DeleteGroup(c *gin.Context) {
+
+}
+
+// TODO 更新群组中的成员
+func UpdateGroupDevice(c *gin.Context)  {
 
 }

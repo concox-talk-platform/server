@@ -1,0 +1,34 @@
+syntax = "proto3";
+
+package talk_cloud;
+
+service WebService{
+    rpc GetAccountClass (AccountClassReq) returns (AccountClassResp){};
+
+    rpc ImportDeviceByRoot (ImportDeviceReq) returns (ImportDeviceResp){};
+}
+
+message AccountClassReq {
+    string name = 1;
+}
+
+message AccountClassResp {
+    int32 id = 1;
+}
+
+
+message ImportDeviceReq {
+    int32 accountId = 1;
+    repeated string deviceImei = 2;
+}
+
+message ImportDeviceResp {
+    Result result = 1;
+}
+
+message Result {
+    string msg = 1;
+    int32 StateCode = 2;
+}
+
+

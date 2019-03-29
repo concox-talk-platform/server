@@ -11,14 +11,15 @@ import (
 func main() {
 	groupServer := grpc.NewServer()
 	talk_cloud.RegisterTalkCloudServer(groupServer, &api.TalkCloudService{})
+	talk_cloud.RegisterWebServiceServer(groupServer, &api.WebServiceServerImpl{})
 
 	lis, err := net.Listen("tcp", ":9000")
 	if err != nil {
-		log.Fatalf("group net listen err: %v", err)
+		log.Printf("group net listen err: %v", err)
 	}
 
 	if err := groupServer.Serve(lis); err != nil {
-		log.Fatalf("监听失败")
+		log.Printf("监听失败")
 	} else {
 		log.Println("listing")
 	}

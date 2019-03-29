@@ -161,7 +161,7 @@ func SearchGroup(target string, db *sql.DB) (*pb.GroupListRsp, error) {
 	return groups, nil
 }
 
-// 查看
+// 查找当前管理员能管理的群组
 func SelectGroupsByAccountId(aid int) ([]*model.GroupInfo, error) {
 	stmtOut, err := dbConn.Prepare("SELECT id, group_name, stat, create_time FROM user_group WHERE account_id = ? AND stat = 1")
 	if err != nil {
@@ -196,42 +196,58 @@ func SelectGroupsByAccountId(aid int) ([]*model.GroupInfo, error) {
 
 // 创建组
 func CreateGroupByWeb(gl *model.GroupList) error {
-	stmtInsG, err := dbConn.Prepare("INSERT INTO user_group (group_name, account_id) VALUES (?, ?)")
-	if err != nil {
-		return err
-	}
-
-	if _, err := stmtInsG.Exec(gl.GroupInfo.GroupName, gl.GroupInfo.AccountId); err != nil {
-		return err
-	}
-	defer func() {
-		if err := stmtInsG.Close(); err != nil {
-			log.Println("Statement close fail.")
-		}
-	}()
-
 	tx, err := dbConn.Begin()
-	log.Printf("group name :%s", gl.GroupInfo.GroupName)
-
-	g, err := SelectGroupByGroupName(gl.GroupInfo.GroupName)
 	if err != nil {
-		log.Printf("查找群组失败")
 		return err
 	}
+	stmtInsG := "INSERT INTO user_group (group_name, account_id) VALUES (?, ?)"
+
+	insGroupRes, err := tx.Exec(stmtInsG, gl.GroupInfo.GroupName, gl.GroupInfo.AccountId)
+	if err != nil {
+		return err
+	}
+
+	var (
+		groupAff ,groupId, groupDeviceAff int64
+	)
+
+	if insGroupRes != nil {
+		groupAff , _ = insGroupRes.RowsAffected()
+		groupId, _ = insGroupRes.LastInsertId()
+	}
+
 
 	var ib = dbs.NewInsertBuilder()
 	ib.Table("group_device")
 	ib.Columns("group_id", "device_id")
 	for i := 0; i < len(gl.DeviceIds); i++ {
-		ib.Values(g.Id, gl.DeviceIds[i])
+		ib.Values(groupId, gl.DeviceIds[i])
 	}
 
-	if _, err := ib.Exec(dbConn); err != nil {
+	stmtInsGD, value, err := ib.ToSQL()
+	if err != nil {
 		return err
 	}
 
-	if err := tx.Commit(); err != nil {
+	insGroupDeviceRes, err :=  tx.Exec(stmtInsGD, value...)
+	if err != nil {
 		return err
+	}
+
+	if insGroupDeviceRes != nil {
+		groupDeviceAff, _ = insGroupDeviceRes.RowsAffected()
+	}
+
+	log.Println(groupAff, groupDeviceAff, len(gl.DeviceIds))
+	if groupAff == 1 && groupDeviceAff == int64(len(gl.DeviceIds)) {
+		if err := tx.Commit(); err != nil {
+			return err
+		}
+	} else {
+		log.Println("rollback")
+		if err := tx.Rollback(); err != nil {
+			return err
+		}
 	}
 
 	return nil

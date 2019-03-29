@@ -1,0 +1,155 @@
+package user
+
+import (
+	"database/sql"
+	"db"
+	"github.com/smartwalle/dbs"
+	"log"
+	"model"
+	"time"
+)
+
+var dbConn = db.DBHandler
+
+// 增加设备
+func AddUser(u *model.User, db ...interface{}) error {
+	var stmtInsB = dbs.NewInsertBuilder()
+
+	stmtInsB.Table("user")
+	//stmtInsB.SET("id",u.Id)
+	stmtInsB.SET("imei", u.IMei)
+	stmtInsB.SET("name", u.UserName)
+	stmtInsB.SET("passwd", u.PassWord)
+	stmtInsB.SET("cid", u.AccountId)
+	stmtInsB.SET("pid", u.ParentId)
+	stmtInsB.SET("nick_name", u.NickName) // 注册的时候默认把username当做昵称
+	stmtInsB.SET("user_type", 1)
+	t := time.Now()
+	ctime := t.Format("2006-1-2 15:04:05")
+	stmtInsB.SET("last_login_time", ctime)
+	stmtInsB.SET("create_time", ctime)
+
+	if _, err := stmtInsB.Exec(dbConn); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// 用过用户名查重，用在app GRpc注册
+func GetUserByName(userName string) (int, error) {
+	stmtOut, err := dbConn.Prepare("SELECT count(id) FROM user WHERE name = ?")
+	if err != nil {
+		log.Printf("DB error :%s", err)
+		return -1, err
+	}
+
+	var res int
+	if err := stmtOut.QueryRow(userName).Scan(&res); err != nil {
+		log.Printf("err: %s", err)
+		return -1, err
+	}
+
+	defer func() {
+		if err := stmtOut.Close(); err != nil {
+			log.Println("Statement close fail")
+		}
+	}()
+	return res, nil
+}
+
+// 通过关键词查找用户名
+func SelectUserByKey(key interface{}) (*model.User, error) {
+	var stmtOut *sql.Stmt
+	var err error
+	switch t := key.(type) {
+	case int:
+		stmtOut, err = dbConn.Prepare("SELECT id, name, nick_name, passwd, imei, user_type, pid, cid, create_time, last_login_time, change_time FROM user WHERE id = ?")
+	case string:
+		stmtOut, err = dbConn.Prepare("SELECT id, name, nick_name, passwd, imei, user_type, pid, cid, create_time, last_login_time, change_time  FROM user WHERE name = ?")
+	default:
+		_ = t
+		return nil, err
+	}
+	if err != nil {
+		log.Printf("%s", err)
+		return nil, err
+	}
+
+	var (
+		id, userType                 int
+		pId, cId, userName, nickName, pwd, iMei string
+		cTime, llTime, changeTime     sql.NullString
+	)
+	err = stmtOut.QueryRow(key).Scan(&id, &userName, &nickName, &pwd, &iMei, &userType, &pId, &cId, &cTime, &llTime, &changeTime)
+	if err != nil {
+		return nil, err
+	}
+
+	res := &model.User{
+		Id:           id,
+		IMei:         iMei,
+		UserName:     userName,
+		PassWord:     pwd,
+		NickName:nickName,
+		UserType:userType,
+		ParentId:pId,
+		AccountId:cId,
+		CreateTime:   cTime,
+		LLTime:       llTime,
+		ChangeTime:   changeTime,
+	}
+
+	defer func() {
+		if err := stmtOut.Close(); err != nil {
+			log.Println("Statement close fail")
+		}
+	}()
+	return res, nil
+}
+
+// 查找设备
+func SelectUserByAccountId(aid int) (interface{}, error) {
+	var stmtOut *sql.Stmt
+	var err error
+	stmtOut, err = dbConn.Prepare("SELECT id, imei, name, passwd, cid, create_time, last_login_time, change_time FROM user WHERE cid = ?")
+
+	if err != nil {
+		log.Printf("%s", err)
+		return "", err
+	}
+	var res []*model.Device
+
+	rows, err := stmtOut.Query(aid)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var (
+			id, accountId                                          int
+			userName, pwd, iMei                                    string
+			cTime, llTime, changeTime sql.NullString
+		)
+		if err := rows.Scan(&id, &iMei, &userName, &pwd, &accountId, &cTime, &llTime, &changeTime); err != nil {
+			return res, err
+		}
+
+		d := &model.Device{
+			Id: id, IMei: iMei,
+			UserName: userName, PassWord: pwd,
+			AccountId: accountId,
+			CreateTime: cTime, LLTime: llTime, ChangeTime: changeTime,
+		}
+		res = append(res, d)
+	}
+
+	defer func() {
+		if err := stmtOut.Close(); err != nil {
+			log.Println("Statement close fail")
+		}
+	}()
+	return res, nil
+}
+
+

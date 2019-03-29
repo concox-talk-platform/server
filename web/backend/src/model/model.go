@@ -17,20 +17,21 @@ type AccountPwd struct {
 }
 
 type AccountDeviceTransReq struct {
-	Devices []*Device `json:"devices"`
+	Devices  []*Device      `json:"devices"`
+	Sender   Account        `json:"sender"`
 	Receiver DeviceReceiver `json:"receiver"`
 }
 
 
+type AccountImportDeviceReq struct {
+	DeviceIMei []string `json:"device_imei"`
+}
 
 // validate
 type AccountValidate struct {
 	Username string `valid:", between=6|15"`
 	Pwd      string `valid:", between=6|15"`
 }
-
-
-
 
 //response
 type Message struct {
@@ -42,17 +43,17 @@ type Message struct {
 
 // 账户层级关系
 type AccountClass struct {
-	Id int `json:"id"`
-	AccountName string `json:"account_name"`
-	Children []*AccountClass `json:"children"`
+	Id          int             `json:"id"`
+	AccountName string          `json:"account_name"`
+	Children    []*AccountClass `json:"children"`
 }
 
 // 返回账户及其账户下所有的组和
 type AccountGroupsResp struct {
-	Message     string             `json:"message"`
-	AccountInfo *Account `json:"account_info"`
-	GroupList   []*GroupList       `json:"group_list"`
-	DeviceList  []*Device          `json:"device_list"`
+	Message     string       `json:"message"`
+	AccountInfo *Account     `json:"account_info"`
+	GroupList   []*GroupList `json:"group_list"`
+	DeviceList  []*Device    `json:"device_list"`
 }
 
 type GroupList struct {
@@ -70,9 +71,8 @@ type SessionInfo struct {
 	TTL       string `json:"ttl"`
 }
 
-
 type DeviceReceiver struct {
-	AccountId int `json:"account_id"`
+	AccountId   int    `json:"account_id"`
 	AccountName string `json:"account_name"`
 }
 
@@ -86,9 +86,36 @@ type Device struct {
 	Status       sql.NullString `json:"status"`
 	ActiveStatus sql.NullString `json:"active_status"`
 	BindStatus   sql.NullString `json:"bind_status"`
-	CrateTime    sql.NullString `json:"crate_time"`
+	CreateTime   sql.NullString `json:"create_time"`
 	LLTime       sql.NullString `json:"last_login_time"`
 	ChangeTime   sql.NullString `json:"change_time"`
+}
+
+// User
+type User struct {
+	Id         int            `json:"id"`
+	IMei       string         `json:"imei"`
+	UserName   string         `json:"user_name"`
+	NickName   string         `json:"nick_name"`
+	PassWord   string         `json:"password"`
+	UserType   int            `json:"user_type"`  // 用户类型(暂定1是普通用户，2是调度员，3是经销商, 4是超级管理员)
+	ParentId   string         `json:"parent_id"`  // 如果是普通用户注册的时候，默认是0， 如果是上级用户创建下级账户，就用来表示创建者的id
+	AccountId  string         `json:"account_id"` // 只有普通用户才有这个字段，表示这个设备属于哪个账户，如果是非普通用户就是默认为0（因为customer表里面没有0号）
+	CreateTime sql.NullString `json:"create_time"`
+	LLTime     sql.NullString `json:"last_login_time"`
+	ChangeTime sql.NullString `json:"change_time"`
+}
+
+type Customer struct {
+	Id         int    `json:"id"`
+	UId        int    `json:"user_id"`
+	PId        int    `json:"parent_id"`
+	Email      string `json:"email"`
+	Phone      string `json:"phone"`
+	Address    string `json:"address"`
+	Remark     string `json:"remark"`
+	ChangeTime string `json:"change_time"`
+	CTime      string `json:"create_time"`
 }
 
 type GroupInfo struct {
@@ -103,7 +130,7 @@ type Account struct {
 	Id          int    `json:"id"`
 	Pid         int    `json:"pid"`
 	Username    string `json:"username"`
-	NickName   string `json:"nick_name"`
+	NickName    string `json:"nick_name"`
 	Pwd         string `json:"pwd"`
 	Email       string `json:"email"`
 	PrivilegeId int    `json:"privilege_id"`
