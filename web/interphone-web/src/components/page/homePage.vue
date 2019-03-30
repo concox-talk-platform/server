@@ -1,5 +1,7 @@
 <template>
 <div class="client">
+    <el-container>
+        <el-aside width="345px">
     <div class="client_left">
         <div class="client_left_tittle">
             <i class="el-icon-caret-bottom client_left_icon"></i>
@@ -8,12 +10,14 @@
             <div class="client_left_regiter" @click="register">{{ $t("client_lang.client_add") }}</div>            
         </div>
         <div class="client_left_body">
-            <el-input :placeholder="$t('ztree.filter')" v-model="filterText">
-            </el-input>
+            <!-- <el-input :placeholder="$t('ztree.filter')" v-model="filterText">
+            </el-input> -->
             <el-tree @node-click="handleNodeClick"  class="filter-tree" :data="ztree_data" :props="defaultProps" default-expand-all :filter-node-method="filterNode" ref="ztree">
             </el-tree>
         </div>
     </div>
+    </el-aside>
+    <el-main>
     <div class="client_right">
         <div class="client_details">
             <div class="account_info"><span class="account_info_tittle">{{$t('account.account_information')}}</span></div> 
@@ -87,7 +91,7 @@
                         :page-size="10" layout="total, sizes, prev, pager, next, jumper" :total="400" >
                         </el-pagination>       -->
                         <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage" :page-sizes="[10, 20, 30, 40]"
-                        :page-size="10" layout="prev, pager, next" :total="400" >
+                        :page-size="10" layout="prev, pager, next" :total="page_mumber" >
                         </el-pagination>                       
                     </div>
                 </el-tab-pane>
@@ -168,7 +172,7 @@
   <!-- 转移 -->
         <el-dialog :title="$t('table.info')" :visible.sync="transfer_dialog" width="30%" :show-close="false">
             <el-select v-model="customer" filterable :placeholder="$t('table.select')">
-                <el-option  v-for="item in customer_List" :key="item.id" :label="item.account_name" :value="item.id">
+                <el-option  v-for="item in customer_List" :key="item.id" :label="item.account_name" :value="item">
                 </el-option>
             </el-select>
             <el-table :data="gridData" :empty-text="$t('table.no_data')">
@@ -186,9 +190,10 @@
         <div class="imei_div">
             <el-button @click="add_imei">{{$t('group.add')}}</el-button>
             <el-table :data="imei_data" :empty-text="$t('table.no_data')">
+                   
                     <el-table-column prop="iemi" label="IMEI">
                     <template  slot-scope="scope">
-                    <el-input v-model="imei_data[scope.$index].iemi"></el-input>
+                    <el-input v-model.number="imei_data[scope.$index].iemi"   ref="iemi_rule"></el-input>
                     </template>
                     </el-table-column>
                     <el-table-column prop="command" :label="$t('table.operation')">
@@ -196,6 +201,7 @@
                     <el-button @click="delete_imei(scope.$index)">{{$t('group.remove')}}</el-button>
                     </template>
                     </el-table-column>
+               
             </el-table>
 
         </div>
@@ -205,11 +211,16 @@
         </span>
         </el-dialog>
         
+</el-main>
+
+
+ </el-container>
 </div>
     
 </template>
 <script>
 export default {
+    inject:['reload'],
     data() {
         var Same_check = (rule, value, callback) => {
             if (value === '') {
@@ -223,7 +234,11 @@ export default {
         return {
             // personal_info:JSON.parse(localStorage.getItem('account_info')),
             personal_info:{},
-            device_info:JSON.parse(localStorage.getItem('device_list')) ,
+            device_info:[] ,
+            total_mumber:'',
+            treeNode:1,
+            nodeId:'',
+            // device_info:JSON.parse(localStorage.getItem('device_list')) ,
             childre_infor:JSON.parse(localStorage.getItem('children_list')),
             // lang:sessionStorage.getItem('lang'),
             registerVisible:false,
@@ -253,6 +268,11 @@ export default {
                     { required: true, message: this.$t('prompt_message.account_type'), trigger: 'blur' }
                 ]
             },
+            // export_rules:{
+            //   iemi_rule:[
+            //        { min: 6, max: 15, message: this.$t('prompt_message.pwd_length'), trigger: 'blur' },
+            //   ]
+            // },
                 // 账户类型
             Account_typedata:
                 [
@@ -275,41 +295,6 @@ export default {
                 ], 
             // 树组件数据
             filterText: '',
-            // ztree_data: [{
-            //     id: 1,
-            //     label: '一级 1',
-            //     children: [{
-            //         id: 4,
-            //         label: '二级 1-1',
-            //         children: [{
-            //         id: 9,
-            //         label: '三级 1-1-1'
-            //         }, {
-            //         id: 10,
-            //         label: '三级 1-1-2'
-            //         }]
-            //     }]
-            //     }, {
-            //     id: 2,
-            //     label: '一级 2',
-            //     children: [{
-            //         id: 5,
-            //         label: '二级 2-1'
-            //     }, {
-            //         id: 6,
-            //         label: '二级 2-2'
-            //     }]
-            //     }, {
-            //     id: 3,
-            //     label: '一级 3',
-            //     children: [{
-            //         id: 7,
-            //         label: '二级 3-1'
-            //     }, {
-            //         id: 8,
-            //         label: '二级 3-2'
-            //     }]
-            // }],
             ztree_data:[],
             defaultProps: {
                 children: 'children',
@@ -339,25 +324,6 @@ export default {
                 
             },
             // 设备表格
-        //  daddas: [
-        //             {imei: '31424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-        //             {imei: '26424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-        //             {imei: '39424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-        //             {imei: '51424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-        //             {imei: '61424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-        //             {imei: '21424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-        //             {imei: '12142415232321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-        //             {imei: '23424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-        //             {imei: '12424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-        //             {imei: '45424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-        //             {imei: '25424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-        //             {imei: '11424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-        //             {imei: '12424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-        //             {imei: '13424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-        //             {imei: '14424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-        //             {imei: '15424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},
-        //             {imei: '16424152312321312',version: 'v.2.0',device_name: '测试组一',time: '2015/04/12'},    
-        // ],
         // tableData:[],
         multipleSelection: [],
         currentPage: 1,
@@ -368,21 +334,8 @@ export default {
         gridData:[],
         // 选择客户
         customer: '',
-        customer_List:[
-            // { id:1,label:'李强',da:'1213'},
-            // { id:2,label:'李爱迪生',da:'1213'},
-            // { id:5,label:'李壹拾贰',da:'1213'},
-            // { id:21,label:'李搞',da:'1213'},
-            // { id:123,label:'李安抚',da:'1213'},
-            // { id:24,label:'李不得',da:'1213'},
-            // { id:543,label:'李啊噶',da:'1213'},
-            // { id:43,label:'李内部',da:'1213'},
-            // { id:53,label:'李更好',da:'1213'},
-            // { id:121,label:'李发烧',da:'1213'},
-            // { id:56,label:'李尕',da:'1213'},
-            // { id:78,label:'李办法',da:'1213'},
-            // { id:9,label:'李班',da:'1213'},
-        ],
+        customer_List:[],
+        device_imei:[],
         // 管理员导入设备
         import_show:false,
         // 导入imei号
@@ -405,35 +358,42 @@ export default {
             submit_register(registerForm){
                 this.$refs[registerForm].validate((valid) => {
                   if (valid) {
-                        let register_info={}
+                        let register_info={};
                         register_info.nikename=this.registerForm.register_name.trim();
                         register_info.username=this.registerForm.register_Account.trim();
                         register_info.pwd=this.registerForm.register_Password.trim();
+                        register_info.pid=sessionStorage.getItem('id');
                         switch(this.registerForm.register_type){
-                                case '经销商':
-                                register_info.roletype=1;
-                                break;
-                                case 'Dealer':
-                                register_info.roletype=1;
-                                break;                             
-                                case '公司':
-                                register_info.roletype=2;
-                                break;
-                                case 'Company':
-                                register_info.roletype=2;
-                                break;
                                 case '管理员':
-                                register_info.roletype=3;
+                                register_info.roletype=1;
                                 break;  
                                 case 'Administrator':
-                                register_info.roletype=3;
+                                register_info.roletype=1;
                                 break;                             
                                 case '调度员':
-                                register_info.roletype=4;
+                                register_info.roletype=2;
                                 break;
                                 case 'Dispatcher':
+                                register_info.roletype=2;
+                                break;                            
+                                case '经销商':
+                                register_info.roletype=3;
+                                break;
+                                case 'Dealer':
+                                register_info.roletype=3;
+                                break;                             
+                                case '公司':
                                 register_info.roletype=4;
                                 break;
+                                case 'Company':
+                                register_info.roletype=4;
+                                break;
+                                case '超级管理员':
+                                register_info.roletype=5;
+                                break;
+                                case 'Superadmin':
+                                register_info.roletype=5;
+                                break;                               
                             }
                         if(this.registerForm.name !== undefined){
                             register_info.name=this.registerForm.name.trim();
@@ -454,36 +414,37 @@ export default {
                             register_info.adress=this.registerForm.adress.trim();  
                         }else{
                             register_info.adress=''
-                        }        
-                        // this.$axios.post('/account',register_info)
-                        // .then(function (response) {
-                        // //  this.$router.push('/homePage');
-                        //   window.console.log(response);
-                        //   window.console.log(response.data.success);
-                        //   if(response.data.success){
-                        //         this.$message({
+                        }     
+                        window.console.log(register_info)   
+                        this.$axios.post('/account',register_info)
+                        .then(function (response) {
+                        //  this.$router.push('/homePage');
+                          window.console.log(response);
+                          window.console.log(response.data.success);
+                          if(response.data.success){
+                                this.$message({
                                     
-                        //         message: this.$t('prompt_message.register_succ'),
-                        //         type: 'success'
-                        //         });
-                        //         this.registerVisible=false;
-                        //         this.$refs['registerForm'].clearValidate();
-                        //        this.$refs['registerForm'].resetFields();
-                        //   }else{
-                        //         this.$message({
-                        //         message: '创建失败，请重新创建',
-                        //         type: 'warning'
-                        //         });
-                        //   }
-                        // }.bind(this))
-                        // .catch( (error) => {
-                        //  window.console.log(error);
-                        //         this.$message({
-                        //         message: '创建失败，请重新创建',
-                        //         type: 'warning'
-                        //         });
+                                message: this.$t('prompt_message.register_succ'),
+                                type: 'success'
+                                });
+                                this.registerVisible=false;
+                                this.$refs['registerForm'].clearValidate();
+                               this.$refs['registerForm'].resetFields();
+                          }else{
+                                this.$message({
+                                message: '创建失败，请重新创建',
+                                type: 'warning'
+                                });
+                          }
+                        }.bind(this))
+                        .catch( (error) => {
+                         window.console.log(error);
+                                this.$message({
+                                message: '创建失败，请重新创建',
+                                type: 'warning'
+                                });
                     
-                        // }); 
+                        }); 
                   } else {
                     // console.log('error submit!!');
                     return false;
@@ -491,8 +452,10 @@ export default {
                 });
             },
             filterNode(value, data) {
-                if (!value) return true;
-                return data.label.indexOf(value) !== -1;
+                window.console.log(value)
+                window.console.log(data)
+                // if (!value) return true;
+                // return data.label.indexOf(value) !== -1;
             },
             edit(){
             this.activeName='second';
@@ -504,6 +467,8 @@ export default {
             // 渲染个人信息
             apply_info(){
               this.personal_info=JSON.parse(localStorage.getItem('account_info'));
+              this.device_info = JSON.parse(localStorage.getItem('device_list'))
+       
               this.renders();
             },
             renders(){     
@@ -511,36 +476,47 @@ export default {
                 this.information_login = this.personal_info.username;
                 this.information_phone = this.personal_info.phone;
                 this.information_adress = this.personal_info.address;
-                this.information_number = this.device_info.length;
+                if( this.device_info !== null){
+                    this.information_number = this.device_info.length;
+                }else{
+                  return
+                 }
+                
                 if(sessionStorage.getItem('lang') == 'en-US'){
                      switch(this.personal_info.role_id){
                          case 1:
-                         this.information_type = "Dealer";
-                         break;
-                         case 2:
-                         this.information_type = "Company";
-                         break;       
-                         case 3:
                          this.information_type = "Administrator";
                          break;
-                         case 4:
+                         case 2:
                          this.information_type = "Dispatcher";
+                         break;       
+                         case 3:
+                         this.information_type = "Dealer";
+                         break;
+                         case 4:
+                         this.information_type = "Company";
+                         break;
+                         case 5:
+                         this.information_type = "Superadmin";
                          break;                                                                 
                      }
                 }else{
                      switch(this.personal_info.role_id){
                          case 1:
-                         this.information_type = "经销商";
-                         break;
-                         case 2:
-                         this.information_type = "公司";
-                         break;       
-                         case 3:
                          this.information_type = "管理员";
                          break;
-                         case 4:
+                         case 2:
                          this.information_type = "调度员";
-                         break;                                                                 
+                         break;       
+                         case 3:
+                         this.information_type = "经销商";
+                         break;
+                         case 4:
+                         this.information_type = "公司";
+                         break;
+                         case 5:
+                         this.information_type = "超级管理员";
+                         break;                                                                   
                      }
                 }
                 this.subordinate.adress = this.personal_info.address;
@@ -548,6 +524,7 @@ export default {
                 this.subordinate.phone = this.personal_info.phone;
                 this.subordinate.account = this.personal_info.username;
                 this.subordinate.name = this.personal_info.nick_name;
+                
                 
             },
             // 修改下级信息
@@ -560,28 +537,34 @@ export default {
                 subordinate_info.email = this.subordinate.email;
                 subordinate_info.adress = this.subordinate.adress;
                 switch(this.subordinate.type){
-                    case '经销商':
-                    subordinate_info.roletype=1;
-                    break;
-                    case 'Dealer':
-                    subordinate_info.roletype=1;
-                    break;                             
-                    case '公司':
-                    subordinate_info.roletype=2;
-                    break;
-                    case 'Company':
-                    subordinate_info.roletype=2;
-                    break;
                     case '管理员':
-                    subordinate_info.roletype=3;
-                    break;  
+                    subordinate_info.roletype=1;
+                    break;
                     case 'Administrator':
-                    subordinate_info.roletype=3;
+                    subordinate_info.roletype=1;
                     break;                             
                     case '调度员':
-                    subordinate_info.roletype=4;
+                    subordinate_info.roletype=2;
                     break;
                     case 'Dispatcher':
+                    subordinate_info.roletype=2;
+                    break;
+                    case '经销商':
+                    subordinate_info.roletype=3;
+                    break;  
+                    case 'Dealer':
+                    subordinate_info.roletype=3;
+                    break;                             
+                    case '公司':
+                    subordinate_info.roletype=4;
+                    break;
+                    case 'Company':
+                    subordinate_info.roletype=4;
+                    break;
+                    case '超级管理员':
+                    subordinate_info.roletype=4;
+                    break;
+                    case 'Superadmin':
                     subordinate_info.roletype=4;
                     break;
                 }
@@ -606,9 +589,11 @@ export default {
             this.currentPage =currentPage
             },
             transfer(){
+                // this.update_data()
                 if(this.multipleSelection.length !== 0){
                     this.transfer_dialog = true;
                     this.customer_List = this.childre_infor.children;
+                    // window.console.log(this.customer_List)
                     this.gridData=this.device_data;
                 }else{
                     this.$message({
@@ -630,9 +615,49 @@ export default {
                 })
                 .then(_ => {
                     window.console.log(_)
-                    let transinformation={}
-                    transinformation.id=this.customer;
-                    transinformation.device=this.gridData;
+                    let transinformation={};
+                    // transinformation.receiver={};
+                    // transinformation.receiver.account_id=this.customer.id;
+                    // transinformation.receiver.account_name=this.customer.account_name;
+                    transinformation.devices=this.gridData;
+                    let a={};
+                    a.account_id =this.customer.id;
+                    a.account_name=this.customer.account_name;
+                    transinformation.receiver=a;
+                    if(transinformation.account_id ==''){
+                        this.$message({
+                        message: this.$t('prompt_message.subordinate'),
+                        type: 'warning'
+                        });
+                        return false
+                    }else{
+                        this.$axios.post('/account_device/'+sessionStorage.getItem('id'),transinformation,
+                            { headers: 
+                            {
+                            "Authorization" : sessionStorage.getItem('setSession_id')
+                            }
+                            })
+                            .then((response) =>{
+                            window.console.log(response);
+                              this.transfer_dialog=false; 
+                              this.customer='';
+                              this.$message({
+                                message: this.$t('failed.transfer_success'),
+                                type: 'success'
+                                });
+                              this.update_data();
+                              this.reload();
+                            })
+                            .catch(function (error) {
+                                window.console.log(error)
+                                this.$message({
+                                  message: this.$t('failed.transfer'),
+                                  type: 'warning'
+                                });
+                            }); 
+                    }
+
+                    
                     done();
                 })
                 .catch(_ => {
@@ -641,7 +666,7 @@ export default {
             },
             // 超级管理员导入设备
             device_import(){
-                // window.console.log(this.$store.state.User.subordinate);
+                window.console.log(JSON.parse(localStorage.getItem('device_list')));
                 // this.ztree_data.push(this.$store.state.User.subordinate)
                 // window.console.log(this.$store.state.User.information);
                 // this.ztree_data=this.$store.state.User.subordinate.tree_data
@@ -658,11 +683,62 @@ export default {
                     cancelButtonText: this.$t("button_message.cancel")
                 })
                 .then(_ => {
-                    window.console.log(_)
-                    let decive_data = {};
-                    decive_data.imei =this.imei_data;
-                    this.import_show=false;
-                    this.imei_data=[];
+                    window.console.log( this.imei_data)
+                    window.console.log(_);
+                    this.device_imei = this.imei_data.map(e =>{
+                        if(e.hasOwnProperty('iemi')){
+                            return e.iemi.toString()
+                        }
+                    })
+                    let imei_length=[];
+                    for(var i=0;i<this.device_imei.length;i++){
+                        window.console.log(this.device_imei[i].length)
+                           if(this.device_imei[i].length !== 15){
+                                imei_length.push(this.device_imei[i]) 
+                                window.console.log(this.device_imei[i])
+                           }
+                    //    window.console.log( this.device_imei[i].length)
+                    //    window.console.log( this.device_imei[i])
+                    }
+                    window.console.log( imei_length)
+                    if(imei_length.length == 0){
+                       let decive_data = {};
+                            decive_data.device_imei =this.device_imei;
+                            this.imei_data=[];
+                            this.import_show=false;
+                            window.console.log(decive_data);
+                            this.$axios.post('/device/import/SuperRoot',decive_data,
+                            { headers: 
+                            {
+                            "Authorization" : sessionStorage.getItem('setSession_id')
+                            }
+                            })
+                            .then((response) =>{
+                            window.console.log(response);
+                                this.transfer_dialog=false; 
+                                this.customer='';
+                                this.update_data();
+                                this.reload();
+                                this.$message({
+                                message: this.$t('failed.export_success'),
+                                type: 'success'
+                                });
+                            })
+                            .catch(function (error) {
+                                window.console.log(error);
+                                this.$message({
+                                message: this.$t('failed.transfer'),
+                                type: 'warning'
+                                });
+                            }); 
+                    }else{
+                        this.$message({
+                        message: this.$t('failed.imei'),
+                        type: 'warning'
+                        });
+                    }
+                    // window.console.log( this.device_imei)
+                    // 
                  
                     //  done();
                 })
@@ -679,6 +755,29 @@ export default {
             },
             // ztree操作
              handleNodeClick(data) {
+                 this.treeNode = data.$treeNodeId; 
+                 this.nodeId = data.id;
+                 window.console.log(data.$treeNodeId);
+                 if(data.$treeNodeId ==1){
+            
+                    this.$axios.get('/account/'+sessionStorage.getItem('loginName'),
+                    { headers: 
+                    {
+                    "Authorization" : sessionStorage.getItem('setSession_id')
+                    }
+                    })
+                    .then((response) =>{
+                    window.console.log(response.data);            
+                    window.console.log(response.data.device_list);            
+                    this.personal_info = response.data.account_info;
+                    this.device_info =  response.data.device_list;
+                    this.total_mumber = response.data.device_list.length;
+                    this.renders(); 
+                    })
+                    .catch(function (error) {
+                    window.console.log(error);
+                    });
+                 }else{
                     this.$axios.get('/account_device/'+data.id,
                     { headers: 
                     {
@@ -688,22 +787,83 @@ export default {
                     })
                     .then((response) =>{
                     //  localStorage.setItem('id', response.data.account_info.id);    
-                    window.console.log(response);
-                    this.personal_info = response.data.account_info
+                    window.console.log(response.data);
+                    this.personal_info = response.data.account_info;
+                    this.total_mumber = response.data.devices.length;
+                    this.device_info =  response.data.devices;
                     this.renders();
                     // this.device_info=response.data.devices
-                    
                     })
                     .catch(function (error) {
                     window.console.log(error);
                     });
-
-                    
-                    
+                 } 
             } ,
             get_ztreeData(){
                 this.ztree_data.push(this.childre_infor)
             },
+            // 设备赋值
+            get_device_data(){
+                this.device_info = JSON.parse(localStorage.getItem('device_list'))
+            },
+            get_total_mumber(){
+                if(JSON.parse(localStorage.getItem('device_list'))==null){
+                    return
+                }else{
+                 this.total_mumber = JSON.parse(localStorage.getItem('device_list')).length
+                }
+              
+            },
+            // 页面赋值公共方法
+            update_data(){
+              window.console.log(this.treeNode);
+              window.console.log(this.nodeId);
+              if(this.treeNode == 1){
+                this.$axios.get('/account/'+sessionStorage.getItem('loginName'),
+                    { headers: 
+                    {
+                    "Authorization" : sessionStorage.getItem('setSession_id')
+                    }
+                    })
+                    .then((response) =>{
+                    window.console.log(response.data);            
+                    window.console.log(response.data.device_list);            
+                    this.personal_info = response.data.account_info;
+                    
+                    this.total_mumber = response.data.device_list.length;
+                    this.device_info =  response.data.device_list;
+                    this.renders();
+                    localStorage.setItem('account_info', JSON.stringify(response.data.account_info));
+                    localStorage.setItem('device_list', JSON.stringify(response.data.device_list));
+                    localStorage.setItem('group_list', JSON.stringify(response.data.group_list));          
+                    })
+                    .catch(function (error) {
+                    window.console.log(error);
+                    });
+              }else{
+                    this.$axios.get('/account_device/'+this.nodeId,
+                    { headers: 
+                    {
+                    // "Authorization" : localStorage.getItem('setSession_id')
+                    "Authorization" : sessionStorage.getItem('setSession_id')
+                    }
+                    })
+                    .then((response) =>{
+                    //  localStorage.setItem('id', response.data.account_info.id);    
+                    window.console.log(response.data);
+                    this.personal_info = response.data.account_info;
+                   
+                    this.total_mumber = response.data.devices.length;
+                    this.device_info =  response.data.devices;
+                     this.renders();
+                    // this.device_info=response.data.devices
+                    })
+                    .catch(function (error) {
+                    window.console.log(error);
+                    });
+              }
+            }
+
     },
          watch: {
             filterText(val) {
@@ -712,16 +872,30 @@ export default {
     },
     computed:{    
         tableData(){
-            return this.device_info
+            return this.device_info;
+        },
+        page_mumber(){
+            return this.total_mumber;
         }
+    },
+    beforeCreate() {
+        window.console.log(JSON.parse(localStorage.getItem('device_list')));
+        window.console.log(JSON.parse(localStorage.getItem('account_info')));
+        window.console.log(JSON.parse(localStorage.getItem('group_list')));
     },
     created(){
         this.apply_info();
-        window.console.log(JSON.parse(localStorage.getItem('children_list')).children)
+        // window.console.log(JSON.parse(localStorage.getItem('account_info')));
+        window.console.log(JSON.parse(localStorage.getItem('device_list')));
+        window.console.log(JSON.parse(localStorage.getItem('account_info')));
+        window.console.log(JSON.parse(localStorage.getItem('group_list')));
+        this.get_total_mumber();
 
     },
     beforeMount(){
-       this. get_ztreeData()
+       this. get_ztreeData();
+       this.get_device_data();
+    //    this.get_total_mumber()
        
     }
  
@@ -733,7 +907,7 @@ export default {
     height: 100%;
 }
 .client_left{
-width: 364px;
+/* width: 364px; */
 height: 100%;
 border-right: 2px solid #a0b0c7;
 
@@ -757,7 +931,7 @@ background-color: white;
     display: inline-block;
     font-size: 16px;
     top: 5px;
-    left: 65px;
+    left: 33px;
 }
 .client_left_regiter{
     display: inline-block;
@@ -792,7 +966,6 @@ background-color: white;
 }
 /* 树组件盒子 */
 .client_left_body{
-    height: 100%;
     background-color: white;
 }
 .client_details{
@@ -852,7 +1025,7 @@ background-color: white;
     text-align: center;
 }
 .equipment_table{
- height: 550px;
+ height: 560px;
  overflow: auto;
 }
 .transfer_tittle{

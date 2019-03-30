@@ -1,5 +1,8 @@
 <template>
+<div>
+    <!-- <el-header> -->
     <div class="navigationbar">
+    
          <div class="ul">
 
          <!-- <router-link class="li"  v-for="(item, index) in navigationerArr" :key="index" :to="item.address">{{item.name}}</router-link> -->
@@ -9,6 +12,8 @@
 
         
     </div>
+    <!-- </el-header> -->
+ </div>   
 </template>
 
 <script>

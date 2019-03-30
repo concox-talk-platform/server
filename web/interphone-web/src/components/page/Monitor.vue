@@ -1,4 +1,6 @@
 <template>
+<div>
+<el-aside>
 <div style="height:100%"  @click="hide">
     <!-- 侧边栏 -->
     <div class="homePage_sideGroup">
@@ -43,6 +45,9 @@
                 </div>
         </div>     
     </div>
+</div>
+</el-aside>
+
     <!-- 创建组 -->
     <el-dialog :title="$t('group.add_group')" :visible.sync="group_div">
         <div class="dialog_div">
@@ -72,7 +77,7 @@
                 <el-button  class="addbotton" @click="add_select_div">{{$t('button_message.add')}}</el-button>
             </div>
         </div>
-        <el-dialog width="31%" :title="$t('group.member_title')" :visible.sync="members_div" append-to-body>
+        <el-dialog    style="text-align: center;"   width="42%" :title="$t('group.member_title')" :visible.sync="members_div" append-to-body>
             <!-- 添加新组左右列表移动 -->
             <el-transfer
                 style="text-align: left; display: inline-block"
@@ -89,7 +94,10 @@
                 <!-- <el-button class="transfer-footer" slot="left-footer" size="small">操作</el-button>
                 <el-button class="transfer-footer" slot="right-footer" size="small">操作</el-button> -->
             </el-transfer>
+            <div>
+            <div class="transfer_cancel" @click="transfer_cancel">{{$t("button_message.cancel")}}</div>
             <div class="select_add" @click="selected_add">{{$t("button_message.confirm")}}</div>
+            </div>
         </el-dialog>
         <div slot="footer" class="dialog-footer">
         <el-button @click="group_add_cancle">{{ $t("button_message.cancel") }}</el-button>
@@ -130,7 +138,7 @@
         </span>
     </el-dialog>
     <!-- 左侧修改组弹出框 -->
-    <el-dialog :title="$t('control.Modify_group')" :visible.sync="amend_show">
+    <el-dialog :title="$t('control.Modify_group')" :visible.sync="amend_show" >
         <el-form :model="Modify_group_form">
             <el-form-item :label="$t('control.group_num')" label-width="110px">
             <el-input v-model="Modify_group_form.num" autocomplete="off" :disabled="dis_control"></el-input>
@@ -145,7 +153,7 @@
         </div>
     </el-dialog>
     <!-- 修改组成员弹出框 -->
-    <el-dialog width="31%" :title="$t('group.modified_member')" :visible.sync="modified_member_show" append-to-body >
+    <el-dialog width="42%" style="text-align: center;" :title="$t('group.modified_member')" :visible.sync="modified_member_show" append-to-body >
         <!-- 左侧左右列表移动 -->
             <el-transfer
                 style="text-align: left; display: inline-block"
@@ -162,9 +170,15 @@
                 <!-- <el-button class="transfer-footer" slot="left-footer" size="small">操作</el-button>
                 <el-button class="transfer-footer" slot="right-footer" size="small">操作</el-button> -->
             </el-transfer>
-        <div class="select_cancel" @click="modified_cancel">{{$t("button_message.cancel")}}</div>
-        <div class="select_add" @click="modified_add">{{$t("button_message.confirm")}}</div>
+            <div>
+             <div class="select_cancel" @click="modified_cancel">{{$t("button_message.cancel")}}</div>
+             <div class="select_add" @click="modified_add">{{$t("button_message.confirm")}}</div>
+            </div>
+       
+       
     </el-dialog>
+
+
 </div>
 </template>
 
@@ -299,9 +313,15 @@ export default {
             let submit_form={};
             this.$refs[addgroup_form].validate((valid) => {
                 if (valid) {
-                    submit_form.group_name = this.addgroup_form.name;
-                    submit_form.group_device = this.confirm_device_List;
+     
+                    // submit_form.group_name = this.addgroup_form.name;
+                    // submit_form.group_device = this.confirm_device_List;
                 if(this.confirm_device_List.length !== 0){
+                    let group_info={};
+                    group_info.group_name = this.addgroup_form.name;
+                    group_info.account_id = sessionStorage.getItem('id');
+                    submit_form.group_info = group_info;
+                    submit_form.device_infos = this.confirm_device_List;
                     window.console.log(submit_form)
                 }else{
                     this.$message({
@@ -399,6 +419,11 @@ export default {
             window.console.log(this.modified_add_member);
             this.modified_member_show=false;
             //  this.group_div_show=false;
+        },
+        transfer_cancel(){
+
+            this.confirm_device = this.yesData;
+            this.members_div = false;
         }
     },
     computed:{
@@ -470,6 +495,9 @@ export default {
 </script>
 
 <style scoped>
+.el-aside{
+    overflow: visible
+}
 .active_on{
     background-color: #206ba2
 }
@@ -561,7 +589,7 @@ export default {
 .sideGroup_body{
     width: 100%;
     background-color: white;
-    height: 750px;
+    height: 700px;
     position: relative;
 }
 .group_foot{
@@ -689,12 +717,12 @@ export default {
     line-height: 26px;
     text-align: center;
     cursor: pointer;
-    margin-top: 25px;
+    margin-top: 64px;
     background-color: #409eff;
     color: white;
     border-radius: 5px 5px 5px 5px;
     display: inline-block;
-    margin-left: 40px;
+    margin-left: 43px;
 }
 .select_cancel{
     width: 59px;
@@ -726,6 +754,19 @@ export default {
 }
 .ungroup:hover,.modification:hover,.editor_member:hover{
      background-color: #60a9e1;
+}
+.transfer_cancel{
+      width: 59px;
+    height: 26px;
+    line-height: 26px;
+    text-align: center;
+    cursor: pointer;
+    margin-top: 64px;
+    background-color: #ccc;
+    color: white;
+    border-radius: 5px 5px 5px 5px;
+    display: inline-block;
+    margin-left: 7px;  
 }
 
 

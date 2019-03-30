@@ -1,5 +1,6 @@
 <template>
 <div>
+   <el-header height="96px">
     <div class="header">
         <div class="collapse-btn" >
             <i class="el-icon-menu"></i>
@@ -82,7 +83,7 @@
                 </div>
             </el-dialog>
     </div>
-   
+   </el-header>
  </div>
 </template>
 <script>
@@ -177,7 +178,7 @@ import vSidebar from './Sidebar.vue';
                         // localStorage.setItem('language', 'Change Language');
                         sessionStorage.setItem('language', 'Change Language');
                         window.console.log(this.lang)
-                        // this.$router.go(0);    
+                        this.$router.go(0);    
                     }else {
                         this.lang = 'zh-CN';
                         this.$i18n.locale = this.lang;//关键语句
@@ -185,7 +186,7 @@ import vSidebar from './Sidebar.vue';
                         sessionStorage.setItem('language', '切换语言');
                         // localStorage.setItem('lang', 'zh-CN');
                         sessionStorage.setItem('lang', 'zh-CN');
-                        // this.$router.go(0);
+                        this.$router.go(0);
                     }
             },
             session_language(){
@@ -354,6 +355,9 @@ import vSidebar from './Sidebar.vue';
     }
 </script>
 <style>
+.el-header {
+    padding: 0px;
+}
     .header {
     position: relative;
     -webkit-box-sizing: border-box;

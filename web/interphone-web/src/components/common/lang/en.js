@@ -54,7 +54,8 @@ module.exports = {
          login_error: ' Wrong password',
          register_succ: 'The account is created successfully. Please go to the login page to log in',
          register_error: 'Creation failed, please recreate',
-         device_num: 'Please add device'
+         device_num: 'Please add device',
+         subordinate: 'Please select a subordinate account'
         },
         change_pwd: {
             title: 'change Password',
@@ -125,9 +126,19 @@ module.exports = {
            info:'Transinformation',
            message:'Are you sure to transfer out?',
            select: 'Please select',
-           new_device:'The import equipment',
+           new_device:'Thse import equipment',
            lead:'Are you sure to import?',
            no_data:"No data",
+        },
+        failed:{
+            transfer:'The operation failed. Please refresh the page and try again',
+            imei:'IMEI is a number with a length of 15, please enter again',
+            export_success:'Successfully added device',
+            transfer_success:'Successful transfer device',
+        },
+        login:{
+            expired:'Login time expired, please login again',
+            
         }
     
 

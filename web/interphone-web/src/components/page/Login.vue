@@ -1,4 +1,5 @@
 <template>
+<!-- import { debug } from 'util'; -->
     <div class="login-wrap">
         <div class="ms-login">
             <div class="ms-title">{{ $t("title.logo_name") }}</div>
@@ -127,8 +128,11 @@
             },
             // 登录
             submitForm(ruleForm) {
+            // submitForm() {
+            //     this.$router.push('/homePage');
                 this.$refs[ruleForm].validate((valid) => {
                     if (valid) {
+                       
                         let login_key={};
                         login_key.username=this.ruleForm.username.trim();
                         login_key.pwd=this.ruleForm.password.trim();

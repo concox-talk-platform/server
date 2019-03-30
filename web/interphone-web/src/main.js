@@ -26,8 +26,8 @@ const i18n =new VueI18n({
     },
     silentTranslationWarn: true,
   })
-// axios.defaults.baseURL = 'http://172.16.0.74:8080'
-axios.defaults.baseURL = 'http://113.105.153.240:8080'
+axios.defaults.baseURL = 'http://172.16.0.74:8080'
+// axios.defaults.baseURL = 'http://113.105.153.240:8080'
 Vue.prototype.$axios = axios;
 
 //使用钩子函数对路由进行权限跳转

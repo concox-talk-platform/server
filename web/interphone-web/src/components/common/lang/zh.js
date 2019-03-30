@@ -55,7 +55,8 @@ module.exports = {
         login_error: '密码错误',
         register_succ: '创建成功，请去登录页面登录',
         register_error: '创建失败，请重新创建',
-        device_num: '请添加设备'
+        device_num: '请添加设备',
+        subordinate: '请选择转移的用户'
    },
    change_pwd: {
        title: '修改密码',
@@ -132,6 +133,17 @@ module.exports = {
         new_device:'导入设备',
         lead:'确定导入?',
         no_data:"暂无数据",
-     }
+     },
+     failed:{
+         transfer:'操作失败，请刷新页面重新操作',
+         imei:'IMEI号的长度为15位数字，请确定后提交',
+         export_success:'设备添加成功',
+         transfer_success:'设备转移成功',
+
+     },
+     login:{
+        expired:'登录时间过期，请重新登录',
+        
+    }
 
 }
