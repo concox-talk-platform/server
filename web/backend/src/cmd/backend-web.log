@@ -1,3 +1,2 @@
-[GIN] 2019/03/29 - 18:17:19 | 200 |     139.008ms |             ::1 | POST     /account/login.do/SuperRoot
-[GIN] 2019/03/29 - 18:17:36 | 400 |     79.0046ms |             ::1 | POST     /device/import/SuperRoot
-[GIN] 2019/03/29 - 18:18:17 | 200 |     157.009ms |             ::1 | POST     /device/import/SuperRoot
+[GIN] 2019/03/30 - 17:25:28 | 422 |            0s |             ::1 | POST     /account
+[GIN] 2019/03/30 - 17:25:43 | 422 |      1.0001ms |             ::1 | POST     /account

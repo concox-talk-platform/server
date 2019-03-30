@@ -30,7 +30,7 @@ func Prepare() *gin.Engine {
 	engine.Use(Cors())
 
 	// 注册路由
-	engine.POST("/account", controllers.SignUp)
+	engine.POST("/account", controllers.CreateAccountBySuperior)
 
 	engine.POST("/account/login.do/:account_name", controllers.SignIn)
 

@@ -14,8 +14,9 @@ var (
 		"error_code": "001",
 	} // 不能解析消息体
 
+
 	ErrorDBError = gin.H{
-		"error":      "DB ops failed",
+		"error":      "The process failed, please try again later.",
 		"error_code": "003",
 	} // 数据库操作错误
 
@@ -23,4 +24,9 @@ var (
 		"error":      "session is not right.",
 		"error_code": "006",
 	} // 账户不合法，不存在
+
+	ErrorCreateAccountError = gin.H{
+		"error": "You can only create accounts for junior users,",
+		"error_code": "0001",
+	} // 创建用户等级不合法
 )

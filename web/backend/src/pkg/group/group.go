@@ -269,8 +269,8 @@ func CreateGroupByWeb(gl *model.GroupList) error {
 	var ib = dbs.NewInsertBuilder()
 	ib.Table("group_device")
 	ib.Columns("group_id", "device_id")
-	for i := 0; i < len(gl.DeviceIds); i++ {
-		ib.Values(groupId, gl.DeviceIds[i])
+	for _, v := range gl.DeviceInfo {
+		ib.Values(groupId, v)
 	}
 
 	stmtInsGD, value, err := ib.ToSQL()

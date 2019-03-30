@@ -17,10 +17,6 @@ var dbConn = db.DBHandler
 
 // 批量导入设备
 func ImportDevice(u []*model.User) error {
-	tx, err := dbConn.Begin()
-	if err != nil {
-		return err
-	}
 	var ib = dbs.NewInsertBuilder()
 
 	ib.Table("user")
@@ -32,23 +28,13 @@ func ImportDevice(u []*model.User) error {
 	}
 
 	stmtIns, values, err := ib.ToSQL()
-	res, err := tx.Exec(stmtIns, values...)
 	if err != nil {
 		return err
 	}
-	var resAff int64
-	if res != nil {
-		resAff, _ = res.RowsAffected()
+	if _, err := dbConn.Exec(stmtIns, values...); err != nil {
+		return err
 	}
 
-	if resAff == int64(len(u)) {
-		_ = tx.Commit()
-	} else {
-		log.Println("rollback")
-		if err := tx.Rollback(); err != nil {
-			return err
-		}
-	}
 	return nil
 }
 

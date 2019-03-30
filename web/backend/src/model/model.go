@@ -22,7 +22,6 @@ type AccountDeviceTransReq struct {
 	Receiver DeviceReceiver `json:"receiver"`
 }
 
-
 type AccountImportDeviceReq struct {
 	DeviceIMei []string `json:"device_imei"`
 }
@@ -134,6 +133,27 @@ type Account struct {
 	Pwd         string `json:"pwd"`
 	Email       string `json:"email"`
 	PrivilegeId int    `json:"privilege_id"`
+	Contact     string `json:"contact"`
+	RoleId      int    `json:"role_id"`
+	State       string `json:"state"`
+	LlTime      string `json:"ll_time"`
+	ChangeTime  string `json:"change_time"`
+	CTime       string `json:"c_time"`
+	Phone       string `json:"phone"`
+	Remark      string `json:"remark"`
+	Address     string `json:"address"`
+}
+
+type CreateAccount struct {
+	ConfirmPwd string `json:"confirm_pwd"`
+	Id          int    `json:"id"`
+	Pid         int    `json:"pid"`
+	Username    string `json:"username"`
+	NickName    string `json:"nick_name"`
+	Pwd         string `json:"pwd"`
+	Email       string `json:"email"`
+	PrivilegeId int    `json:"privilege_id"`
+	Contact     string `json:"contact"`
 	RoleId      int    `json:"role_id"`
 	State       string `json:"state"`
 	LlTime      string `json:"ll_time"`
