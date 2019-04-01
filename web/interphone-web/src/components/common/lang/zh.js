@@ -20,7 +20,8 @@ module.exports = {
         sign_up: '注册',
         ensure: '提交',
         add: '添加',
-        confirm :'确定'
+        confirm :'确定',
+        reset: '重置'
 
         
     },
@@ -53,8 +54,6 @@ module.exports = {
         pwd_err: '两次输入密码不一致',
         account_error: '账号不存在',
         login_error: '密码错误',
-        register_succ: '创建成功，请去登录页面登录',
-        register_error: '创建失败，请重新创建',
         device_num: '请添加设备',
         subordinate: '请选择转移的用户'
    },
@@ -143,7 +142,17 @@ module.exports = {
      },
      login:{
         expired:'登录时间过期，请重新登录',
-        
+    },
+    establish:{
+        failed:'创建失败，请重新创建',
+        success:'创建成功',
+    },
+    registration:{
+        name:'客户名要求：不能大于20位字符，只能包含英文字母、数字、汉字、下划线',
+        client:'账号要求：5~20位字符，只能包含英文字母、数字、下划线',
+        same_account:'账户名已存在',
+        nick_name:'请填写客户名称',
+        success:'资料更新成功',
     }
 
 }

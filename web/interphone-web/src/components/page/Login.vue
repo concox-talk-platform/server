@@ -142,8 +142,6 @@
                         // localStorage.setItem('setSession_id', response.data.session_id);
                         sessionStorage.setItem('setSession_id', response.data.session_id);
                         window.console.log( sessionStorage.getItem('setSession_id'));
-                        window.console.log( sessionStorage.getItem('setSession_id'));
-                        // localStorage.setItem('loginName', this.ruleForm.username.trim());            
                         sessionStorage.setItem('loginName', this.ruleForm.username.trim());  
                         this.$axios.get('/account/'+sessionStorage.getItem('loginName'),
                             { headers: 
@@ -155,29 +153,11 @@
                              window.console.log(response);
                             sessionStorage.setItem('id', response.data.account_info.id);
                             sessionStorage.setItem('lang', this.lang);
-                            localStorage.setItem('account_info', JSON.stringify(response.data.account_info));
+                            sessionStorage.setItem('account_info', JSON.stringify(response.data.account_info));
                             localStorage.setItem('device_list', JSON.stringify(response.data.device_list));
                             localStorage.setItem('group_list', JSON.stringify(response.data.group_list));
-                            // this.$store.commit("groupList",response.data.group_list);
+                            localStorage.setItem('children_list', JSON.stringify(response.data.tree_data));
                             this.$router.push('/homePage');
-                            // this.$store.commit("deviceList",response.data.device_list);
-                            // this.$store.commit("information",response.data.account_info);
-                                this.$axios.get('/account_class/'+response.data.account_info.id,
-                                { headers: 
-                                {
-                                // "Authorization" : localStorage.getItem('setSession_id')
-                                "Authorization" : sessionStorage.getItem('setSession_id')
-                                }
-                                })
-                                .then((response) =>{
-                                //  localStorage.setItem('id', response.data.account_info.id);    
-                                window.console.log(response);
-                                localStorage.setItem('children_list', JSON.stringify(response.data.tree_data));
-                                // this.$store.commit("subordinate",response.data.tree_data);
-                                })
-                                .catch(function (error) {
-                                window.console.log(error);
-                                });
                             })
                             .catch(function (error) {
                             window.console.log(error);

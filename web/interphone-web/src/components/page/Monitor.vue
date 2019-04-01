@@ -186,7 +186,7 @@
 export default {
     data() {   
         return {
-                local_device_list:JSON.parse(localStorage.getItem('device_list')),
+                // local_device_list:JSON.parse(localStorage.getItem('device_list')),
                 local_group_list:JSON.parse(localStorage.getItem('group_list')),
                 yesData: [],
                 select_Data:[],
@@ -288,15 +288,20 @@ export default {
             this.confirm_device_List = [];
             // let device_list = JSON.parse(localStorage.getItem('device_list'));
             // for( var i =0;i<device_list.length;i++){
-            for( var i =0;i<this.local_device_list.length;i++){
-                for(var j=0;j<this.confirm_device.length;j++){
-                    // if(device_list[i].id == this.confirm_device[j]){
-                    if(this.local_device_list[i].id == this.confirm_device[j]){
-                    // this.confirm_device_List.push(device_list[i])  
-                    this.confirm_device_List.push(this.local_device_list[i])  
+            if(this.local_device_list == null){
+                return 
+            }else{
+                for( var i =0;i<this.local_device_list.length;i++){
+                    for(var j=0;j<this.confirm_device.length;j++){
+                        // if(device_list[i].id == this.confirm_device[j]){
+                        if(this.local_device_list[i].id == this.confirm_device[j]){
+                        // this.confirm_device_List.push(device_list[i])  
+                        this.confirm_device_List.push(this.local_device_list[i])  
+                        }
                     }
                 }
             }
+
             window.console.log(this.confirm_device_List)
             this.members_div = false;
             this.group_memberdiv_show = true;
@@ -406,6 +411,7 @@ export default {
         modified_add(){
             // let modified_divice = JSON.parse(localStorage.getItem('device_list'));
             // for( var i=0;i<modified_divice.length;i++){
+                
             for( var i=0;i<this.local_device_list.length;i++){
                 for(var j=0;j< this.select_Data.length;j++){
                     // if(modified_divice[i].id == this.select_Data[j]){
@@ -434,37 +440,52 @@ export default {
             device_member(){
                 //  let device_device_list = JSON.parse(localStorage.getItem('device_list'));
                 //  let device_id = device_device_list.map(e =>{
-                 let device_id = this.local_device_list.map(e =>{
-                    if(e.hasOwnProperty('id')){
-                        return e.id
+                    if(this.local_device_list == null){
+                        return
+                    }else{
+                        let device_id = this.local_device_list.map(e =>{
+                            if(e.hasOwnProperty('id')){
+                                return e.id
+                            }
+                        })
+                        return device_id;                   
                     }
-                 })
-                return device_id;
+
             },
             noData(){
                 // let  transfer_name = JSON.parse(localStorage.getItem('device_list'));
                 let transfer_newData = [];
                 // transfer_name.forEach((obj) => {
-                this.local_device_list.forEach((obj) => {
-                    var  transfer_obj = {};
-                    transfer_obj.id = obj.id;
-                    transfer_obj.name =obj.user_name;
-                    transfer_newData.push(transfer_obj)
-                });
-                return  transfer_newData
+                    if (this.local_device_list == null){
+                        return
+                    }else{
+                        this.local_device_list.forEach((obj) => {
+                                    var  transfer_obj = {};
+                                    transfer_obj.id = obj.id;
+                                    transfer_obj.name =obj.user_name;
+                                    transfer_newData.push(transfer_obj)
+                                });
+                        return  transfer_newData
+                    }
+      
             },
             // 选中组的设备信息
             member_data(){
                 // let modified_name = JSON.parse(localStorage.getItem('device_list'));
                 let modified_newData = [];
                 // modified_name.forEach((obj) => {
-                this.local_device_list.forEach((obj) => {
-                    var  modified_obj ={};
-                    modified_obj.id = obj.id;
-                    modified_obj.name =obj.user_name;
-                    modified_newData.push(modified_obj)
-                });
-                return  modified_newData
+                if( this.local_device_list == null){
+                      return
+                }else{
+                    this.local_device_list.forEach((obj) => {
+                        var  modified_obj ={};
+                        modified_obj.id = obj.id;
+                        modified_obj.name =obj.user_name;
+                        modified_newData.push(modified_obj)
+                    });
+                    return  modified_newData
+                }
+
             },
             select_group_num(){
                 // let  group_select_device = JSON.parse(localStorage.getItem('group_list'));
@@ -487,6 +508,9 @@ export default {
                     group_selected_member = group_selected_member[group_selected_name].group_info.group_name
                 }
                 return   group_selected_member
+            },
+            local_device_list(){
+                return JSON.parse(localStorage.getItem('device_list'))
             }
     },
     mounted(){

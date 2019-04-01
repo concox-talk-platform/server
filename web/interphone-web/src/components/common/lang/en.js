@@ -20,7 +20,8 @@ module.exports = {
         sign_up: 'Sign Up',
         ensure: 'Submit',
         add: 'Add',
-        confirm :'Confirm'
+        confirm :'Confirm',
+        reset: 'Reset'
         
     },
     reg_message: {
@@ -52,8 +53,6 @@ module.exports = {
          pwd_err: 'Entered passwords differ',
          account_error: 'Account does not exist',
          login_error: ' Wrong password',
-         register_succ: 'The account is created successfully. Please go to the login page to log in',
-         register_error: 'Creation failed, please recreate',
          device_num: 'Please add device',
          subordinate: 'Please select a subordinate account'
         },
@@ -139,6 +138,17 @@ module.exports = {
         login:{
             expired:'Login time expired, please login again',
             
+        },
+        establish:{
+            failed:'Failed to create. Please create again',
+            success:'Created successfully',
+        },
+        registration:{
+            name:'Customer name requirements: 1~20 characters, can only contain English letters, numbers, Chinese characters, underline',
+            client:'Account requirements: 5~20 characters, can only contain English letters, numbers, underscores',
+            same_account:'The account name already exists',
+            nick_name: 'Please enter a customer name',
+            success:'Data updated successfully',
         }
     
 

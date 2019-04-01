@@ -25,7 +25,7 @@
                         {{nikename}} <i class="el-icon-caret-bottom"></i>
                     </span>
                     <el-dropdown-menu slot="dropdown">
-                            <el-dropdown-item  @click.native="FormVisible">{{ $t("account.account_information") }}</el-dropdown-item>
+                            <!-- <el-dropdown-item  @click.native="FormVisible">{{ $t("account.account_information") }}</el-dropdown-item> -->
                             <el-dropdown-item  @click.native="changePassword">{{ $t("account.change_passwords") }}</el-dropdown-item>
                         <!-- <el-dropdown-item divided  command="loginout">退出登录</el-dropdown-item> -->
                         <el-dropdown-item  @click.native="change_lang">{{$t("change.language")}}</el-dropdown-item>
@@ -36,10 +36,8 @@
             </div>
         </div>
          <v-sidebar></v-sidebar>
-        
-        
              <!-- 账户信息 -->
-            <el-dialog :title="$t('reg_message.account_info')" :visible.sync="dialogFormVisible">
+            <!-- <el-dialog :title="$t('reg_message.account_info')" :visible.sync="dialogFormVisible">
                 <el-form :model="accountInfo" ref="accountInfo">
                     <el-form-item :label="$t('reg_message.contact')" :label-width="formLabelWidth">
                     <el-input v-model="accountInfo.name" autocomplete="off" ></el-input>
@@ -58,11 +56,10 @@
                     </el-form-item>        
                 </el-form>
                 <div slot="footer" class="dialog-footer">
-                    <!-- <el-button @click="dialogFormVisible = false">取 消</el-button> -->
                     <el-button @click="formCancle">{{$t('button_message.cancel')}}</el-button>
                     <el-button type="primary" @click="updateInfor">{{$t('button_message.ensure')}}</el-button>
                 </div>
-            </el-dialog>
+            </el-dialog> -->
             <!-- 修改密码 -->
             <el-dialog :title="$t('change_pwd.title')" :visible.sync="pwdVisible" status-icon>
                 <el-form ref="form" :model="form" :rules="rule" label-width="136px" @submit.native.prevent>
@@ -115,7 +112,7 @@ import vSidebar from './Sidebar.vue';
                 collapse: false,
                 fullscreen: false,
                 // name: 'linxin',
-                dialogFormVisible: false,
+                // dialogFormVisible: false,
                 lang:sessionStorage.getItem('lang'),
                 pwdVisible:false,
                 accountInfo: {
@@ -192,26 +189,26 @@ import vSidebar from './Sidebar.vue';
             session_language(){
                 this.$i18n.locale = sessionStorage.getItem('lang');
             },
-            FormVisible(){
-               this.dialogFormVisible=true;
-                // window.console.log(this.$store.state.User.information)
-                // let personal_details = this.$store.state.User.information
-                let personal_details = JSON.parse(localStorage.getItem('account_info'))
-                // let personal_details = this.$store.state.User.information
-                this.accountInfo.name = personal_details.nike_name;
-                this.accountInfo.phone = personal_details.phone;
-                this.accountInfo.email = personal_details.email;
-                this.accountInfo.adress = personal_details.address;
-                this.accountInfo.remark = personal_details.remark;
-            },
+            // FormVisible(){
+            //    this.dialogFormVisible=true;
+            //     // window.console.log(this.$store.state.User.information)
+            //     // let personal_details = this.$store.state.User.information
+            //     let personal_details = JSON.parse(sessionStorage.getItem('account_info'))
+            //     // let personal_details = this.$store.state.User.information
+            //     this.accountInfo.name = personal_details.nike_name;
+            //     this.accountInfo.phone = personal_details.phone;
+            //     this.accountInfo.email = personal_details.email;
+            //     this.accountInfo.adress = personal_details.address;
+            //     this.accountInfo.remark = personal_details.remark;
+            // },
             changePassword(){
                 this.pwdVisible=true;
             },
             // 关闭表单
-            formCancle(){
-                this.dialogFormVisible = false;
-                this.accountInfo={}
-            },
+            // formCancle(){
+            //     this.dialogFormVisible = false;
+            //     this.accountInfo={}
+            // },
             pwdCancle(){
                 this.pwdVisible = false;
                 
@@ -242,23 +239,23 @@ import vSidebar from './Sidebar.vue';
             }); 
     
             },
-            updateInfor(){
-                let newInfor={}
-                // newInfor.id=this.$store.state.id
-                newInfor.inick_name=this.accountInfo.name;
-                newInfor.phone=this.accountInfo.phone;
-                newInfor.email=this.accountInfo.email;
-                newInfor.address=this.accountInfo.adress;
-                newInfor.remark=this.accountInfo.remark;
-                window.console.log(newInfor)
-                // this.$axios.post('/account/info/update',newInfor)
-                // .then(function (response) {
-                // window.console.log(response)
-                // this.$router.push('/');
-                // }.bind(this))
-                // .catch( () => {
-                // });  
-            },
+            // updateInfor(){
+            //     let newInfor={}
+            //     // newInfor.id=this.$store.state.id
+            //     newInfor.inick_name=this.accountInfo.name;
+            //     newInfor.phone=this.accountInfo.phone;
+            //     newInfor.email=this.accountInfo.email;
+            //     newInfor.address=this.accountInfo.adress;
+            //     newInfor.remark=this.accountInfo.remark;
+            //     window.console.log(newInfor)
+            //     // this.$axios.post('/account/info/update',newInfor)
+            //     // .then(function (response) {
+            //     // window.console.log(response)
+            //     // this.$router.push('/');
+            //     // }.bind(this))
+            //     // .catch( () => {
+            //     // });  
+            // },
             outlogin(){
              this.$router.push('/login');   
             //  localStorage.clear();       

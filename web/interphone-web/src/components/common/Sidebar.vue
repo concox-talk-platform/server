@@ -7,7 +7,7 @@
 
          <!-- <router-link class="li"  v-for="(item, index) in navigationerArr" :key="index" :to="item.address">{{item.name}}</router-link> -->
          <router-link class="li" to="/homePage">{{$t('title.Account_center')}}</router-link>
-         <router-link class="li" to="/monitor">{{$t('title.monitor')}}</router-link>
+         <router-link class="li" to="/monitor" v-if="monitorShow">{{$t('title.monitor')}}</router-link>
          </div>
 
         
@@ -20,6 +20,7 @@
     export default {
         data() {
             return {
+                monitorShow :true,
                 // navigationerArr:[
                 //     {name:this.$t('title.Account_center'),address:"/homePage"},
                 //     // {name:this.$t('title.control_center'),address:'/mapControl'},
@@ -30,6 +31,13 @@
             }
         },
         methods:{
+            monitor_Show(){
+                if(JSON.parse(sessionStorage.getItem('account_info')).role_id == 2){
+                    this.monitorShow=true
+                }else{
+                    this.monitorShow=false;
+                }
+            }
         },
         computed:{
             onRoutes(){
@@ -40,6 +48,9 @@
         created(){
             // this.language()
         },
+        mounted(){
+            this.monitor_Show()
+        }
     }
 </script>
 

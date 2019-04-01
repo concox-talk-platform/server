@@ -6,7 +6,7 @@
         <div class="client_left_tittle">
             <i class="el-icon-caret-bottom client_left_icon"></i>
             <span class="client_left_name">{{ $t("client_lang.client_list") }} </span>
-            <div class="client_left_import" @click="device_import">{{ $t("client_lang.import") }}</div>            
+            <div class="client_left_import" @click="device_import" v-if="rootShow">{{ $t("client_lang.import") }}</div>            
             <div class="client_left_regiter" @click="register">{{ $t("client_lang.client_add") }}</div>            
         </div>
         <div class="client_left_body">
@@ -72,8 +72,10 @@
                             <span class="mass_transfer" @click="transfer">{{$t('table.mass')}}</span>
                         </div>
                         <!-- 完整分页 -->
-                        <el-table ref="multipleTable" :data="tableData.slice((currentPage-1)*pagesize,currentPage*pagesize)" tooltip-effect="dark"
+                        <el-table ref="multipleTable" :data="table_page" tooltip-effect="dark"
                          :empty-text="$t('table.no_data')" style="width: 100%"  @selection-change="handleSelectionChange">
+                               <!-- <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark"
+                         :empty-text="$t('table.no_data')" style="width: 100%"  @selection-change="handleSelectionChange"> -->
                             <el-table-column type="selection" width="55" ></el-table-column>
                             <el-table-column  type="index" width="80" :label="$t('table.number')"></el-table-column>
                             <el-table-column prop="imei" label="IMEI" width="240"> </el-table-column>
@@ -104,11 +106,14 @@
                             <el-form-item :label="$t('reg_message.account')">
                                 <el-input  v-model="subordinate.account"  :disabled="ban"></el-input>
                             </el-form-item>
-                            <el-form-item :label="$t('reg_message.account_type')" prop="register_type">
+                            <!-- <el-form-item :label="$t('reg_message.account_type')" prop="register_type">
                                     <el-radio-group v-model="subordinate.type">
                                     <el-radio v-for="item in Account_typedata" :key="item.Account_type"  :label="item.Account_type" :value="item.value" ></el-radio>       
                                     </el-radio-group>
-                                </el-form-item>
+                            </el-form-item> -->
+                            <el-form-item :label="$t('reg_message.account_type')" prop="register_type">
+                                    <el-input  v-model="subordinate.type"  :disabled="ban"></el-input>
+                            </el-form-item>
                             <el-form-item :label="$t('reg_message.contact')">
                             <el-input v-model="subordinate.contact" autocomplete="off" ></el-input>
                             </el-form-item>
@@ -121,9 +126,12 @@
                             <el-form-item :label="$t('reg_message.adress')" >
                             <el-input v-model="subordinate.adress" autocomplete="off" ></el-input>
                             </el-form-item>
+                            <el-form-item :label="$t('reg_message.remark')"  >
+                                <el-input type="textarea" v-model="subordinate.remark" autocomplete="off" ></el-input>
+                            </el-form-item> 
                         </el-form>
                         <div slot="footer" class="dialog-footer subordinate_footer">
-                            <!-- <el-button @click="register_Cancle">{{$t('button_message.cancel')}}</el-button> -->
+                            <el-button @click="reset ">{{$t('button_message.reset')}}</el-button>
                             <el-button type="primary" @click="subordinate_submit">{{$t('button_message.confirm')}}</el-button>
                         </div>
                     </div>
@@ -132,7 +140,7 @@
         </div>
     </div>
   <!-- 注册 -->
-        <el-dialog :title="$t('reg_message.title')" :visible.sync="registerVisible" :show-close="false">
+        <el-dialog :title="$t('reg_message.title')" :visible.sync="registerVisible" :show-close="false" width="33%">
             <el-form ref="registerForm" :model="registerForm"  :rules="register_rules" label-width="136px" @submit.native.prevent>
                 <el-form-item :label="$t('reg_message.name')" prop="register_name">
                     <el-input ref="register_name" v-model="registerForm.register_name" :placeholder="$t('prompt_message.name')"></el-input>
@@ -163,6 +171,9 @@
                  <el-form-item :label="$t('reg_message.adress')" >
                   <el-input v-model="registerForm.adress" autocomplete="off" ></el-input>
                 </el-form-item>
+                <el-form-item :label="$t('reg_message.remark')"  >
+                    <el-input type="textarea" v-model="registerForm.remark" autocomplete="off" ></el-input>
+                </el-form-item> 
             </el-form>
             <div slot="footer" class="dialog-footer">
                 <el-button @click="register_Cancle">{{$t('button_message.cancel')}}</el-button>
@@ -238,15 +249,25 @@ export default {
             total_mumber:'',
             treeNode:1,
             nodeId:'',
+            rootShow:false,
+            ztreeId:sessionStorage.getItem('id'),
             // device_info:JSON.parse(localStorage.getItem('device_list')) ,
-            childre_infor:JSON.parse(localStorage.getItem('children_list')),
-            // lang:sessionStorage.getItem('lang'),
+            // childre_infor:JSON.parse(localStorage.getItem('children_list')),
+            
+            // lang:sessionStorage.getItem('lang'/),
             registerVisible:false,
             registerForm: {
+                    register_name:'',
                     register_Account: '',
                     register_Password: '',
                     register_cfmPassword: '',
-                    register_type: ''
+                    register_type: '',
+                    name:'',
+                    phone:'',
+                    email:'',
+                    adress:'',
+                    remark:''
+                    
                 }, 
             register_rules: {
                 register_name: [
@@ -298,16 +319,16 @@ export default {
             ztree_data:[],
             defaultProps: {
                 children: 'children',
-                label: 'account_name'
+                label: 'account_nickname'
             },
             // 登录信息
             information_name:'程涛',
             information_login:'小小',
-            information_type:'经销商',
-            information_number:'21',
-            information_contact: '库卡',
-            information_phone:'13112344321',
-            information_adress:'china shenzhen',
+            information_type:'',
+            information_number:'',
+            information_contact: '',
+            information_phone:'',
+            information_adress:'',
         
             // 选项卡
              activeName: 'first',
@@ -315,12 +336,13 @@ export default {
             ban:true,
             subordinate :{
                 name:'',
-                account:'11111',
+                account:'',
                 contact: '',
                 phone:'',
                 email:'',
                 type:'',
                 adress:'',
+                remark:'',
                 
             },
             // 设备表格
@@ -348,7 +370,7 @@ export default {
                this.registerVisible=true; 
                this.register_Account=''
                this.register_Password=''
-               this.register_cfmPasswor=''
+               this.register_cfmPassword=''
             },
             register_Cancle(){
                 this.registerVisible=false;
@@ -359,40 +381,43 @@ export default {
                 this.$refs[registerForm].validate((valid) => {
                   if (valid) {
                         let register_info={};
-                        register_info.nikename=this.registerForm.register_name.trim();
-                        register_info.username=this.registerForm.register_Account.trim();
-                        register_info.pwd=this.registerForm.register_Password.trim();
-                        register_info.pid=sessionStorage.getItem('id');
+                        register_info.nick_name = this.registerForm.register_name.trim();
+                        register_info.username = this.registerForm.register_Account.trim();
+                        register_info.pwd = this.registerForm.register_Password.trim();
+                        register_info.confirm_pwd = this.registerForm.register_cfmPassword.trim();
+                        register_info.remark = this.registerForm.remark;
+                        register_info.contact = this.registerForm.name;
+                        register_info.pid = parseInt(sessionStorage.getItem('id'));
                         switch(this.registerForm.register_type){
                                 case '管理员':
-                                register_info.roletype=1;
+                                register_info.role_id=1;
                                 break;  
                                 case 'Administrator':
-                                register_info.roletype=1;
+                                register_info.role_id=1;
                                 break;                             
                                 case '调度员':
-                                register_info.roletype=2;
+                                register_info.role_id=2;
                                 break;
                                 case 'Dispatcher':
-                                register_info.roletype=2;
+                                register_info.role_id=2;
                                 break;                            
                                 case '经销商':
-                                register_info.roletype=3;
+                                register_info.role_id=3;
                                 break;
                                 case 'Dealer':
-                                register_info.roletype=3;
+                                register_info.role_id=3;
                                 break;                             
                                 case '公司':
-                                register_info.roletype=4;
+                                register_info.role_id=4;
                                 break;
                                 case 'Company':
-                                register_info.roletype=4;
+                                register_info.role_id=4;
                                 break;
                                 case '超级管理员':
-                                register_info.roletype=5;
+                                register_info.role_id=5;
                                 break;
                                 case 'Superadmin':
-                                register_info.roletype=5;
+                                register_info.role_id=5;
                                 break;                               
                             }
                         if(this.registerForm.name !== undefined){
@@ -411,38 +436,57 @@ export default {
                             register_info.email=''
                         }                                       
                         if(this.registerForm.adress !== undefined){
-                            register_info.adress=this.registerForm.adress.trim();  
+                            register_info.address=this.registerForm.adress.trim();  
                         }else{
-                            register_info.adress=''
-                        }     
+                            register_info.address=''
+                        }
+                          
                         window.console.log(register_info)   
-                        this.$axios.post('/account',register_info)
+                        this.$axios.post('/account',register_info,{ headers: 
+                            {"Authorization" : sessionStorage.getItem('setSession_id')}
+                                })
                         .then(function (response) {
                         //  this.$router.push('/homePage');
                           window.console.log(response);
                           window.console.log(response.data.success);
                           if(response.data.success){
-                                this.$message({
-                                    
-                                message: this.$t('prompt_message.register_succ'),
+                                this.$message({                                   
+                                message: this.$t('establish.success'),
                                 type: 'success'
                                 });
                                 this.registerVisible=false;
                                 this.$refs['registerForm'].clearValidate();
-                               this.$refs['registerForm'].resetFields();
-                          }else{
+                                 this.$refs['registerForm'].resetFields();
+                                this.ztree_updata();
+                           }else{
                                 this.$message({
-                                message: '创建失败，请重新创建',
+                                message: this.$t('establish.failed'),
                                 type: 'warning'
                                 });
                           }
                         }.bind(this))
                         .catch( (error) => {
-                         window.console.log(error);
-                                this.$message({
-                                message: '创建失败，请重新创建',
-                                type: 'warning'
-                                });
+                        switch(error.response.data.error_code){
+                            case '0002':
+                            this.$message({
+                            message: this.$t('registration.name'),
+                            type: 'warning'
+                            });
+                            break; 
+                            case '0003':
+                            this.$message({
+                            message: this.$t('registration.client'),
+                            type: 'warning'
+                            });
+                            break;
+                            case '0005':
+                            this.$message({
+                            message: this.$t('registration.same_account'),
+                            type: 'warning'
+                            });
+                            break;
+                                
+                        }
                     
                         }); 
                   } else {
@@ -466,108 +510,138 @@ export default {
             },
             // 渲染个人信息
             apply_info(){
-              this.personal_info=JSON.parse(localStorage.getItem('account_info'));
+              this.personal_info = JSON.parse(sessionStorage.getItem('account_info'));
+              
               this.device_info = JSON.parse(localStorage.getItem('device_list'))
-       
+            //   if(this.device_info == null){
+
+            //     this.renders();
+            //   }else{
+            //     this.renders();
+            //   }
               this.renders();
             },
             renders(){     
                 this.information_name = this.personal_info.nick_name;
                 this.information_login = this.personal_info.username;
-                this.information_phone = this.personal_info.phone;
-                this.information_adress = this.personal_info.address;
+                this.information_phone = this.personal_info.phone.String;
+                this.information_adress = this.personal_info.address.String;
+                this.information_contact = this.personal_info.contact.String;
                 if( this.device_info !== null){
                     this.information_number = this.device_info.length;
                 }else{
-                  return
+                  this.information_number =0;
                  }
                 
                 if(sessionStorage.getItem('lang') == 'en-US'){
                      switch(this.personal_info.role_id){
                          case 1:
                          this.information_type = "Administrator";
+                         this.subordinate.type = "Administrator";
                          break;
                          case 2:
                          this.information_type = "Dispatcher";
+                         this.subordinate.type = "Dispatcher";
                          break;       
                          case 3:
                          this.information_type = "Dealer";
+                         this.subordinate.type = "Dealer";
                          break;
                          case 4:
                          this.information_type = "Company";
+                         this.subordinate.type = "Company";
                          break;
                          case 5:
                          this.information_type = "Superadmin";
+                         this.subordinate.type = "Superadmin";
                          break;                                                                 
                      }
                 }else{
                      switch(this.personal_info.role_id){
                          case 1:
                          this.information_type = "管理员";
+                         this.subordinate.type = "管理员";
                          break;
                          case 2:
                          this.information_type = "调度员";
+                         this.subordinate.type = "调度员";
                          break;       
                          case 3:
                          this.information_type = "经销商";
+                         this.subordinate.type = "经销商";
                          break;
                          case 4:
                          this.information_type = "公司";
+                         this.subordinate.type = "公司";
                          break;
                          case 5:
                          this.information_type = "超级管理员";
+                         this.subordinate.type = "超级管理员";
                          break;                                                                   
                      }
                 }
-                this.subordinate.adress = this.personal_info.address;
-                this.subordinate.email = this.personal_info.email;
-                this.subordinate.phone = this.personal_info.phone;
+                this.subordinate.adress = this.personal_info.address.String;
+                this.subordinate.email = this.personal_info.email.String;
+                this.subordinate.phone = this.personal_info.phone.String;
                 this.subordinate.account = this.personal_info.username;
                 this.subordinate.name = this.personal_info.nick_name;
+                this.subordinate.remark = this.personal_info.remark.String;
+                this.subordinate.contact = this.personal_info.contact.String;
+                
+
                 
                 
+            },
+            // 重置
+            reset(){
+               this.subordinate.name = '';
+               this.subordinate.contact = '';
+               this.subordinate.phone = '';
+               this.subordinate.email = '';
+               this.subordinate.adress = '';
+               this.subordinate.remark = '';
+               
             },
             // 修改下级信息
             subordinate_submit(){
                 let subordinate_info = {};
-                subordinate_info.nikename = this.subordinate.name;
+                subordinate_info.login_id = sessionStorage.getItem('id');
+                subordinate_info.id = this.ztreeId.toString();
+                subordinate_info.nick_name = this.subordinate.name;
                 subordinate_info.username = this.subordinate.account;
-                subordinate_info.contact = this.subordinate.contact;
+                subordinate_info.type_id = this.personal_info.role_id.toString();
                 subordinate_info.phone = this.subordinate.phone;
                 subordinate_info.email = this.subordinate.email;
-                subordinate_info.adress = this.subordinate.adress;
-                switch(this.subordinate.type){
-                    case '管理员':
-                    subordinate_info.roletype=1;
-                    break;
-                    case 'Administrator':
-                    subordinate_info.roletype=1;
-                    break;                             
-                    case '调度员':
-                    subordinate_info.roletype=2;
-                    break;
-                    case 'Dispatcher':
-                    subordinate_info.roletype=2;
-                    break;
-                    case '经销商':
-                    subordinate_info.roletype=3;
-                    break;  
-                    case 'Dealer':
-                    subordinate_info.roletype=3;
-                    break;                             
-                    case '公司':
-                    subordinate_info.roletype=4;
-                    break;
-                    case 'Company':
-                    subordinate_info.roletype=4;
-                    break;
-                    case '超级管理员':
-                    subordinate_info.roletype=4;
-                    break;
-                    case 'Superadmin':
-                    subordinate_info.roletype=4;
-                    break;
+                subordinate_info.address = this.subordinate.adress;
+                subordinate_info.remark = this.subordinate.remark;
+                subordinate_info.contact = this.subordinate.contact;  
+                window.console.log(subordinate_info);
+                if(subordinate_info.nick_name == ''){
+                  this.$message({
+                        message: this.$t('registration.nick_name'),
+                        type: 'warning'
+                    });
+
+                }else{
+                    this.$axios.post('/account/info/update',subordinate_info,
+                    { headers: 
+                    {"Authorization" : sessionStorage.getItem('setSession_id')}
+                    })
+                    .then((response) =>{
+                    window.console.log(response); 
+                    this.$message({
+                        message: this.$t('registration.success'),
+                        type: 'success'
+                    });
+                    this.ztree_updata();
+                    this.update_data();
+                    })
+                    .catch(function (error) {
+                    window.console.log(error);
+                    });
                 }
+
+        
             }, 
             // 设备表格
             handleSelectionChange(val) {
@@ -593,7 +667,6 @@ export default {
                 if(this.multipleSelection.length !== 0){
                     this.transfer_dialog = true;
                     this.customer_List = this.childre_infor.children;
-                    // window.console.log(this.customer_List)
                     this.gridData=this.device_data;
                 }else{
                     this.$message({
@@ -616,9 +689,6 @@ export default {
                 .then(_ => {
                     window.console.log(_)
                     let transinformation={};
-                    // transinformation.receiver={};
-                    // transinformation.receiver.account_id=this.customer.id;
-                    // transinformation.receiver.account_name=this.customer.account_name;
                     transinformation.devices=this.gridData;
                     let a={};
                     a.account_id =this.customer.id;
@@ -648,7 +718,7 @@ export default {
                               this.update_data();
                               this.reload();
                             })
-                            .catch(function (error) {
+                            .catch((error) => {
                                 window.console.log(error)
                                 this.$message({
                                   message: this.$t('failed.transfer'),
@@ -656,8 +726,6 @@ export default {
                                 });
                             }); 
                     }
-
-                    
                     done();
                 })
                 .catch(_ => {
@@ -683,7 +751,6 @@ export default {
                     cancelButtonText: this.$t("button_message.cancel")
                 })
                 .then(_ => {
-                    window.console.log( this.imei_data)
                     window.console.log(_);
                     this.device_imei = this.imei_data.map(e =>{
                         if(e.hasOwnProperty('iemi')){
@@ -694,13 +761,9 @@ export default {
                     for(var i=0;i<this.device_imei.length;i++){
                         window.console.log(this.device_imei[i].length)
                            if(this.device_imei[i].length !== 15){
-                                imei_length.push(this.device_imei[i]) 
-                                window.console.log(this.device_imei[i])
+                                imei_length.push(this.device_imei[i]); 
                            }
-                    //    window.console.log( this.device_imei[i].length)
-                    //    window.console.log( this.device_imei[i])
                     }
-                    window.console.log( imei_length)
                     if(imei_length.length == 0){
                        let decive_data = {};
                             decive_data.device_imei =this.device_imei;
@@ -724,7 +787,7 @@ export default {
                                 type: 'success'
                                 });
                             })
-                            .catch(function (error) {
+                            .catch((error) => {
                                 window.console.log(error);
                                 this.$message({
                                 message: this.$t('failed.transfer'),
@@ -772,9 +835,10 @@ export default {
                     this.personal_info = response.data.account_info;
                     this.device_info =  response.data.device_list;
                     this.total_mumber = response.data.device_list.length;
+                    this.ztreeId =  response.data.account_info.id;
                     this.renders(); 
                     })
-                    .catch(function (error) {
+                    .catch((error) => {
                     window.console.log(error);
                     });
                  }else{
@@ -789,12 +853,20 @@ export default {
                     //  localStorage.setItem('id', response.data.account_info.id);    
                     window.console.log(response.data);
                     this.personal_info = response.data.account_info;
-                    this.total_mumber = response.data.devices.length;
-                    this.device_info =  response.data.devices;
+                    this.ztreeId =  response.data.account_info.id;
+                    if(  response.data.devices == null){
+                        this.total_mumber = 0;
+                        this.device_info = [];
+                    }else{
+                       this.total_mumber = response.data.devices.length;
+                       this.device_info =  response.data.devices;
+                    }
+                    
+                    
                     this.renders();
                     // this.device_info=response.data.devices
                     })
-                    .catch(function (error) {
+                    .catch( (error) =>{
                     window.console.log(error);
                     });
                  } 
@@ -804,15 +876,44 @@ export default {
             },
             // 设备赋值
             get_device_data(){
-                this.device_info = JSON.parse(localStorage.getItem('device_list'))
+                if( JSON.parse(localStorage.getItem('device_list')) == null){
+                   return
+                }else{
+                   this.device_info = JSON.parse(localStorage.getItem('device_list'))
+                }
+                
             },
             get_total_mumber(){
                 if(JSON.parse(localStorage.getItem('device_list'))==null){
-                    return
+                    this.total_mumber = 0;
                 }else{
                  this.total_mumber = JSON.parse(localStorage.getItem('device_list')).length
                 }
               
+            },
+                    // 超级管理员导入
+            root_Show(){
+                if(JSON.parse(sessionStorage.getItem('account_info')).role_id == 5){
+                    this.rootShow=true
+                }else{
+                    this.rootShow=false
+                }
+            },
+            // 更新左侧树
+            ztree_updata(){
+                this.ztree_data = [];
+                this.$axios.get('/account_class/'+sessionStorage.getItem('id'),
+                { headers: 
+                {"Authorization" : sessionStorage.getItem('setSession_id')}
+                })
+                .then((response) =>{
+                window.console.log(response);
+                    this.ztree_data.push( response.data.tree_data);        
+                localStorage.setItem('children_list', JSON.stringify(response.data.tree_data));
+                })
+                .catch(function (error) {
+                window.console.log(error);
+                });
             },
             // 页面赋值公共方法
             update_data(){
@@ -826,39 +927,39 @@ export default {
                     }
                     })
                     .then((response) =>{
-                    window.console.log(response.data);            
-                    window.console.log(response.data.device_list);            
                     this.personal_info = response.data.account_info;
-                    
                     this.total_mumber = response.data.device_list.length;
                     this.device_info =  response.data.device_list;
                     this.renders();
-                    localStorage.setItem('account_info', JSON.stringify(response.data.account_info));
+                    sessionStorage.setItem('account_info', JSON.stringify(response.data.account_info));
                     localStorage.setItem('device_list', JSON.stringify(response.data.device_list));
                     localStorage.setItem('group_list', JSON.stringify(response.data.group_list));          
                     })
-                    .catch(function (error) {
+                    .catch( (error) => {
                     window.console.log(error);
                     });
               }else{
                     this.$axios.get('/account_device/'+this.nodeId,
                     { headers: 
                     {
-                    // "Authorization" : localStorage.getItem('setSession_id')
                     "Authorization" : sessionStorage.getItem('setSession_id')
                     }
                     })
                     .then((response) =>{
-                    //  localStorage.setItem('id', response.data.account_info.id);    
+                    //  sessionStorage.setItem('id', response.data.account_info.id);    
                     window.console.log(response.data);
                     this.personal_info = response.data.account_info;
-                   
-                    this.total_mumber = response.data.devices.length;
-                    this.device_info =  response.data.devices;
-                     this.renders();
+                    if(response.data.devices == null){
+                           this.total_mumber = 0;
+                           this.device_info =  [];
+                    }else{
+                      this.total_mumber = response.data.devices.length;
+                      this.device_info =  response.data.devices;
+                    }
+                    this.renders();
                     // this.device_info=response.data.devices
                     })
-                    .catch(function (error) {
+                    .catch((error) => {
                     window.console.log(error);
                     });
               }
@@ -872,29 +973,39 @@ export default {
     },
     computed:{    
         tableData(){
-            return this.device_info;
+            if(JSON.parse(localStorage.getItem('device_list')) == null){
+              return
+            }else{
+              return this.device_info;
+            }
+           
         },
         page_mumber(){
             return this.total_mumber;
-        }
+        },
+        childre_infor(){
+            return JSON.parse(localStorage.getItem('children_list'))
+        },
+        table_page(){
+            if(this.tableData == null){
+               return
+            }else{
+               return  this.tableData.slice((this.currentPage-1)*10,this.currentPage*10)
+            }
+        },
+
     },
     beforeCreate() {
-        window.console.log(JSON.parse(localStorage.getItem('device_list')));
-        window.console.log(JSON.parse(localStorage.getItem('account_info')));
-        window.console.log(JSON.parse(localStorage.getItem('group_list')));
     },
     created(){
         this.apply_info();
-        // window.console.log(JSON.parse(localStorage.getItem('account_info')));
-        window.console.log(JSON.parse(localStorage.getItem('device_list')));
-        window.console.log(JSON.parse(localStorage.getItem('account_info')));
-        window.console.log(JSON.parse(localStorage.getItem('group_list')));
         this.get_total_mumber();
 
     },
     beforeMount(){
        this. get_ztreeData();
        this.get_device_data();
+       this.root_Show();
     //    this.get_total_mumber()
        
     }
