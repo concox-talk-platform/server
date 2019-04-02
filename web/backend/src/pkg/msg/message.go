@@ -58,7 +58,7 @@ func AddMsg(msg *MsgData, db *sql.DB) error {
 	return nil
 }
 
-func GetMsg(uid int64, stat MsgType, db *sql.DB) ([]*MsgData, error) {
+func GetMsg(uid int64, stat MsgStat, db *sql.DB) ([]*MsgData, error) {
 	if db == nil {
 		return nil, fmt.Errorf("db is nil")
 	}
