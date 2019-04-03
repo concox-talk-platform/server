@@ -21,6 +21,12 @@ service TalkCloud {
     rpc RemoveGrp(GroupDelReq) returns (GroupDelRsp) {}
     rpc GetGroupList(GrpListReq) returns (GroupListRsp) {}
     rpc SearchGroup(GrpSearchReq) returns (GroupListRsp) {}
+
+    // 离线消息拉取
+    rpc AddMsg(MsgNewReq) returns (MsgNewRsp) {}
+    rpc GetMsg(MsgReq) returns (MsgRsp) {}
+    rpc SetMsgStat(MsgStatReq) returns (MsgStatRsp) {}
+    rpc DelMsg(MsgDelReq) returns (MsgDelRsp) {}
 }
 
 /*************** Register ***************/
@@ -212,4 +218,60 @@ message GrpMemberList {
     uint64 gid = 1;
     string group_name = 2;
     repeated UserRecord usr_list = 3;
+}
+
+/************Msg***********/
+enum MsgType {
+    PLAIN_TEXT = 0; // 普通文本
+    IMAGE = 1;      // 图片
+    AUDIO = 2;      // 音频
+    VIDEO = 3;      // 视频
+}
+
+message MsgNewReq {
+    repeated int64 uids = 1;
+    int64 sender_id = 2;
+    MsgType msg_type = 3;
+    string src = 4;
+    int64 create_time =5;
+}
+
+message MsgNewRsp {
+    ErrorMsg err = 1;
+}
+
+message MsgReq {
+    int64 uid = 1;
+    int64 stat = 2;
+}
+
+message MsgData {
+    uint64 msg_id = 1;
+    uint64 sender_id = 2;
+    MsgType msg_type = 3;
+    string src = 4;
+    uint64 create_time = 5;
+}
+
+message MsgRsp {
+    int64 uid = 1;
+    int64 stat = 2;
+    repeated MsgData msg_list = 3;
+}
+
+message MsgStatReq {
+    repeated int64 msg_ids = 1;
+    int64 stat = 2;
+}
+
+message MsgStatRsp {
+    ErrorMsg err = 1;
+}
+
+message MsgDelReq {
+    repeated int64 msg_ids = 1;
+}
+
+message MsgDelRsp {
+    ErrorMsg err = 1;
 }
