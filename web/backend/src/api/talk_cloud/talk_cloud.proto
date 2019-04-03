@@ -226,13 +226,19 @@ enum MsgType {
     IMAGE = 1;      // 图片
     AUDIO = 2;      // 音频
     VIDEO = 3;      // 视频
+    LOCATION = 4;   // 位置
+}
+
+enum MsgStat {
+    MSG_UNREAD = 0;
+    MSG_READ = 1;
 }
 
 message MsgNewReq {
     repeated int64 uids = 1;
     int64 sender_id = 2;
     MsgType msg_type = 3;
-    string src = 4;
+    string content = 4;
     int64 create_time =5;
 }
 
@@ -242,26 +248,26 @@ message MsgNewRsp {
 
 message MsgReq {
     int64 uid = 1;
-    int64 stat = 2;
+    MsgStat stat = 2;
 }
 
 message MsgData {
     uint64 msg_id = 1;
     uint64 sender_id = 2;
     MsgType msg_type = 3;
-    string src = 4;
+    string content = 4;
     uint64 create_time = 5;
 }
 
 message MsgRsp {
     int64 uid = 1;
-    int64 stat = 2;
+    MsgStat stat = 2;
     repeated MsgData msg_list = 3;
 }
 
 message MsgStatReq {
     repeated int64 msg_ids = 1;
-    int64 stat = 2;
+    MsgStat stat = 2;
 }
 
 message MsgStatRsp {

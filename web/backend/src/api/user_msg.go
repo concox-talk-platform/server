@@ -28,7 +28,7 @@ func (serv *TalkCloudService) GetMsg(ctx context.Context, req *pb.MsgReq) (*pb.M
 	rsp.Uid = req.Uid
 	rsp.Stat = req.Stat
 	var err error
-	rsp.MsgList, err = msg.GetMsg(req.Uid, msg.MsgStat(req.Stat), db.DBHandler)
+	rsp.MsgList, err = msg.GetMsg(req.Uid, req.Stat, db.DBHandler)
 
 	if err != nil {
 		log.Printf("get user(%d) msg fail\n", req.Uid)
@@ -38,7 +38,7 @@ func (serv *TalkCloudService) GetMsg(ctx context.Context, req *pb.MsgReq) (*pb.M
 }
 
 func (serv *TalkCloudService) SetMsgStat(ctx context.Context, req *pb.MsgStatReq) (*pb.MsgStatRsp, error) {
-	err := msg.SetMultiMsgStat(req.MsgIds, msg.MsgStat(req.Stat), db.DBHandler)
+	err := msg.SetMultiMsgStat(req.MsgIds, req.Stat, db.DBHandler)
 
 	rsp := new(pb.MsgStatRsp)
 	rsp.Err = new(pb.ErrorMsg)

@@ -24,10 +24,11 @@ const (
 )
 
 const (
-	PLAIN_TEXT MsgType = iota
-	IMAGE
-	AUDIO
-	VIDEO
+	PLAIN_TEXT MsgType = iota	// 普通文本
+	IMAGE						// 图片
+	AUDIO						// 音频
+	VIDEO						// 视频
+	LOCATION					// 位置
 )
 
 type MsgData struct {
@@ -35,8 +36,16 @@ type MsgData struct {
 	Uid int64
 	SenderId int64
 	Type MsgType
-	Src string
+	Content string
 	CreateTime int64
+}
+
+type LocationData struct {
+	Id int64
+	Uid int64
+	Lat float64
+	Lng float64
+	TimeStamp int64
 }
 
 func NewMsg() *MsgData {
@@ -49,8 +58,8 @@ func AddMsg(msg *MsgData, db *sql.DB) error {
 	}
 
 	timeStr := time.Unix(msg.CreateTime, 0).Format("2006-01-02 15:04:05")
-	sql := fmt.Sprintf("INSERT INTO message(uid, sender_id, msg_type, src, create_time) " +
-		"VALUES(%d,%d,%d,'%s','%s')", msg.Uid, msg.SenderId, msg.Type, msg.Src, timeStr)
+	sql := fmt.Sprintf("INSERT INTO message(uid, sender_id, msg_type, content, create_time) " +
+		"VALUES(%d,%d,%d,'%s','%s')", msg.Uid, msg.SenderId, msg.Type, msg.Content, timeStr)
 
 	_, err := db.Query(sql)
 	if err != nil {
@@ -73,14 +82,14 @@ func AddMultiMsg(req *pb.MsgNewReq, db *sql.DB) error {
 	}
 
 	timeStr := time.Unix(req.CreateTime, 0).Format("2006-01-02 15:04:05")
-	sql := fmt.Sprintf("INSERT INTO message(uid, sender_id, msg_type, src, create_time) VALUES")
+	sql := fmt.Sprintf("INSERT INTO message(uid, sender_id, msg_type, content, create_time) VALUES")
 
 	var elem string
 	for i := 0; i < sz; i++ {
 		if 0 != i {
 			sql += ","
 		}
-		elem = fmt.Sprintf("(%d,%d,%d,'%s','%s')", req.Uids[i], req.SenderId, req.MsgType, req.Src, timeStr)
+		elem = fmt.Sprintf("(%d,%d,%d,'%s','%s')", req.Uids[i], req.SenderId, req.MsgType, req.Content, timeStr)
 		sql += elem
 	}
 
@@ -93,12 +102,12 @@ func AddMultiMsg(req *pb.MsgNewReq, db *sql.DB) error {
 	return nil
 }
 
-func GetMsg(uid int64, stat MsgStat, db *sql.DB) ([]*pb.MsgData, error) {
+func GetMsg(uid int64, stat pb.MsgStat, db *sql.DB) ([]*pb.MsgData, error) {
 	if db == nil {
 		return nil, fmt.Errorf("db is nil")
 	}
 
-	sql := fmt.Sprintf("SELECT id, sender_id, msg_type, src, UNIX_TIMESTAMP(create_time) " +
+	sql := fmt.Sprintf("SELECT id, sender_id, msg_type, content, UNIX_TIMESTAMP(create_time) " +
 		"FROM message WHERE uid=%d AND stat=%d", uid, stat)
 	rows, err := db.Query(sql)
 	if err != nil {
@@ -112,7 +121,7 @@ func GetMsg(uid int64, stat MsgStat, db *sql.DB) ([]*pb.MsgData, error) {
 
 	for rows.Next() {
 		msg := new(pb.MsgData)
-		err = rows.Scan(&msg.MsgId, &msg.SenderId, &msg.MsgType, &msg.Src, &msg.CreateTime)
+		err = rows.Scan(&msg.MsgId, &msg.SenderId, &msg.MsgType, &msg.Content, &msg.CreateTime)
 		if err != nil {
 			log.Printf("Scan message error: %s\n", err)
 			continue
@@ -139,7 +148,7 @@ func SetMsgStat(msgID int64, stat MsgStat, db *sql.DB) error {
 	return nil
 }
 
-func SetMultiMsgStat(msgID []int64, stat MsgStat, db *sql.DB) error {
+func SetMultiMsgStat(msgID []int64, stat pb.MsgStat, db *sql.DB) error {
 	if db == nil {
 		return fmt.Errorf("db is nil")
 	}
@@ -150,7 +159,7 @@ func SetMultiMsgStat(msgID []int64, stat MsgStat, db *sql.DB) error {
 		return nil
 	}
 
-	sql := fmt.Sprintf("UPDATE message SET stat=%d WHERE id in (")
+	sql := fmt.Sprintf("UPDATE message SET stat=%d WHERE id in (", stat)
 	for i := 0; i < sz; i++ {
 		if 0 != i {
 			sql += ","
