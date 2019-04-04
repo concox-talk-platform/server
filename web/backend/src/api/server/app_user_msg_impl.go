@@ -1,22 +1,30 @@
-package api
+/*
+@Time : 2019/4/4 14:42 
+@Author : yanKoo
+@File : app_user_msg
+@Software: GoLand
+@Description:
+*/
+
+package server
 
 import (
-	pb "api/talk_cloud"
-	"context"
-	"db"
-	"log"
-	"pkg/msg"
+pb "api/talk_cloud"
+"context"
+"db"
+"log"
+"pkg/msg"
 )
 
 func (serv *TalkCloudService) AddMsg(ctx context.Context, req *pb.MsgNewReq) (*pb.MsgNewRsp, error) {
 	err := msg.AddMultiMsg(req, db.DBHandler)
 
 	rsp := new(pb.MsgNewRsp)
-	rsp.Err = new(pb.ErrorMsg)
+	rsp.Res = new(pb.Result)
 
 	if err != nil {
-		rsp.Err.Code = -1
-		rsp.Err.Msg = err.Error()
+		rsp.Res.Code = -1
+		rsp.Res.Msg = err.Error()
 		log.Printf("add multi message fail\n")
 	}
 
@@ -41,11 +49,11 @@ func (serv *TalkCloudService) SetMsgStat(ctx context.Context, req *pb.MsgStatReq
 	err := msg.SetMultiMsgStat(req.MsgIds, req.Stat, db.DBHandler)
 
 	rsp := new(pb.MsgStatRsp)
-	rsp.Err = new(pb.ErrorMsg)
+	rsp.Res = new(pb.Result)
 
 	if err != nil {
-		rsp.Err.Code = -1
-		rsp.Err.Msg = err.Error()
+		rsp.Res.Code = -1
+		rsp.Res.Msg = err.Error()
 		log.Printf("set multi msg stat fail")
 	}
 
@@ -54,12 +62,12 @@ func (serv *TalkCloudService) SetMsgStat(ctx context.Context, req *pb.MsgStatReq
 
 func (serv *TalkCloudService) DelMsg(ctx context.Context, req *pb.MsgDelReq) (*pb.MsgDelRsp, error) {
 	rsp := new(pb.MsgDelRsp)
-	rsp.Err = new(pb.ErrorMsg)
+	rsp.Res = new(pb.Result)
 
 	err := msg.DeleteMsg(req.MsgIds, db.DBHandler)
 	if err != nil {
-		rsp.Err.Code = -1
-		rsp.Err.Msg = err.Error()
+		rsp.Res.Code = -1
+		rsp.Res.Msg = err.Error()
 		log.Printf("delete msg list fail")
 	}
 

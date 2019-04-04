@@ -1,11 +1,11 @@
 /*
-@Time : 2019/3/28 15:33
+@Time : 2019/4/4 14:18 
 @Author : yanKoo
-@File : TalkCloudRegisterImpl
+@File : web_device_impl
 @Software: GoLand
-@Description: 目前主要供web端调用
+@Description: 实现web端需要用到的关于设备管理需要用到的GRpc接口
 */
-package api
+package server
 
 import (
 	pb "api/talk_cloud"
@@ -15,12 +15,9 @@ import (
 	"model"
 	"net/http"
 	td "pkg/device"
-	"strconv"
 )
 
-type WebServiceServerImpl struct {
-}
-
+// 批量导入设备
 func (wssu *WebServiceServerImpl) ImportDeviceByRoot(ctx context.Context, req *pb.ImportDeviceReq) (*pb.ImportDeviceResp, error) {
 	// 设备串号和账户id进行校验
 	log.Println("start Import DeviceByRoot")
@@ -28,8 +25,8 @@ func (wssu *WebServiceServerImpl) ImportDeviceByRoot(ctx context.Context, req *p
 		if v == "" {
 			return &pb.ImportDeviceResp{
 				Result: &pb.Result{
-					Msg:       "Import device Imei can't be empty! please try again later.",
-					StateCode: http.StatusUnprocessableEntity,
+					Msg:  "Import device Imei can't be empty! please try again later.",
+					Code: http.StatusUnprocessableEntity,
 				},
 			}, errors.New("import device imei is empty")
 		}
@@ -39,8 +36,8 @@ func (wssu *WebServiceServerImpl) ImportDeviceByRoot(ctx context.Context, req *p
 	if req.AccountId != 1 {
 		return &pb.ImportDeviceResp{
 			Result: &pb.Result{
-				Msg:       "Only the root account can import devices.",
-				StateCode: http.StatusUnprocessableEntity,
+				Msg:  "Only the root account can import devices.",
+				Code: http.StatusUnprocessableEntity,
 			},
 		}, errors.New("account is unauthorized")
 	}
@@ -48,36 +45,26 @@ func (wssu *WebServiceServerImpl) ImportDeviceByRoot(ctx context.Context, req *p
 	devices := make([]*model.User, 0)
 	for _, v := range req.DeviceImei {
 		devices = append(devices, &model.User{
-			IMei:  v,
-			UserName: string([]byte(v)[7:len(v)]),
-			PassWord: string([]byte(v)[7:len(v)]),
-			AccountId: strconv.FormatInt(int64(req.GetAccountId()), 10),
+			IMei:      v,
+			UserName:  string([]byte(v)[7:len(v)]),
+			PassWord:  string([]byte(v)[7:len(v)]),
+			AccountId: int(req.GetAccountId()),
 		})
 	}
 
 	if err := td.ImportDevice(devices); err != nil {
 		return &pb.ImportDeviceResp{
 			Result: &pb.Result{
-				Msg:       "Import device error, please try again later.",
-				StateCode: http.StatusInternalServerError,
+				Msg:  "Import device error, please try again later.",
+				Code: http.StatusInternalServerError,
 			},
 		}, err
 	}
 
 	return &pb.ImportDeviceResp{
 		Result: &pb.Result{
-			Msg:       "import device successful.",
-			StateCode: http.StatusOK,
+			Msg:  "import device successful.",
+			Code: http.StatusOK,
 		},
 	}, nil
-}
-
-// TODO 获取经销商的下级用户
-func (wssi *WebServiceServerImpl) GetAccountClass(ctx context.Context, req *pb.AccountClassReq) (*pb.AccountClassResp, error) {
-
-	if req.Name == "bob" {
-		return &pb.AccountClassResp{Id: 1}, nil
-	} else {
-		return &pb.AccountClassResp{Id: -1}, nil
-	}
 }

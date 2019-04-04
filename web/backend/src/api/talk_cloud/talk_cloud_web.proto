@@ -2,20 +2,31 @@ syntax = "proto3";
 
 package talk_cloud;
 
-service WebService{
-    rpc GetAccountClass (AccountClassReq) returns (AccountClassResp){};
+import "talk_cloud_model.proto";
 
-    rpc ImportDeviceByRoot (ImportDeviceReq) returns (ImportDeviceResp){};
+service WebService {
+    rpc UpdateGroup (UpdateGroupReq) returns (UpdateGroupResp) {
+    };
+    rpc DeleteGroup (Group) returns (DeleteGroupResp) {  // 返回的消息暂定
+    };
+    rpc ImportDeviceByRoot (ImportDeviceReq) returns (ImportDeviceResp) {
+    };
 }
 
-message AccountClassReq {
-    string name = 1;
+
+message UpdateGroupReq {
+    repeated int64 deviceIds = 2;
+    repeated Member deviceInfos = 3;
+    Group groupInfo = 4;
 }
 
-message AccountClassResp {
-    int32 id = 1;
+message UpdateGroupResp {
+    Result resultMsg = 1;
 }
 
+message DeleteGroupResp {
+    Result resultMsg = 1;
+}
 
 message ImportDeviceReq {
     int32 accountId = 1;
@@ -25,10 +36,4 @@ message ImportDeviceReq {
 message ImportDeviceResp {
     Result result = 1;
 }
-
-message Result {
-    string msg = 1;
-    int32 StateCode = 2;
-}
-
 

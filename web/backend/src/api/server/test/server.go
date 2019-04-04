@@ -1,7 +1,7 @@
 package main
 
 import (
-	"api"
+	gServer "api/server"
 	"api/talk_cloud"
 	"google.golang.org/grpc"
 	"log"
@@ -10,8 +10,8 @@ import (
 
 func main() {
 	groupServer := grpc.NewServer()
-	talk_cloud.RegisterTalkCloudServer(groupServer, &api.TalkCloudService{})
-	talk_cloud.RegisterWebServiceServer(groupServer, &api.WebServiceServerImpl{})
+	talk_cloud.RegisterTalkCloudServer(groupServer, &gServer.TalkCloudService{})
+	talk_cloud.RegisterWebServiceServer(groupServer, &gServer.WebServiceServerImpl{})
 
 	lis, err := net.Listen("tcp", ":9000")
 	if err != nil {
