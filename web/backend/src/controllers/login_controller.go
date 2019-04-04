@@ -40,7 +40,7 @@ func SignIn(c *gin.Context) {
 	// 3. 数据库查询密码，看是否和发过来的相同
 	uInfo, err := tc.GetAccount(signINBody.Username)
 	if err != nil && err != sql.ErrNoRows {
-		log.Println("err:", err)
+		log.Println("login db err:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":      "db ops err",
 			"error_code": "003",
@@ -78,6 +78,7 @@ func SignIn(c *gin.Context) {
 		})
 		return
 	}
+
 	// 5. 更新session
 	// 先取session，不用判断这里不用判断session是否过期，因为，你已经login请求了，说明新建立一个session，直接更新session
 	var sInfo = &model.SessionInfo{

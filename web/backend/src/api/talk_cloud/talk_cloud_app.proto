@@ -111,7 +111,7 @@ message FriendNewReq {
 }
 
 message FriendNewRsp {
-    Result err = 1;
+    Result res = 1;
 }
 
 message FriendDelReq {

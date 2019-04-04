@@ -4,21 +4,17 @@ import (
 	pb "api/talk_cloud"
 	"context"
 	"db"
+	"log"
 	"pkg/user_friend"
 )
 
 func (serv *TalkCloudService) AddFriend(ctx context.Context, req *pb.FriendNewReq) (*pb.FriendNewRsp, error) {
+	log.Printf("Add friend: uid: %d, friend_id:%d", req.Uid, req.Fuid)
 	_, err := user_friend.AddFriend(req.Uid, req.Fuid, db.DBHandler)
-	rsp := new(pb.FriendNewRsp)
-	rsp.Err = new(pb.Result)
-	rsp.Err.Code = 0
-	rsp.Err.Msg = ""
 	if err != nil {
-		rsp.Err.Code = -1
-		rsp.Err.Msg = err.Error()
+		return &pb.FriendNewRsp{Res:&pb.Result{Msg:"Add friend error, please try again later",Code: 500}}, err
 	}
-
-	return rsp, err
+	return &pb.FriendNewRsp{Res:&pb.Result{Msg:"Add friend success",Code: 200}}, nil
 }
 
 func (serv *TalkCloudService) DelFriend(ctx context.Context, req *pb.FriendDelReq) (*pb.FriendDelRsp, error) {
@@ -41,6 +37,7 @@ func (serv *TalkCloudService) GetFriendList(ctx context.Context, req *pb.Friends
 	if err != nil {
 		return &pb.FriendsRsp{Res: &pb.Result{Code: 500, Msg: "process error, please try again"}}, err
 	}
+	fList.Res = &pb.Result{Msg:"Get friend list success", Code:200}
 	return fList, nil
 }
 
@@ -62,5 +59,6 @@ func (serv *TalkCloudService) SearchUserByKey(ctx context.Context, req *pb.UserS
 			v.IsFriend = true
 		}
 	}
+	uSResp.Res = &pb.Result{Msg:"Search User success", Code:200}
 	return uSResp, nil
 }

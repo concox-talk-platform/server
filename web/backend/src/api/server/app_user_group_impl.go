@@ -4,6 +4,7 @@ import (
 	pb "api/talk_cloud"
 	"cache"
 	"context"
+	"database/sql"
 	"db"
 	"log"
 	"model"
@@ -124,15 +125,18 @@ func (serv *TalkCloudService) RemoveGrp(ctx context.Context, req *pb.GroupDelReq
 func (serv *TalkCloudService) GetGroupList(ctx context.Context, req *pb.GrpListReq) (*pb.GroupListRsp, error) {
 	// 先去缓存取，取不出来再去mysql取
 	res, err := tu.GetGroupList(req.Uid, cache.GetRedisClient())
-	if err != nil && err != cache.NofindInCacheError {
+	if err != nil && err != sql.ErrNoRows {
+		log.Println("cache.NofindInCacheError")
 		return &pb.GroupListRsp{Res: &pb.Result{Code: 500, Msg: "process error, please try again"}}, err
-	} else if err == cache.NofindInCacheError {
-		rsp, _, err := group.GetGroupList(req.Uid, db.DBHandler)
+	}
+	if err == sql.ErrNoRows {
+		log.Println("get")
+		res, _, err = group.GetGroupList(req.Uid, db.DBHandler)
 		if err != nil {
 			return &pb.GroupListRsp{Res: &pb.Result{Code: 500, Msg: "process error, please try again"}}, err
 		}
-		return rsp, nil
 	}
+	res.Res = &pb.Result{Msg:"get group list successful",Code:200}
 	return res, err
 }
 
@@ -155,5 +159,6 @@ func (serv *TalkCloudService) SearchGroup(ctx context.Context, req *pb.GrpSearch
 		}
 	}
 	log.Printf("server search group: %+v", groups)
+	groups.Res = &pb.Result{Msg:"search group success", Code:200}
 	return groups, nil
 }

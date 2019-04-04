@@ -9,6 +9,7 @@ package user_friend
 import (
 	pb "api/talk_cloud"
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 )
@@ -53,7 +54,7 @@ func AddFriend(uid, fuid uint64, db *sql.DB) (bool, error) {
 		return false, fmt.Errorf("user friend exists")
 	}
 
-	sql := fmt.Sprintf("INSERT INTO user_friend(uid, fuid) VALUES(%d, %d)", uid, fuid)
+	sql := fmt.Sprintf("INSERT INTO user_friend(uid, friend_uid) VALUES(%d, %d)", uid, fuid)
 	_, err = db.Query(sql)
 	if err != nil {
 		return false, fmt.Errorf("query(%s), error(%s)", sql, err)
@@ -79,47 +80,77 @@ func RemoveFriend(uid, fuid uint64, db *sql.DB) (bool, error) {
 }
 
 // 获取好友请求列表
-func GetFriendReqList(uid uint64, db *sql.DB) (*pb.FriendsRsp, error) {
-    if db == nil {
-        return nil, fmt.Errorf("db is nil")
-    }
-    
-    sql := fmt.Sprintf("SELECT d.id, d.user_name, d.imei FROM device AS d RIGHT JOIN user_friend AS u ON u.friend_uid=d.id WHERE u.uid=%d", uid)
-    rows, err := db.Query(sql)
-    if err != nil {
-        return nil, err
-    }
-    
-    defer rows.Close()
+func GetFriendReqList(uid uint64, db *sql.DB) (*pb.FriendsRsp, *map[uint64]string, error) {
+	if db == nil {
+		return nil, nil, errors.New("db is nil")
+	}
 
-    friends := &pb.FriendsRsp{Uid: uid, FriendList:nil}
+	sql := fmt.Sprintf("SELECT d.id, d.name, d.imei FROM user AS d RIGHT JOIN user_friend AS u ON u.friend_uid=d.id WHERE u.uid=%d", uid)
+	rows, err := db.Query(sql)
+	if err != nil {
+		return nil, nil, err
+	}
 
-    for rows.Next() {
-        friend := new(pb.FriendRecord)
-        err = rows.Scan(&friend.Uid, &friend.Name, &friend.Imei)
-        if err != nil {
-            return nil, err
-        }
-        
-        friends.FriendList = append(friends.FriendList, friend)
-    }
-    
-    return friends,nil
+	defer rows.Close()
+
+	friends := &pb.FriendsRsp{Uid: uid, FriendList: nil}
+	friendsMap := map[uint64]string{}
+	for rows.Next() {
+		friend := new(pb.FriendRecord)
+		err = rows.Scan(&friend.Uid, &friend.Name, &friend.Imei)
+		if err != nil {
+			return nil, nil, err
+		}
+		friendsMap[friend.Uid] = friend.Name
+		friends.FriendList = append(friends.FriendList, friend)
+	}
+
+	return friends, &friendsMap, nil
 }
 
-// 查找好友
-func SearchUserByName(uid uint64, target string, db *sql.DB) (*pb.UserSearchRsp, error) {
+// 查找用户
+func SearchUserByName(_ uint64, target string, db *sql.DB) (*pb.UserSearchRsp, error) {
+	if db == nil {
+		return nil, errors.New("db is nil")
+	}
+
+	rows, err := db.Query("SELECT id, name FROM user WHERE name LIKE ?", "%"+target+"%")
+	if err != nil {
+		log.Printf("query user error(%s)", err)
+		return nil, err
+	}
+
+	log.Println(rows)
+	defer rows.Close()
+
+	users := &pb.UserSearchRsp{UserList: nil}
+	for rows.Next() {
+		user := new(pb.UserRecord)
+
+		err = rows.Scan(&user.Uid, &user.Name)
+		if err != nil {
+			log.Printf("scan rows error: %s", err)
+			return nil, err
+		}
+		user.IsFriend = false
+		users.UserList = append(users.UserList, user)
+	}
+
+	return users, nil
+}
+
+func SearchFriendByUserId(uid uint64, db *sql.DB) (*pb.UserSearchRsp, error) {
 	if db == nil {
 		return nil, fmt.Errorf("db is nil")
 	}
 
-	sql := fmt.Sprintf("SELECT id, user_name FROM device WHERE user_name LIKE '%%s%' AND id!= %d", target, uid)
-	rows, err := db.Query(sql)
+	rows, err := db.Query("SELECT id, name FROM user_friend WHERE uid = ?", uid)
 	if err != nil {
-		log.Printf("query(%s), error(%s)", sql, err)
+		log.Printf("query user error(%s)", err)
 		return nil, err
 	}
 
+	log.Println(rows)
 	defer rows.Close()
 
 	users := &pb.UserSearchRsp{UserList: nil}

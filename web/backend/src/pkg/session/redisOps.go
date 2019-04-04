@@ -13,7 +13,6 @@ import (
 	"server/common/src/cache"
 )
 
-//var rdsConn =
 // 添加一个session
 func InsertSession(sInfo *model.SessionInfo) error {
 	// 将session转换成json数据，注意：转换后的value是一个byte数组
@@ -43,6 +42,9 @@ func DeleteSession(sid string) error {
 
 // 更新缓存中的session
 func UpdateSession(oldSInfo, newSInfo *model.SessionInfo) error {
+	if cache.GetRedisClient() == nil {
+
+	}
 	if _, err := cache.GetRedisClient().Do("DEL", oldSInfo.SessionID); err != nil {
 		return err
 	}

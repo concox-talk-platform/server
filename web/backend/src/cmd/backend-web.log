@@ -1,0 +1,2 @@
+[GIN] 2019/04/04 - 17:46:28 | 200 |    191.0109ms |             ::1 | POST     /account/login.do/dolphin
+[GIN] 2019/04/04 - 17:46:38 | 200 |    1.3620779s |             ::1 | GET      /account/dolphin
