@@ -3,42 +3,42 @@
 * @Date: 2019/3/18 11:34
 * @Description:
  */
-package group_device
+package group_member
 
 import (
-	"database/sql"
 	"db"
 	"log"
-	"server/web/backend/src/model"
+	"model"
 )
 
 var dbConn = db.DBHandler
 
-func SelectDevicesByGroupId(gid int) ([]*model.Device, error) {
-	stmtOut, err := dbConn.Prepare(`SELECT id, imei, name, passwd, cid, create_time, last_login_time, change_time 
-									FROM user WHERE id IN (SELECT device_id FROM group_device WHERE group_id = ?);`)
+func SelectDevicesByGroupId(gid int) ([]*model.User, error) {
+	stmtOut, err := dbConn.Prepare(`SELECT id, imei, name, passwd, user_type, cid, create_time, last_login_time, change_time 
+									FROM user WHERE id IN (SELECT uid FROM group_member WHERE gid = ?) AND user_type = 1`)
 	if err != nil {
 		return nil, err
 	}
 
-	var res []*model.Device
+	var res []*model.User
 	rows, err := stmtOut.Query(gid)
 	if err != nil {
 		return nil, err
 	}
 
 	for rows.Next() {
-		var id, accountId int
+		var id, accountId, userType int
 		var iMei, userName, pwd string
-		var cTime, llTime, changeTime sql.NullString
-		if err := rows.Scan(&id, &iMei, &userName, &pwd, &accountId, &cTime, &llTime, &changeTime); err != nil {
+		var cTime, llTime, changeTime string
+		if err := rows.Scan(&id, &iMei, &userName, &pwd, &userType, &accountId, &cTime, &llTime, &changeTime); err != nil {
 			return res, err
 		}
 
-		d := &model.Device{
+		d := &model.User{
 			Id: id, IMei: iMei,
-			UserName: userName, PassWord: pwd,
+			UserName: userName, //PassWord: pwd,
 			AccountId: accountId,
+			UserType:  userType,
 			//Status:    status, ActiveStatus: aStatus, BindStatus: bindStatus,
 			CreateTime: cTime, LLTime: llTime, ChangeTime: changeTime,
 		}
@@ -54,7 +54,7 @@ func SelectDevicesByGroupId(gid int) ([]*model.Device, error) {
 }
 
 func SelectDeviceIdsByGroupId(gid int) ([]int, error) {
-	stmtOut, err := dbConn.Prepare("SELECT device_id FROM group_device WHERE group_id = ?")
+	stmtOut, err := dbConn.Prepare("SELECT uid FROM group_member WHERE gid = ?")
 	if err != nil {
 		return nil, err
 	}

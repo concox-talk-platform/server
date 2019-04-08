@@ -1,9 +1,10 @@
-package api
+package server
 
 import (
 	"api/talk_cloud"
 	pb "api/talk_cloud"
 	"context"
+	"database/sql"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"log"
@@ -14,10 +15,6 @@ import (
 	"strconv"
 	"time"
 	"utils"
-)
-
-const (
-	SERVICEPORT = "9000"
 )
 
 type TalkCloudService struct{}
@@ -31,14 +28,14 @@ func (serv *TalkCloudService) AppRegister(ctx context.Context, req *pb.AppRegReq
 	ifExist, err := u.GetUserByName(req.Name)
 	if err != nil {
 		log.Printf("app register error : %s", err)
-		appRegResp.Err = &pb.ErrorMsg{
+		appRegResp.Res = &pb.Result{
 			Code: 500,
 			Msg:  "User registration failed. Please try again later",
 		}
 		return appRegResp, nil
 	}
 	if ifExist > 0 {
-		appRegResp.Err = &pb.ErrorMsg{
+		appRegResp.Res = &pb.Result{
 			Code: 500,
 			Msg:  "User name has been registered",
 		}
@@ -48,14 +45,14 @@ func (serv *TalkCloudService) AppRegister(ctx context.Context, req *pb.AppRegReq
 	user := &model.User{
 		UserName:  req.Name,
 		PassWord:  req.Password,
-		AccountId: "1", // TODO 默认给谁  普通用户默认是0
+		AccountId: 1, // TODO 默认给谁  普通用户默认是0
 		IMei:      iMei,
-		UserType: 1,
+		UserType:  1,
 	}
 
 	if err := u.AddUser(user); err != nil {
 		log.Printf("app register error : %s", err)
-		appRegResp.Err = &pb.ErrorMsg{
+		appRegResp.Res = &pb.Result{
 			Code: 500,
 			Msg:  "User registration failed. Please try again later",
 		}
@@ -65,7 +62,7 @@ func (serv *TalkCloudService) AppRegister(ctx context.Context, req *pb.AppRegReq
 	res, err := u.SelectUserByKey(req.Name)
 	if err != nil {
 		log.Printf("app register error : %s", err)
-		appRegResp.Err = &pb.ErrorMsg{
+		appRegResp.Res = &pb.Result{
 			Code: 500,
 			Msg:  "User registration Process failed. Please try again later",
 		}
@@ -82,29 +79,61 @@ func (serv *TalkCloudService) DeviceRegister(ctx context.Context, req *pb.Device
 	user := &model.User{
 		UserName:  name,
 		PassWord:  "123456",
-		AccountId: strconv.FormatUint(req.AccountId, 10),
+		AccountId: int(req.AccountId),
 		IMei:      req.DeviceList,
 	}
 
 	if err := u.AddUser(user); err != nil {
 		log.Printf("app register error : %s", err)
-		return &pb.DeviceRegRsp{Err: &pb.ErrorMsg{Code: 500, Msg: "Device registration failed. Please try again later"}}, err
+		return &pb.DeviceRegRsp{Res: &pb.Result{Code: 500, Msg: "Device registration failed. Please try again later"}}, err
 	}
 
-	return &pb.DeviceRegRsp{Err: &pb.ErrorMsg{Code: 200, Msg: "Device registration successful"}}, nil
+	return &pb.DeviceRegRsp{Res: &pb.Result{Code: 200, Msg: "Device registration successful"}}, nil
 }
 
+// 用户登录
 func (serv *TalkCloudService) Login(ctx context.Context, req *pb.LoginReq) (*talk_cloud.LoginRsp, error) {
 	//　验证用户名是否存在以及密码是否正确，然后就生成一个uuid session, 把sessionid放进metadata返回给客户端，
 	//  然后之后的每一次连接都需要客户端加入这个metadata，使用拦截器，对用户进行鉴权
 	if req.Name == "" || req.Passwd == "" {
-		return &pb.LoginRsp{Err: &pb.ErrorMsg{Code: 422, Msg: "用户名或密码不能为空"}}, nil
+		return &pb.LoginRsp{Res: &pb.Result{Code: 422, Msg: "用户名或密码不能为空"}}, nil
+	}
+
+	res, err := u.SelectUserByKey(req.Name)
+	if err != nil && err != sql.ErrNoRows {
+		log.Printf("App login error : %s", err)
+		loginRsp := &pb.LoginRsp{
+			Res: &pb.Result{
+				Code: 500,
+				Msg:  "User Login Process failed. Please try again later"},
+		}
+		return loginRsp, nil
+	}
+
+	if err == sql.ErrNoRows {
+		log.Printf("App login error : %s", err)
+		loginRsp := &pb.LoginRsp{
+			Res: &pb.Result{
+				Code: 500,
+				Msg:  "User is not exist error. Please try again later"},
+		}
+		return loginRsp, nil
+	}
+
+	if res.PassWord != req.Passwd {
+		log.Printf("App login error : %s", err)
+		loginRsp := &pb.LoginRsp{
+			Res: &pb.Result{
+				Code: 500,
+				Msg:  "User Login pwd error. Please try again later"},
+		}
+		return loginRsp, nil
 	}
 
 	sessionId, err := utils.NewUUID()
 	if err != nil {
 		log.Panicf("session id is error%s", err)
-		return &pb.LoginRsp{Err: &pb.ErrorMsg{Code: 500, Msg: "server internal error"}}, err
+		return &pb.LoginRsp{Res: &pb.Result{Code: 500, Msg: "server internal error"}}, err
 	}
 
 	ct := time.Now().UnixNano() / 1000000
@@ -114,30 +143,42 @@ func (serv *TalkCloudService) Login(ctx context.Context, req *pb.LoginReq) (*tal
 	sInfo := &model.SessionInfo{SessionID: sessionId, UserName: req.Name, UserPwd: req.Passwd, TTL: ttlStr}
 	if err := s.InsertSession(sInfo); err != nil {
 		log.Panicf("session id insert is error%s", err)
-		return &pb.LoginRsp{Err: &pb.ErrorMsg{Code: 500, Msg: "server internal error"}}, err
+		return &pb.LoginRsp{Res: &pb.Result{Code: 500, Msg: "server internal error"}}, err
 	}
 
 	// create and send header
 	header := metadata.Pairs("sessionId", sessionId)
 	if err := grpc.SendHeader(ctx, header); err != nil {
 		log.Panicf("sessionid metadata set  error%s", err)
-		return &pb.LoginRsp{Err: &pb.ErrorMsg{Code: 500, Msg: "server internal error"}}, err
+		return &pb.LoginRsp{Res: &pb.Result{Code: 500, Msg: "server internal error"}}, err
 	}
-	return &pb.LoginRsp{Err: &pb.ErrorMsg{Code: 200, Msg: req.Name + "login successful"}}, nil
+
+	userInfo := &pb.Member{
+		Id:       int32(res.Id),
+		IMei:     res.IMei,
+		UserName: res.UserName,
+		NickName: res.NickName,
+		UserType: int32(res.UserType),
+	}
+	return &pb.LoginRsp{
+		Res:      &pb.Result{Code: 200, Msg: req.Name + " login successful"},
+		UserInfo: userInfo,
+	}, nil
 }
 
+// 用户注销
 func (serv *TalkCloudService) Logout(ctx context.Context, req *pb.LogoutReq) (*talk_cloud.LogoutRsp, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		log.Panicf("sessionid metadata set  error%s")
-		return &pb.LogoutRsp{Err: &pb.ErrorMsg{Code: 403, Msg: "server internal error"}}, nil
+		return &pb.LogoutRsp{Res: &pb.Result{Code: 403, Msg: "server internal error"}}, nil
 	}
 	// TODO 考虑要不要验证sessionInfo中的name和password
 	if err := s.DeleteSession(md.Get("sessionId")[1]); err != nil {
 		log.Panicf("sessionid metadata delete  error%s", err)
-		return &pb.LogoutRsp{Err: &pb.ErrorMsg{Code: 500, Msg: "server internal error"}}, err
+		return &pb.LogoutRsp{Res: &pb.Result{Code: 500, Msg: "server internal error"}}, err
 	}
-	return &pb.LogoutRsp{Err: &pb.ErrorMsg{Code: 200, Msg: req.Name + "logout successful"}}, nil
+	return &pb.LogoutRsp{Res: &pb.Result{Code: 200, Msg: req.Name + "logout successful"}}, nil
 }
 
 //// authenticateClient check the client credentials
@@ -168,5 +209,3 @@ func (serv *TalkCloudService) Logout(ctx context.Context, req *pb.LogoutReq) (*t
 //	ctx = context.WithValue(ctx, "clientID", clientID)
 //	return handler(ctx, req)
 //}
-
-// Test

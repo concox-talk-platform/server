@@ -77,9 +77,8 @@ func SelectUserByKey(key interface{}) (*model.User, error) {
 	}
 
 	var (
-		id, userType                 int
-		pId, cId, userName, nickName, pwd, iMei string
-		cTime, llTime, changeTime     sql.NullString
+		id, userType, cId                                             int
+		pId, userName, nickName, pwd, iMei, cTime, llTime, changeTime string
 	)
 	err = stmtOut.QueryRow(key).Scan(&id, &userName, &nickName, &pwd, &iMei, &userType, &pId, &cId, &cTime, &llTime, &changeTime)
 	if err != nil {
@@ -87,17 +86,17 @@ func SelectUserByKey(key interface{}) (*model.User, error) {
 	}
 
 	res := &model.User{
-		Id:           id,
-		IMei:         iMei,
-		UserName:     userName,
-		PassWord:     pwd,
-		NickName:nickName,
-		UserType:userType,
-		ParentId:pId,
-		AccountId:cId,
-		CreateTime:   cTime,
-		LLTime:       llTime,
-		ChangeTime:   changeTime,
+		Id:         id,
+		IMei:       iMei,
+		UserName:   userName,
+		PassWord:   pwd,
+		NickName:   nickName,
+		UserType:   userType,
+		ParentId:   pId,
+		AccountId:  cId,
+		CreateTime: cTime,
+		LLTime:     llTime,
+		ChangeTime: changeTime,
 	}
 
 	defer func() {
@@ -127,9 +126,9 @@ func SelectUserByAccountId(aid int) (interface{}, error) {
 
 	for rows.Next() {
 		var (
-			id, accountId                                          int
-			userName, pwd, iMei                                    string
-			cTime, llTime, changeTime sql.NullString
+			id, accountId             int
+			userName, pwd, iMei       string
+			cTime, llTime, changeTime string
 		)
 		if err := rows.Scan(&id, &iMei, &userName, &pwd, &accountId, &cTime, &llTime, &changeTime); err != nil {
 			return res, err
@@ -137,9 +136,8 @@ func SelectUserByAccountId(aid int) (interface{}, error) {
 
 		d := &model.Device{
 			Id: id, IMei: iMei,
-			UserName: userName, PassWord: pwd,
-			AccountId: accountId,
-			CreateTime: cTime, LLTime: llTime, ChangeTime: changeTime,
+			UserName: userName, //PassWord: pwd,
+			AccountId:  accountId,
 		}
 		res = append(res, d)
 	}
@@ -151,5 +149,3 @@ func SelectUserByAccountId(aid int) (interface{}, error) {
 	}()
 	return res, nil
 }
-
-

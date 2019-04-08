@@ -14,7 +14,7 @@ import (
 	"log"
 	"model"
 	"net/http"
-	"server/web/backend/src/service/client_pool"
+	"service/client_pool"
 	"service"
 )
 
@@ -67,7 +67,7 @@ func ImportDeviceByRoot(c * gin.Context) {
 		return
 	}
 
-	c.JSON(int(res.Result.StateCode), gin.H{
+	c.JSON(int(res.Result.Code), gin.H{
 		"msg": res.Result.Msg,
 	})
 

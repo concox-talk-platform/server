@@ -13,7 +13,7 @@ import (
 	tc "pkg/customer" // table customer
 	td "pkg/device"
 	tg "pkg/group"         // table group
-	tgd "pkg/group_device" // table group_device
+	tgc "pkg/group_member" // table group_device
 	tu "pkg/user"
 	"server/web/backend/src/utils"
 
@@ -39,8 +39,8 @@ func CreateAccountBySuperior(c *gin.Context) {
 		return
 	}
 
-	if utils.CheckName(uBody.Username) || utils.CheckName(uBody.NickName) || utils.CheckPwd(uBody.ConfirmPwd) || utils.CheckPwd(uBody.Pwd) {
-		log.Println("format is error")
+	if !utils.CheckName(uBody.Username) || !utils.CheckName(uBody.NickName) || !utils.CheckPwd(uBody.ConfirmPwd) || !utils.CheckPwd(uBody.Pwd) {
+		log.Println("username or nickname or pwd format is error")
 		c.JSON(http.StatusUnprocessableEntity, model.ErrorRequestBodyParseFailed)
 		return
 	}
@@ -78,16 +78,17 @@ func CreateAccountBySuperior(c *gin.Context) {
 	}
 
 	// 3. 添加账户
-	if err := tc.AddAccount(&model.Account{Username: uBody.Username, Pwd: uBody.Pwd}); err != nil {
+	uId, err := tc.AddAccount(uBody)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
 	}
 
-	// 4. 生成session，返回消息内容
-	id := service.GenerateNewSessionId(uBody.Username)
+	//4. 生成session，返回消息内容
+	//id := service.GenerateNewSessionId(uBody.Username)
 	c.JSON(http.StatusCreated, gin.H{
 		"success":    "true",
-		"session_id": id,
+		"account_id": uId,
 	})
 }
 
@@ -136,28 +137,28 @@ func GetAccountInfo(c *gin.Context) {
 	groups, err := tg.SelectGroupsByAccountId(ai.Id)
 	var gList []*model.GroupList
 	for i := 0; i < len(groups); i++ {
-		ds, err := tgd.SelectDevicesByGroupId((*groups[i]).Id)
+		us, err := tgc.SelectDevicesByGroupId((*groups[i]).Id)
 		if err != nil {
 			log.Printf("Error in Get Group devices: %s", err)
 		}
-		log.Println(ds)
-		devices := make([]*model.Device, 0)
-		for _, d := range ds {
-			devices = append(devices, &model.Device{
-				Id:           d.Id,
-				IMei:         d.IMei,
-				UserName:     d.UserName,
-				PassWord:     d.PassWord,
-				AccountId:    d.AccountId,
-				Status:       d.Status,
-				ActiveStatus: d.ActiveStatus,
-				BindStatus:   d.BindStatus,
-				CreateTime:   d.CreateTime,
-				LLTime:       d.LLTime,
-				ChangeTime:   d.ChangeTime,
+		log.Println(us)
+		groupMember := make([]interface{}, 0)
+		groupMember = append(groupMember, ai)
+		for _, u := range us {
+			groupMember = append(groupMember, &model.User{
+				Id:         u.Id,
+				IMei:       u.IMei,
+				UserName:   u.UserName,
+				PassWord:   u.PassWord,
+				UserType:   u.UserType,
+				AccountId:  u.AccountId,
+				CreateTime: u.CreateTime,
+				LLTime:     u.LLTime,
+				ChangeTime: u.ChangeTime,
 			})
 		}
-		ids, err := tgd.SelectDeviceIdsByGroupId((*groups[i]).Id)
+		// 群里的用户id
+		ids, err := tgc.SelectDeviceIdsByGroupId((*groups[i]).Id)
 		if err != nil {
 			log.Printf("Error in GetGroups: %s", err)
 			c.JSON(http.StatusInternalServerError, gin.H{
@@ -166,8 +167,38 @@ func GetAccountInfo(c *gin.Context) {
 			})
 			return
 		}
-		gListEle := &model.GroupList{DeviceInfo: devices, DeviceIds: ids, GroupInfo: groups[i]}
+		gListEle := &model.GroupList{DeviceInfo: groupMember, DeviceIds: ids, GroupInfo: groups[i]}
 		gList = append(gList, gListEle)
+	}
+
+	resElem, err := tc.SelectChildByPId(ai.Id)
+	if err != nil {
+		log.Printf("db error : %s", err)
+		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
+		return
+	}
+
+	cList := make([]*model.AccountClass, 0)
+	for i := 0; i < len(resElem); i++ {
+		child, err := tc.GetAccount((*resElem[i]).Id)
+		if err != nil {
+			log.Printf("db error : %s", err)
+			c.JSON(http.StatusInternalServerError, model.ErrorDBError)
+			return
+		}
+
+		cList = append(cList, &model.AccountClass{
+			Id:              child.Id,
+			AccountName:     child.Username,
+			AccountNickName: child.NickName,
+		})
+	}
+
+	resp := &model.AccountClass{
+		Id:              ai.Id,
+		AccountName:     ai.Username,
+		AccountNickName: ai.NickName,
+		Children:        cList,
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -175,23 +206,24 @@ func GetAccountInfo(c *gin.Context) {
 		"account_info": ai,
 		"device_list":  deviceAll,
 		"group_list":   gList,
+		"tree_data":    resp,
 	})
 }
 
-// 更新账户信息
+// 更新账户信息 如果父id == 0 就是修改自己。
 func UpdateAccountInfo(c *gin.Context) {
 	accInf := &model.AccountUpdate{}
 	if err := c.BindJSON(accInf); err != nil {
 		log.Printf("%s", err)
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"error":      "Request body is not correct.",
 			"error_code": "001",
 		})
 		return
 	}
 
-	// 校验参数信息 ：校首先必须要有id，其次是每个参数的合法性，首先都不允许为空，TODO 其次每一个参数的合法性，比如只能有汉字
-	if accInf.Id == "" {
+	// 校验参数信息 ：校首先必须要有id，其次是每个参数的合法性，首先都不允许为空
+	if accInf.LoginId == "" {
 		log.Printf("account id is nil")
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"error":      "The account id cannot be empty",
@@ -200,8 +232,10 @@ func UpdateAccountInfo(c *gin.Context) {
 		return
 	}
 
+	loginId, _ := strconv.Atoi(accInf.LoginId)
+
 	// 使用session来校验用户
-	if !service.ValidateAccountSession(c.Request, accInf.Id) {
+	if !service.ValidateAccountSession(c.Request, loginId) {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error":      "session is not right.",
 			"error_code": "006",
@@ -209,14 +243,16 @@ func UpdateAccountInfo(c *gin.Context) {
 		return
 	}
 
-	if accInf.Phone == "" && accInf.Email == "" && accInf.NickName == "" && accInf.Address == "" && accInf.Remark == "" {
+	/*if accInf.Phone == "" && accInf.Email == "" &&
+		accInf.NickName == "" && accInf.Address == "" &&
+		accInf.Remark == "" && accInf.Contact == "" {
 		log.Printf("All changed parameters are null")
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"error":      "Change at least one parameter",
 			"error_code": "004",
 		})
 		return
-	}
+	}*/
 
 	if err := tc.UpdateAccount(accInf); err != nil {
 		log.Println("Update account error :", err)
@@ -343,15 +379,17 @@ func GetAccountClass(c *gin.Context) {
 		}
 
 		cList = append(cList, &model.AccountClass{
-			Id:          child.Id,
-			AccountName: child.Username,
+			Id:              child.Id,
+			AccountName:     child.Username,
+			AccountNickName: child.NickName,
 		})
 	}
 
 	resp := &model.AccountClass{
-		Id:          aid,
-		AccountName: root.Username,
-		Children:    cList,
+		Id:              aid,
+		AccountName:     root.Username,
+		AccountNickName: root.NickName,
+		Children:        cList,
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -360,10 +398,11 @@ func GetAccountClass(c *gin.Context) {
 	})
 }
 
+// 获取账户的设备信息
 func GetAccountDevice(c *gin.Context) {
 	accountId := c.Param("accountId")
 
-	// 使用session来校验用户 TODO 考虑加一个
+	// 使用session来校验用户 TODO 考虑加一个, 保证只有上级用户和自己能访问这个接口
 	aid, _ := strconv.Atoi(accountId)
 	//if !service.ValidateAccountSession(c.Request, aid) {
 	//	c.JSON(http.StatusUnauthorized, model.ErrorNotAuthSession)

@@ -7,16 +7,16 @@ package customer
 
 import (
 	"database/sql"
-	"server/common/src/db"
 	"log"
 	"model"
+	"server/common/src/db"
 	"strconv"
 	"time"
 )
 
 var dbConn = db.DBHandler
 // 增加用户
-func AddAccount(a *model.Account) error {
+func AddAccount(a *model.CreateAccount) (int, error) {
 	tx, err := dbConn.Begin();
 	if err != nil {
 		log.Println("事物开启失败")
@@ -31,28 +31,28 @@ func AddAccount(a *model.Account) error {
 		PassWord:   a.Pwd,
 		UserType:   a.RoleId,
 		ParentId:   strconv.FormatInt(int64(a.Pid), 10),
-		AccountId:  "0",
-		LLTime:     sql.NullString{String: ctime},
-		CreateTime: sql.NullString{String: ctime},
+		AccountId:  0,
+		LLTime:     ctime,
+		CreateTime: ctime,
 	}
 
 	stmtQuery := "INSERT INTO user (imei, name, passwd, cid, pid, nick_name, user_type, last_login_time, create_time)	VALUES (?, ?, ?,?, ?, ?, ?, ?, ?)"
-	userRes, err := tx.Exec(stmtQuery, u.IMei, u.UserName, u.PassWord, u.AccountId, u.ParentId, u.NickName, u.UserType, u.LLTime, u.CreateTime)
+	userRes, err := tx.Exec(stmtQuery, u.IMei, u.UserName, u.PassWord, u.AccountId, u.ParentId, u.NickName, u.UserType, ctime, ctime)
 	if err != nil {
-		return err
+		return -1, err
 	}
 
 	uid, err := userRes.LastInsertId()
 	if err != nil {
 		log.Println("get insert AddUser Fail")
-		return err
+		return -1, err
 	}
 
 	// customer
-	cusRes, err := tx.Exec("INSERT INTO customer (uid, pid, email, phone, address, remark) VALUES (?, ?, ?, ?, ?, ?)",
-		uid, a.Pid, a.Email, a.Phone, a.Address, a.Remark)
+	cusRes, err := tx.Exec("INSERT INTO customer (uid, pid, email, phone, address, remark, create_time) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		uid, a.Pid, a.Email, a.Phone, a.Address, a.Remark, ctime)
 	if err != nil {
-		return err
+		return -1, err
 	}
 	var affUser, affCus int64
 
@@ -66,16 +66,16 @@ func AddAccount(a *model.Account) error {
 	if affUser == 1 && affCus == 1 {
 		// 提交事务
 		if err := tx.Commit(); err != nil {
-			return err
+			return -1, err
 		}
 	} else {
 		// 回滚
 		if err := tx.Rollback(); err != nil {
-			return err
+			return -1, err
 		}
 
 	}
-	return nil
+	return int(uid), nil
 }
 
 // 获取用户的密码
@@ -162,10 +162,10 @@ func GetAccount(key interface{}) (*model.Account, error) {
 	switch t := key.(type) {
 	case int:
 		stmtOut, stmtErr = dbConn.Prepare(`SELECT user.id, user.pid, user.name, user.nick_name, user.passwd, user_type, user.last_login_time, user.create_time, user.change_time, 
-																email, phone, remark, address FROM user LEFT JOIN customer ON user.id = customer.uid WHERE user.id = ?`)
+																email, phone, remark, address, contact FROM user LEFT JOIN customer ON user.id = customer.uid WHERE user.id = ?`)
 	case string:
 		stmtOut, stmtErr = dbConn.Prepare(`SELECT user.id, user.pid, user.name, user.nick_name, user.passwd, user_type, user.last_login_time, user.create_time, user.change_time, 
-																email, phone, remark, address FROM user LEFT JOIN customer ON user.id = customer.uid WHERE user.name = ?`)
+																email, phone, remark, address, contact FROM user LEFT JOIN customer ON user.id = customer.uid WHERE user.name = ?`)
 	default:
 		_ = t
 	}
@@ -180,10 +180,11 @@ func GetAccount(key interface{}) (*model.Account, error) {
 		username    string
 		nickname    string
 		pwd         string
-		email       string
-		phone       string
-		remark      string
-		address     string
+		email       sql.NullString
+		phone       sql.NullString
+		remark      sql.NullString
+		contact     sql.NullString
+		address     sql.NullString
 		privilegeId int
 		roleId      int
 		stat        string
@@ -193,7 +194,7 @@ func GetAccount(key interface{}) (*model.Account, error) {
 	)
 	// 查询数据
 	err := stmtOut.QueryRow(key).
-		Scan(&id, &pid, &username, &nickname, &pwd, &roleId, &llTime, &cTime, &changeTime, &email, &phone, &remark, &address)
+		Scan(&id, &pid, &username, &nickname, &pwd, &roleId, &llTime, &cTime, &changeTime, &email, &phone, &remark, &address, &contact)
 
 	if err != nil {
 		log.Printf("err: %s", err)
@@ -218,11 +219,12 @@ func GetAccount(key interface{}) (*model.Account, error) {
 		RoleId:      roleId,
 		State:       stat,
 		LlTime:      llTime,
+		Contact:     contact,
 		ChangeTime:  changeTime,
 		CTime:       cTime,
 		Phone:       phone,
 		Address:     address,
-		Remark:      address,
+		Remark:      remark,
 	}
 
 	defer func() {
@@ -241,35 +243,52 @@ func UpdateAccount(a *model.AccountUpdate) error {
 		return err
 	}
 
-	userUpdStmt := "UPDATE user SET nick_name = ? WHERE id = ?"
-	cusUpdStmt := "UPDATE customer SET remark = ?, address = ?, email = ?, phone = ? WHERE uid = ?"
+	userUpdStmt := "UPDATE `user` SET nick_name = ?, change_time = ? WHERE id = ?"
+	cusUpdStmt := "UPDATE customer SET remark = ?, address = ?, email = ?, phone = ?, contact = ?, change_time = ? WHERE uid = ?"
 
-	userRes, err := tx.Exec(userUpdStmt, a.NickName, a.Id)
+	t := time.Now()
+	ctime := t.Format("2006-1-2 15:04:05")
+
+	userRes, err := tx.Exec(userUpdStmt, a.NickName, ctime, a.Id)
 	if err != nil {
 		log.Println("update user error : ", err)
 		return err
 	}
+	var userAff, cusAff int64
 
-	cusRes, err := tx.Exec(cusUpdStmt, a.Remark, a.Address, a.Email, a.Phone, a.Id)
+	if userRes != nil {
+		userAff, err = userRes.RowsAffected()
+		if err != nil {
+			log.Println("update user RowsAffected error : ", err)
+			return err
+		}
+	}
+	cusRes, err := tx.Exec(cusUpdStmt,
+		a.Remark,
+		a.Address,
+		a.Email,
+		a.Phone,
+		a.Contact,
+		ctime, a.Id)
 	if err != nil {
 		log.Println("update customer error : ", err)
 		return err
 	}
 
-	var userAff, cusAff int64
-
-	if userRes != nil {
-		userAff, _ = userRes.RowsAffected()
-	}
-
 	if cusRes != nil {
-		cusAff, _ = cusRes.RowsAffected()
+		cusAff, err = cusRes.RowsAffected()
+		if err != nil {
+			log.Println("update customer RowsAffected error : ", err)
+			return err
+		}
 	}
 
+	log.Println(userAff, "cusAff", cusAff)
 	if userAff == 1 && cusAff == 1 {
-		 _ = tx.Commit()
+		return tx.Commit()
 	} else {
-		_ = tx.Rollback()
+		log.Println("rollback")
+		return tx.Rollback()
 	}
 
 	return nil

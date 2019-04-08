@@ -1,6 +1,6 @@
 ## api 定义
 
-### 1. 注册   
+### 1. 创建下级账户   
 
 请求协议：`http`
 
@@ -11,9 +11,19 @@
 请求参数：请求body必须包含username和pwd和用户类型
 ``` json
 {
-	"username" : "elephant",
-	"pwd" : "123456",
-	"role_type" : "1"
+	"confirm_pwd" :"123456",    // 不能为空
+	"pid": 5,    				// 不能为空
+	"username": "liuyang06",   // 不能为空
+	"nick_name": "nana123",   // 不能为空
+	"pwd": "123456",     // 不能为空
+	"role_id": 3,    // 不能为空
+	"email": "123456789@qq.com",
+	"privilege_id": 0,
+	"contact": "",
+	"state": "",
+	"phone": "",
+	"remark": "",
+	"address": ""
 }
 ```
 
@@ -21,7 +31,7 @@
 ``` json
 {
 	"success": true,
-	"session_id": "c9f9173c-7cc8-44c3-81a8-7c72d9863f9a"
+	"account_id": 1430   // 新创建的用户的id
 }
 ```
 
@@ -108,6 +118,7 @@
 	Email    string `json:"email"`
 	Address  string `json:"address"`
 	Remark   string `json:"remark"`
+	Contact  string `json:"contact"`
 ```
 
 ### 6. 修改账户密码
@@ -187,7 +198,7 @@
 
 请求方式：`POST`
 
-请求地址：`/device/import/:account_name`
+请求地址：`/device/import/SurpeRoot`
 
 请求参数：**请求头中添加返回的session_id**  
 
@@ -209,7 +220,7 @@
 
 ``` json
 {
-  "device_ids": [
+  "device_infos": [
     8,
     10,
     11   // 至少有一个设备

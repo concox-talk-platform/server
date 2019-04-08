@@ -7,15 +7,18 @@
 package group
 
 import (
+	pb "api/talk_cloud"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/gomodule/redigo/redis"
 	"log"
+	"model"
 )
 
 // Before when you change these constants
 const (
-	GRP_MEM_KEY_FMT = "grp:%d:mem"
+	GRP_MEM_KEY_FMT  = "grp:%d:mem"
 	GRP_DATA_KEY_FMT = "grp:%d:data"
 	USR_DATA_KEY_FMT = "usr:%d:data"
 )
@@ -28,20 +31,20 @@ const (
 )
 
 type MemRecord struct {
-	Uid int64
+	Uid  int64
 	Name string
 	Role RoleType
 	Stat MemStat
 }
 
 type GrpRecord struct {
-	Gid int64
+	Gid  int64
 	Name string
 }
 
 type GrpMemData struct {
-	Gid int64
-	GroupName string
+	Gid        []int64
+	GroupName  string
 	MemberList []*MemRecord
 }
 
@@ -77,56 +80,32 @@ func IsKeyExists(key string, rd redis.Conn) (bool, error) {
 }
 
 // add new group data to cache
-func AddGroupCache(uid int64, usrName string, gid int64, grpName string, rd redis.Conn) (*GrpMemData, error) {
+func AddGroupCache(us []int64, gid int64, grpName string, rd redis.Conn) error {
 	if rd == nil {
-		return nil, fmt.Errorf("rd is null")
+		return errors.New("rd is null")
 	}
 
 	grpData, err := json.Marshal(GrpRecord{Gid: gid, Name: grpName})
-
 	if err != nil {
 		log.Printf("json marshal error: %s\n", err)
-		return nil, err
+		return err
 	}
 
 	grpKey := MakeGroupDataKey(gid)
 	memKey := MakeGroupMemKey(gid)
 
+	_ = rd.Send("MULTI")
+	_ = rd.Send("SADD", memKey, us)
+	_ = rd.Send("SET", grpKey, grpData)
 
-
-	rd.Send("MULTI")
-	rd.Send("SADD",  memKey, uid)
-	rd.Send("SET", grpKey, grpData)
-
-	replys, err := redis.Ints(rd.Do("EXEC"))
+	reply, err := rd.Do("EXEC")
 	if err != nil {
 		log.Printf("add group to cache error: %s\n", err)
-		return nil, err
+		return err
 	}
+	log.Printf("reply:%T", reply)
 
-	// Todo: 是否有必要检测所有返回结果？后续可以考虑注释掉
-	allOk := true
-	for _, status := range replys {
-		if 0 == status {
-			allOk = false
-			break
-		}
-	}
-
-	if !allOk {
-		return nil, fmt.Errorf("add new group cache with some errors\n")
-	}
-
-	grp := new(GrpMemData)
-	grp.Gid = gid
-	grp.GroupName = grpName
-	mem := new(MemRecord)
-	mem.Name = usrName
-	mem.Uid = uid
-	mem.Stat = MEM_ONLINE
-	grp.MemberList = append(grp.MemberList, mem)
-
-	return grp, nil
+	return nil
 }
 
 // add new member to the group
@@ -177,11 +156,11 @@ func GetGroupMemData(gid int64, rd redis.Conn) (*GrpMemData, error) {
 	grpMemData := new(GrpMemData)
 	grpData, err := GetGroupData(gid, rd)
 	if err != nil {
-		log.Printf("get group(%d) metadata fail")
+		log.Printf("get group(%d) metadata fail", gid)
 		return nil, err
 	}
 
-	grpMemData.Gid = grpData.Gid
+	grpMemData.Gid = append(grpMemData.Gid, grpData.Gid)
 	grpMemData.GroupName = grpData.Name
 	key := MakeGroupMemKey(gid)
 	uids, err := redis.Int64s(rd.Do("SMEMBERS", key))
@@ -201,7 +180,6 @@ func GetGroupMemData(gid int64, rd redis.Conn) (*GrpMemData, error) {
 	}
 
 	mems, err := redis.ByteSlices(rd.Do("MGET", memKeys...))
-
 	if err != nil {
 		log.Printf("mget users data error: %s\n", err)
 		return grpMemData, nil
@@ -244,7 +222,7 @@ func SetUserStat(uid int64, stat MemStat, rd redis.Conn) error {
 	user.Stat = stat
 	data, err := json.Marshal(&user)
 	if err != nil {
-		log.Printf("json encode user data(%s) error: %s\n", user, err)
+		log.Printf("json encode user data(%+v) error: %v\n", user, err)
 		return err
 	}
 
@@ -260,4 +238,44 @@ func SetUserStat(uid int64, stat MemStat, rd redis.Conn) error {
 	}
 
 	return nil
+}
+
+func AddGroupInCache(gl *model.GroupList, rd redis.Conn) error {
+	if rd == nil {
+		return errors.New("rd is null")
+	}
+
+	grpData, err := json.Marshal(&pb.GroupRecord{Gid: uint64(gl.GroupInfo.Id), GroupName: gl.GroupInfo.GroupName})
+	if err != nil {
+		log.Printf("json marshal error: %s\n", err)
+		return err
+	}
+
+	grpKey := MakeGroupDataKey(int64(gl.GroupInfo.Id))
+	memKey := MakeGroupMemKey(int64(gl.GroupInfo.Id))
+
+	// TODO redis 错误处理
+	_ = rd.Send("MULTI")
+
+	for _, v := range gl.DeviceInfo {
+		_ = rd.Send("SADD", memKey, v.(map[string]interface{})["id"])
+	}
+	_ = rd.Send("SET", grpKey, grpData)
+
+	_, err = rd.Do("EXEC")
+	if err != nil {
+		log.Printf("Add group to cache error: %s\n", err)
+		return err
+	}
+
+	return nil
+}
+
+func init() {
+	loadCache()
+}
+
+// 加载所有用户在哪些组
+func loadCache() {
+
 }
