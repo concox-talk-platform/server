@@ -222,16 +222,22 @@ import vSidebar from './Sidebar.vue';
             sendpwd.old_pwd=this.form.oldPassword;
             sendpwd.new_pwd=this.form.newPassword;
             sendpwd.confirm_pwd=this.form.cfmPassword;
-            this.$axios.post('/account/pwd/update',sendpwd)
+            this.$axios.post('/account/pwd/update',sendpwd, 
+            { headers: 
+            {"Authorization" : sessionStorage.getItem('setSession_id')}
+            }
+            )
             .then(function (response) {
             window.console.log(response);
-                    this.$message({
-                        message: this.$t('change_pwd.change_success'),
-                        type: 'success'
-                    });            
+            this.$message({
+                message: this.$t('change_pwd.change_success'),
+                type: 'success'
+            });       
              this.$router.push('/login'); 
-            //   localStorage.clear();
-              sessionStorage.clear();
+             localStorage.clear();       
+             sessionStorage.clear();     
+              
+             
             }.bind(this))
             .catch( (error) => {
             window.console.log(error);
@@ -258,7 +264,7 @@ import vSidebar from './Sidebar.vue';
             // },
             outlogin(){
              this.$router.push('/login');   
-            //  localStorage.clear();       
+             localStorage.clear();       
              sessionStorage.clear();       
             },
             // 全屏事件

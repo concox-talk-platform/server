@@ -1,62 +1,28 @@
 <template>
-<!-- import { debug } from 'util'; -->
-    <div class="login-wrap">
+<div class=" canvas_box">
+    <vue-particle-line class="login-wrap">
         <div class="ms-login">
             <div class="ms-title">{{ $t("title.logo_name") }}</div>
             <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="0px" class="ms-content">
                 <el-form-item prop="username">
                     <el-input v-model="ruleForm.username" :placeholder="$t('prompt_message.account')">
-                        <el-button slot="prepend" icon="el-icon-document"></el-button>
+                        <i class="el-icon-tickets" slot="prepend"></i>
                     </el-input>
                 </el-form-item>
                 <el-form-item prop="password">
                     <el-input type="password" :placeholder="$t('prompt_message.pwd')" v-model="ruleForm.password" @keyup.enter.native="submitForm('ruleForm')">
-                        <el-button slot="prepend" icon="el-icon-edit"></el-button>
+                        <i class="el-icon-edit" slot="prepend"></i>
                     </el-input>
                 </el-form-item>
-                 <!-- <div class="register" @click="register">{{ $t("reg_message.enroll") }}</div> -->
                 <div class="login-btn">
                     <el-button type="primary" @click="submitForm('ruleForm')">{{ $t("button_message.launcher") }}</el-button>
                 </div>
             </el-form>
             <span class="language"  @click="change_language">{{language}}</span>
         </div>
-  <!-- 注册 -->
-        <!-- <el-dialog :title="$t('reg_message.title')" :visible.sync="registerVisible">
-            <el-form ref="registerForm" :model="registerForm"  :rules="register_rules" label-width="136px" @submit.native.prevent>
-                <el-form-item :label="$t('reg_message.account')" prop="register_Account">
-                    <el-input ref="register_Account" v-model="registerForm.register_Account" :placeholder="$t('prompt_message.account')"></el-input>
-                </el-form-item>
-                <el-form-item :label="$t('reg_message.pwd')" prop="register_Password">
-                    <el-input ref="register_Password" v-model="registerForm.register_Password" :placeholder="$t('prompt_message.pwd')" type="password"></el-input>
-                </el-form-item>
-                <el-form-item :label="$t('reg_message.cfm_pwd')" prop="register_cfmPassword">
-                    <el-input v-model="registerForm.register_cfmPassword" :placeholder="$t('prompt_message.again_pwd')" type="password"></el-input>
-                </el-form-item>
-                  <el-form-item :label="$t('reg_message.account_type')" prop="register_type">
-                        <el-radio-group v-model="registerForm.register_type">
-                        <el-radio v-for="item in Account_typedata" :key="item.Account_type"  :label="item.Account_type" :value="item.value" ></el-radio>       
-                        </el-radio-group>
-                    </el-form-item>
-                <el-form-item :label="$t('reg_message.contact')">
-                  <el-input v-model="registerForm.name" autocomplete="off" ></el-input>
-                </el-form-item>
-                <el-form-item :label="$t('reg_message.phone')" >
-                  <el-input v-model="registerForm.phone" autocomplete="off" ></el-input>
-                </el-form-item>
-                <el-form-item :label="$t('reg_message.email')">
-                  <el-input v-model="registerForm.email" autocomplete="off" ></el-input>
-                </el-form-item>                
-                 <el-form-item :label="$t('reg_message.adress')" >
-                  <el-input v-model="registerForm.adress" autocomplete="off" ></el-input>
-                </el-form-item>
-            </el-form>
-            <div slot="footer" class="dialog-footer">
-                <el-button @click="register_Cancle">{{$t('button_message.cancel')}}</el-button>
-                <el-button type="primary" @click="submit_register('registerForm')">{{$t('button_message.sign_up')}}</el-button>
-            </div>
-        </el-dialog>               -->
-    </div>
+    </vue-particle-line>
+
+</div>
 </template>
 
 <script>
@@ -64,7 +30,7 @@
     export default {
         data(){
             return {
-                language:'Change Language',
+                language:'切换语言',
                 ruleForm: {
                     username: '',
                     password: '',
@@ -115,14 +81,14 @@
                         sessionStorage.setItem('lang', 'en-US');
                         // localStorage.setItem('language', 'Change Language');
                         sessionStorage.setItem('language', 'Change Language');
-                        this.language = 'Change Language'
+                        this.language = '切换语言'
                     }else {
                         this.lang = 'zh-CN';
                         this.$i18n.locale = this.lang;//关键语句
                         // localStorage.setItem('language', '切换语言');
                         sessionStorage.setItem('language', '切换语言');
                         // localStorage.setItem('lang', 'zh-CN');
-                            this.language = '切换语言'
+                            this.language = 'Change Language'
                         sessionStorage.setItem('lang', 'zh-CN');
                     }
             },
@@ -151,6 +117,7 @@
                             })
                             .then((response) =>{
                              window.console.log(response);
+                             
                             sessionStorage.setItem('id', response.data.account_info.id);
                             sessionStorage.setItem('lang', this.lang);
                             sessionStorage.setItem('account_info', JSON.stringify(response.data.account_info));
@@ -158,8 +125,9 @@
                             localStorage.setItem('group_list', JSON.stringify(response.data.group_list));
                             localStorage.setItem('children_list', JSON.stringify(response.data.tree_data));
                             this.$router.push('/homePage');
+                            
                             })
-                            .catch(function (error) {
+                            .catch( (error) => {
                             window.console.log(error);
                             });          
                         //  this.$router.push('/homePage');
@@ -199,11 +167,14 @@
             margin-right: 8px;
             cursor: pointer;
      }
+     .canvas_box{
+         height: 100%;
+     }
     .login-wrap{
         position: relative;
         width:100%;
         height:100%;
-        background-image: url(../../assets/img/login-background.jpg);
+        /* background-image: url(../../assets/img/login-background.jpg); */
         background-size: cover;
         background-repeat: no-repeat;
     }
@@ -216,11 +187,18 @@
         border-bottom: 1px solid #ddd;
     }
     .ms-login{
-        position: absolute;
-        right:0px;
-        top:50%;
+        z-index: 999;
+        /* position: absolute;
+        left:50%;
+        top:50%; */
+         position: absolute;
+         margin:auto; 
+         top: 0;
+         left: 0;
+         right: 0;
+         bottom: 0;
         width:350px;
-        margin:-190px 200px 0 0px;
+        height: 300px;
         border-radius: 5px;
         background: rgba(255,255,255, 0.3);
         overflow: hidden;

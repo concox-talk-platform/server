@@ -8,6 +8,9 @@ import VueI18n from 'vue-i18n'
 import './assets/icon/iconfont.css';
 import 'element-ui/lib/theme-chalk/index.css'; // 默认主题
 import "babel-polyfill";
+import vueParticleLine from 'vue-particle-line'
+import 'vue-particle-line/dist/vue-particle-line.css'
+Vue.use(vueParticleLine)
 // import { push_uniq } from '../node_modules/terser';
 // import { is } from 'css-select';
 // import { isNull } from 'util';
@@ -33,6 +36,7 @@ Vue.prototype.$axios = axios;
 //使用钩子函数对路由进行权限跳转
 router.beforeEach((to, from, next) => {
     // let role=localStorage.getItem('setSession_id');
+    // let role=null;
     let role=sessionStorage.getItem('setSession_id');
     if(role===null&&to.path=='/login'){
     next()

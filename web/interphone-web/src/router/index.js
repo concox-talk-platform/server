@@ -4,6 +4,7 @@ import Router from 'vue-router';
 Vue.use(Router);
 // const homePage = () => import('./Foo.vue');
 export default new Router({
+    mode: 'history',
     routes: [
         // {
         //     path: '/',

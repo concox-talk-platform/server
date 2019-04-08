@@ -84,7 +84,14 @@ module.exports = {
        dbremove:"双击删除",
        dissolve:"解散本组",
        amend: '修改本组',
-       modified_member: '成员编辑'
+       modified_member: '成员编辑',
+       dele_success: '删除成功',
+       modify_success: '修改成功',
+       modify_failed: '修改失败',
+       name:'群名已存在',
+       voice:'语音',
+       video:'视频',
+       messaging:'消息',
 
 
        

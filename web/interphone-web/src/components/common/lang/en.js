@@ -81,9 +81,17 @@ module.exports = {
             add:"Add",
             remove:"Remove", 
             dbremove:"Double-click the delete",
-            dissolve:"Dissolve this group",
-            amend: 'Modify this group',
+            dissolve:"Dissolve ",
+            amend: 'Modify',
             modified_member: 'Member editor',
+            dele_success: 'Deleted successfully',
+            modify_suc: 'Changed successfully',
+            modify_failed: 'Changed failed',
+            name:'The group name already exists',
+            voice:'Voice',
+            video:'Video',
+            messaging:'Messaging',
+     
         },
         // 我的用户
         client_lang: {

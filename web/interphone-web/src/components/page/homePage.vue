@@ -12,7 +12,10 @@
         <div class="client_left_body">
             <!-- <el-input :placeholder="$t('ztree.filter')" v-model="filterText">
             </el-input> -->
-            <el-tree @node-click="handleNodeClick"  class="filter-tree" :data="ztree_data" :props="defaultProps" default-expand-all :filter-node-method="filterNode" ref="ztree">
+            <!-- <el-tree @node-click="handleNodeClick"  class="filter-tree" :data="ztree_data" :props="defaultProps" default-expand-all :filter-node-method="filterNode" ref="ztree" :empty-text="$t('table.no_data')">
+            </el-tree> -->
+            <el-tree @node-click="handleNodeClick"  class="filter-tree"  :props="defaultProps" 
+            lazy :load="get_newtree"   ref="ztree" :empty-text="$t('table.no_data')" v-if="tree_show">
             </el-tree>
         </div>
     </div>
@@ -149,10 +152,10 @@
                     <el-input ref="register_Account" v-model="registerForm.register_Account" :placeholder="$t('prompt_message.account')"></el-input>
                 </el-form-item>
                 <el-form-item :label="$t('reg_message.pwd')" prop="register_Password">
-                    <el-input ref="register_Password" v-model="registerForm.register_Password" :placeholder="$t('prompt_message.pwd')" type="password"></el-input>
+                    <el-input ref="register_Password" v-model="registerForm.register_Password" :placeholder="$t('prompt_message.pwd')" ></el-input>
                 </el-form-item>
                 <el-form-item :label="$t('reg_message.cfm_pwd')" prop="register_cfmPassword">
-                    <el-input v-model="registerForm.register_cfmPassword" :placeholder="$t('prompt_message.again_pwd')" type="password"></el-input>
+                    <el-input v-model="registerForm.register_cfmPassword" :placeholder="$t('prompt_message.again_pwd')" ></el-input>
                 </el-form-item>
                   <el-form-item :label="$t('reg_message.account_type')" prop="register_type">
                         <el-radio-group v-model="registerForm.register_type">
@@ -183,7 +186,10 @@
   <!-- 转移 -->
         <el-dialog :title="$t('table.info')" :visible.sync="transfer_dialog" width="30%" :show-close="false">
             <el-select v-model="customer" filterable :placeholder="$t('table.select')">
-                <el-option  v-for="item in customer_List" :key="item.id" :label="item.account_name" :value="item">
+                <!-- <el-option  v-for="item in customer_List" :key="item.id" :label="item.account_name" :value="item.id"> -->
+                <el-option  v-for="item in customer_List" :key="item.id" :label="item.account_name+item.account_nickname" :value="item.id">
+                    <span style="float:left">{{item.account_name}}</span>
+                    <span style="float:right">{{item.account_nickname}}</span>
                 </el-option>
             </el-select>
             <el-table :data="gridData" :empty-text="$t('table.no_data')">
@@ -321,6 +327,8 @@ export default {
                 children: 'children',
                 label: 'account_nickname'
             },
+            tree_show :true,
+            second_tree:'',
             // 登录信息
             information_name:'程涛',
             information_login:'小小',
@@ -356,13 +364,13 @@ export default {
         gridData:[],
         // 选择客户
         customer: '',
-        customer_List:[],
+        // customer_List:[],
         device_imei:[],
         // 管理员导入设备
         import_show:false,
         // 导入imei号
-        imei_data:[],   
-        
+        imei_data:[],  
+        updata_list:[]
         }
     },
     methods: {
@@ -458,6 +466,7 @@ export default {
                                 this.$refs['registerForm'].clearValidate();
                                  this.$refs['registerForm'].resetFields();
                                 this.ztree_updata();
+
                            }else{
                                 this.$message({
                                 message: this.$t('establish.failed'),
@@ -510,15 +519,8 @@ export default {
             },
             // 渲染个人信息
             apply_info(){
-              this.personal_info = JSON.parse(sessionStorage.getItem('account_info'));
-              
+              this.personal_info = JSON.parse(sessionStorage.getItem('account_info'));             
               this.device_info = JSON.parse(localStorage.getItem('device_list'))
-            //   if(this.device_info == null){
-
-            //     this.renders();
-            //   }else{
-            //     this.renders();
-            //   }
               this.renders();
             },
             renders(){     
@@ -580,6 +582,7 @@ export default {
                          break;                                                                   
                      }
                 }
+                window.console.log(this.personal_info);
                 this.subordinate.adress = this.personal_info.address.String;
                 this.subordinate.email = this.personal_info.email.String;
                 this.subordinate.phone = this.personal_info.phone.String;
@@ -600,7 +603,6 @@ export default {
                this.subordinate.email = '';
                this.subordinate.adress = '';
                this.subordinate.remark = '';
-               
             },
             // 修改下级信息
             subordinate_submit(){
@@ -614,8 +616,14 @@ export default {
                 subordinate_info.email = this.subordinate.email;
                 subordinate_info.address = this.subordinate.adress;
                 subordinate_info.remark = this.subordinate.remark;
-                subordinate_info.contact = this.subordinate.contact;  
+                subordinate_info.contact = this.subordinate.contact;
                 window.console.log(subordinate_info);
+                let  same_name  = true;
+                if(this.personal_info.nick_name == this.subordinate.name){
+                    same_name  = true;
+                }else{
+                   same_name  = false; 
+                }
                 if(subordinate_info.nick_name == ''){
                   this.$message({
                         message: this.$t('registration.nick_name'),
@@ -627,17 +635,23 @@ export default {
                     { headers: 
                     {"Authorization" : sessionStorage.getItem('setSession_id')}
                     })
-                    .then((response) =>{
-                    window.console.log(response); 
+                    .then(() =>{
                     this.$message({
                         message: this.$t('registration.success'),
                         type: 'success'
                     });
-                    this.ztree_updata();
-                    this.update_data();
+                    if(same_name  == true){ 
+                        this.update_data();
+                    }else{
+                        this.tree_show =false
+                        this.ztree_name();
+                        
+                        this.update_data();
+                     
+                    }                   
                     })
-                    .catch(function (error) {
-                    window.console.log(error);
+                    .catch((error)=>{
+                     window.console.log(error)
                     });
                 }
 
@@ -650,7 +664,7 @@ export default {
             },
             device_export(index, row) {
                 this.transfer_dialog=true;
-                this.customer_List = this.childre_infor.children;
+                // this.customer_List = this.children_infor.children;
                 this.gridData=[];
                 this.gridData.push(row)
             },
@@ -662,11 +676,13 @@ export default {
             handleCurrentChange(currentPage) {
             this.currentPage =currentPage
             },
-            transfer(){
+            transfer(){ 
+                window.console.log(this.children_infor)
+                window.console.log(this.updata_list.children)
                 // this.update_data()
                 if(this.multipleSelection.length !== 0){
                     this.transfer_dialog = true;
-                    this.customer_List = this.childre_infor.children;
+                    // this.customer_List = this.children_infor.children;
                     this.gridData=this.device_data;
                 }else{
                     this.$message({
@@ -681,7 +697,7 @@ export default {
                 
             },
             // 转移设备
-            submit_transfer(done){
+            submit_transfer(){
                 this.$confirm(this.$t('table.message'),{
                    confirmButtonText: this.$t("button_message.confirm"),
                    cancelButtonText: this.$t("button_message.cancel")
@@ -690,10 +706,18 @@ export default {
                     window.console.log(_)
                     let transinformation={};
                     transinformation.devices=this.gridData;
-                    let a={};
-                    a.account_id =this.customer.id;
-                    a.account_name=this.customer.account_name;
-                    transinformation.receiver=a;
+                    let receiver ={}
+                    this.customer_List.forEach(element => {
+                        if(element.id ==this.customer){
+                            receiver =element
+                        }
+                    });
+                    window.console.log(receiver)
+                    let facility={};
+                    facility.account_id =receiver.id;
+                    facility.account_name=receiver.account_name;
+                    transinformation.receiver=facility;
+                    window.console.log(transinformation)
                     if(transinformation.account_id ==''){
                         this.$message({
                         message: this.$t('prompt_message.subordinate'),
@@ -707,8 +731,7 @@ export default {
                             "Authorization" : sessionStorage.getItem('setSession_id')
                             }
                             })
-                            .then((response) =>{
-                            window.console.log(response);
+                            .then(() =>{
                               this.transfer_dialog=false; 
                               this.customer='';
                               this.$message({
@@ -718,15 +741,14 @@ export default {
                               this.update_data();
                               this.reload();
                             })
-                            .catch((error) => {
-                                window.console.log(error)
+                            .catch(() => {
                                 this.$message({
                                   message: this.$t('failed.transfer'),
                                   type: 'warning'
                                 });
                             }); 
                     }
-                    done();
+                   
                 })
                 .catch(_ => {
                     window.console.log(_)
@@ -734,10 +756,6 @@ export default {
             },
             // 超级管理员导入设备
             device_import(){
-                window.console.log(JSON.parse(localStorage.getItem('device_list')));
-                // this.ztree_data.push(this.$store.state.User.subordinate)
-                // window.console.log(this.$store.state.User.information);
-                // this.ztree_data=this.$store.state.User.subordinate.tree_data
                 this.import_show=true;
 
             },
@@ -759,7 +777,6 @@ export default {
                     })
                     let imei_length=[];
                     for(var i=0;i<this.device_imei.length;i++){
-                        window.console.log(this.device_imei[i].length)
                            if(this.device_imei[i].length !== 15){
                                 imei_length.push(this.device_imei[i]); 
                            }
@@ -769,15 +786,13 @@ export default {
                             decive_data.device_imei =this.device_imei;
                             this.imei_data=[];
                             this.import_show=false;
-                            window.console.log(decive_data);
                             this.$axios.post('/device/import/SuperRoot',decive_data,
                             { headers: 
                             {
                             "Authorization" : sessionStorage.getItem('setSession_id')
                             }
                             })
-                            .then((response) =>{
-                            window.console.log(response);
+                            .then(() =>{
                                 this.transfer_dialog=false; 
                                 this.customer='';
                                 this.update_data();
@@ -787,8 +802,7 @@ export default {
                                 type: 'success'
                                 });
                             })
-                            .catch((error) => {
-                                window.console.log(error);
+                            .catch(() => {
                                 this.$message({
                                 message: this.$t('failed.transfer'),
                                 type: 'warning'
@@ -800,8 +814,6 @@ export default {
                         type: 'warning'
                         });
                     }
-                    // window.console.log( this.device_imei)
-                    // 
                  
                     //  done();
                 })
@@ -816,13 +828,11 @@ export default {
             delete_imei(index){
               this.imei_data.splice(index,1)
             },
-            // ztree操作
+           // ztree操作
              handleNodeClick(data) {
                  this.treeNode = data.$treeNodeId; 
                  this.nodeId = data.id;
-                 window.console.log(data.$treeNodeId);
                  if(data.$treeNodeId ==1){
-            
                     this.$axios.get('/account/'+sessionStorage.getItem('loginName'),
                     { headers: 
                     {
@@ -830,8 +840,6 @@ export default {
                     }
                     })
                     .then((response) =>{
-                    window.console.log(response.data);            
-                    window.console.log(response.data.device_list);            
                     this.personal_info = response.data.account_info;
                     this.device_info =  response.data.device_list;
                     this.total_mumber = response.data.device_list.length;
@@ -842,7 +850,7 @@ export default {
                     window.console.log(error);
                     });
                  }else{
-                    this.$axios.get('/account_device/'+data.id,
+                    this.$axios.get('/account_device/'+sessionStorage.getItem('id')+'/'+data.id,
                     { headers: 
                     {
                     // "Authorization" : localStorage.getItem('setSession_id')
@@ -851,7 +859,6 @@ export default {
                     })
                     .then((response) =>{
                     //  localStorage.setItem('id', response.data.account_info.id);    
-                    window.console.log(response.data);
                     this.personal_info = response.data.account_info;
                     this.ztreeId =  response.data.account_info.id;
                     if(  response.data.devices == null){
@@ -872,7 +879,37 @@ export default {
                  } 
             } ,
             get_ztreeData(){
-                this.ztree_data.push(this.childre_infor)
+                this.ztree_data.push(this.children_infor);
+                this.updata_list = this.children_infor;
+            },
+           // 获取下层树
+            get_newtree(node, resolve) {
+               if(node.level == 0){
+                   resolve(this.tree_info)
+                   window.console.log(node);
+               }
+               if(node.level == 1){
+                   this.second_tree = this.tree_info[0].children
+                   resolve(this.second_tree)
+                      window.console.log(this.tree_info[0]);
+               }
+               if(node.level > 1){
+                   window.console.log(node.data)
+                    this.$axios.get('/account_class/'+sessionStorage.getItem('id')+'/'+node.data.id,
+                    { headers: 
+                    {
+                    "Authorization" : sessionStorage.getItem('setSession_id')
+                    }
+                    })
+                    .then((response) =>{
+                     window.console.log(response.data.tree_data.children)
+                     resolve(response.data.tree_data.children)
+                    })
+                    .catch( (error) => {
+                    window.console.log(error);
+                    resolve([])
+                    });                    
+                }
             },
             // 设备赋值
             get_device_data(){
@@ -891,7 +928,7 @@ export default {
                 }
               
             },
-                    // 超级管理员导入
+            // 超级管理员导入
             root_Show(){
                 if(JSON.parse(sessionStorage.getItem('account_info')).role_id == 5){
                     this.rootShow=true
@@ -902,23 +939,51 @@ export default {
             // 更新左侧树
             ztree_updata(){
                 this.ztree_data = [];
-                this.$axios.get('/account_class/'+sessionStorage.getItem('id'),
+                this.$axios.get('/account_class/'+sessionStorage.getItem('id')+'/'+sessionStorage.getItem('id'),
                 { headers: 
                 {"Authorization" : sessionStorage.getItem('setSession_id')}
                 })
                 .then((response) =>{
-                window.console.log(response);
-                    this.ztree_data.push( response.data.tree_data);        
+                this.ztree_data.push( response.data.tree_data);  
+                this.updata_list = response.data.tree_data;      
+                window.console.log(this.tree_info[0].children);
+                let tree_length = this.tree_info[0].children.length-1
+                this.second_tree.push(this.tree_info[0].children[tree_length]);
                 localStorage.setItem('children_list', JSON.stringify(response.data.tree_data));
                 })
                 .catch(function (error) {
                 window.console.log(error);
-                });
+                });  
             },
+            //更新左侧树名字
+            ztree_name(){
+                this.ztree_data = [];
+                this.$axios.get('/account_class/'+sessionStorage.getItem('id')+'/'+sessionStorage.getItem('id'),
+                { headers: 
+                {"Authorization" : sessionStorage.getItem('setSession_id')}
+                })
+                .then((response) =>{
+                this.second_tree=[]
+                this.ztree_data.push( response.data.tree_data);  
+                this.updata_list = response.data.tree_data;      
+                localStorage.setItem('children_list', JSON.stringify(response.data.tree_data));
+                // window.console.log(this.tree_info[0].children);
+                // this.get_newtree(node, resolve)
+
+                
+                this.tree_show =true
+
+                })
+                .catch(function (error) {
+                window.console.log(error);
+                }); 
+            },
+            // addNode(node,data){
+            //     this.node.childNodes = [];
+            //     this.loadNode(this.node,this.resolve)
+            // },
             // 页面赋值公共方法
             update_data(){
-              window.console.log(this.treeNode);
-              window.console.log(this.nodeId);
               if(this.treeNode == 1){
                 this.$axios.get('/account/'+sessionStorage.getItem('loginName'),
                     { headers: 
@@ -930,16 +995,18 @@ export default {
                     this.personal_info = response.data.account_info;
                     this.total_mumber = response.data.device_list.length;
                     this.device_info =  response.data.device_list;
+                    // this.children_infor = response.data.tree_data;
                     this.renders();
                     sessionStorage.setItem('account_info', JSON.stringify(response.data.account_info));
                     localStorage.setItem('device_list', JSON.stringify(response.data.device_list));
-                    localStorage.setItem('group_list', JSON.stringify(response.data.group_list));          
+                    localStorage.setItem('group_list', JSON.stringify(response.data.group_list)); 
+                    localStorage.setItem('children_list', JSON.stringify(response.data.tree_data));         
                     })
                     .catch( (error) => {
                     window.console.log(error);
                     });
               }else{
-                    this.$axios.get('/account_device/'+this.nodeId,
+                    this.$axios.get('/account_device/'+sessionStorage.getItem('id')+'/'+this.nodeId,
                     { headers: 
                     {
                     "Authorization" : sessionStorage.getItem('setSession_id')
@@ -947,7 +1014,6 @@ export default {
                     })
                     .then((response) =>{
                     //  sessionStorage.setItem('id', response.data.account_info.id);    
-                    window.console.log(response.data);
                     this.personal_info = response.data.account_info;
                     if(response.data.devices == null){
                            this.total_mumber = 0;
@@ -966,7 +1032,7 @@ export default {
             }
 
     },
-         watch: {
+    watch: {
             filterText(val) {
                 this.$refs.ztree.filter(val);
             },
@@ -983,7 +1049,7 @@ export default {
         page_mumber(){
             return this.total_mumber;
         },
-        childre_infor(){
+        children_infor(){
             return JSON.parse(localStorage.getItem('children_list'))
         },
         table_page(){
@@ -993,6 +1059,13 @@ export default {
                return  this.tableData.slice((this.currentPage-1)*10,this.currentPage*10)
             }
         },
+        // 转移成员列表
+        customer_List(){
+            return  this.updata_list.children
+        },
+        tree_info(){
+            return this.ztree_data
+        }
 
     },
     beforeCreate() {
@@ -1078,6 +1151,8 @@ background-color: white;
 /* 树组件盒子 */
 .client_left_body{
     background-color: white;
+    height: 743px;
+    overflow: auto;
 }
 .client_details{
     height: 139px;
