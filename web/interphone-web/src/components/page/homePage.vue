@@ -377,8 +377,8 @@ export default {
             register(){
                this.registerVisible=true; 
                this.register_Account=''
-               this.register_Password=''
-               this.register_cfmPassword=''
+               this.registerForm.register_Password='123456'
+               this.registerForm.register_cfmPassword='123456'
             },
             register_Cancle(){
                 this.registerVisible=false;
@@ -1079,6 +1079,7 @@ export default {
        this. get_ztreeData();
        this.get_device_data();
        this.root_Show();
+       
     //    this.get_total_mumber()
        
     }
