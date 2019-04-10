@@ -161,11 +161,11 @@ func GetAccount(key interface{}) (*model.Account, error) {
 	var stmtErr error
 	switch t := key.(type) {
 	case int:
-		stmtOut, stmtErr = dbConn.Prepare(`SELECT user.id, user.pid, user.name, user.nick_name, user.passwd, user_type, user.last_login_time, user.create_time, user.change_time, 
-																email, phone, remark, address, contact FROM user LEFT JOIN customer ON user.id = customer.uid WHERE user.id = ?`)
+		stmtOut, stmtErr = dbConn.Prepare(`SELECT  u.id, u.pid, u.name, u.nick_name, u.passwd, u.user_type, u.last_login_time, u.create_time, u.change_time, email, phone, remark, address, contact 
+													FROM user AS u LEFT JOIN customer AS c ON u.id = c.uid WHERE u.id = ?`)
 	case string:
-		stmtOut, stmtErr = dbConn.Prepare(`SELECT user.id, user.pid, user.name, user.nick_name, user.passwd, user_type, user.last_login_time, user.create_time, user.change_time, 
-																email, phone, remark, address, contact FROM user LEFT JOIN customer ON user.id = customer.uid WHERE user.name = ?`)
+		stmtOut, stmtErr = dbConn.Prepare(`SELECT  u.id, u.pid, u.name, u.nick_name, u.passwd, u.user_type, u.last_login_time, u.create_time, u.change_time, email, phone, remark, address, contact 
+													FROM user AS u LEFT JOIN customer AS c ON u.id = c.uid WHERE u.name = ?`)
 	default:
 		_ = t
 	}
@@ -175,22 +175,13 @@ func GetAccount(key interface{}) (*model.Account, error) {
 		return nil, stmtErr
 	}
 	var (
-		id          int
-		pid         int
-		username    string
-		nickname    string
-		pwd         string
-		email       sql.NullString
-		phone       sql.NullString
-		remark      sql.NullString
-		contact     sql.NullString
-		address     sql.NullString
-		privilegeId int
-		roleId      int
-		stat        string
-		llTime      string
-		cTime       string
-		changeTime  string
+		id, pid                                int
+		username, nickname, pwd                string
+		email, phone, remark, contact, address sql.NullString
+		privilegeId                            int
+		roleId                                 int
+		stat                                   string
+		llTime, cTime, changeTime              string
 	)
 	// 查询数据
 	err := stmtOut.QueryRow(key).
@@ -207,7 +198,7 @@ func GetAccount(key interface{}) (*model.Account, error) {
 	}
 
 	// 赋值给返回的结构体
-	log.Println("get account : ", id, "  ", username, " ", privilegeId, " ", pwd, " ", cTime)
+	//log.Println("get account : ", id, "  ", username, " ", privilegeId, " ", pwd, " ", cTime)
 	res := &model.Account{
 		Id:          id,
 		Pid:         pid,
@@ -310,7 +301,7 @@ func UpdateAccountPwd(pwd string, id int) error {
 
 // 查找下级目录
 func SelectChildByPId(pId int) ([]*model.Account, error) {
-	stmtOut, err := dbConn.Prepare("SELECT id, name FROM user WHERE pid = ?")
+	stmtOut, err := dbConn.Prepare("SELECT id, `name` FROM `user` WHERE pid = ?")
 	if err != nil {
 		return nil, err
 	}

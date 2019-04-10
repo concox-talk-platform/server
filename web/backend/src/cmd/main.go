@@ -9,12 +9,23 @@ import (
 	"controllers"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/lestrrat/go-file-rotatelogs"
+	"github.com/rifflock/lfshook"
+	"github.com/sirupsen/logrus"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 )
+
+func main() {
+	engine := Prepare()
+	if err := engine.Run(":8888"); err != nil {
+		log.Println("listen is error", err)
+	}
+}
 
 func Prepare() *gin.Engine {
 
@@ -26,38 +37,40 @@ func Prepare() *gin.Engine {
 
 	engine := gin.Default()
 
-	// 解决跨域问题
-	engine.Use(Cors())
+	// 日志， 解决跨域问题
+	engine.Use(Logger(),Cors())
 
 	// 注册路由
-	engine.POST("/account", controllers.CreateAccountBySuperior)
-
+	// account
 	engine.POST("/account/login.do/:account_name", controllers.SignIn)
 
 	engine.POST("/account/logout.do/:account_name", controllers.SignOut)
 
-	engine.GET("/account/:account_name", controllers.GetAccountInfo)
+	engine.POST("/account", controllers.CreateAccountBySuperior)
 
-	engine.GET("/account_class/:accountId",controllers.GetAccountClass)
+	engine.GET("/account/:account_name", controllers.GetAccountInfo)
 
 	engine.POST("/account/info/update", controllers.UpdateAccountInfo)
 
 	engine.POST("/account/pwd/update", controllers.UpdateAccountPwd)
 
-	engine.GET("/account_device/:accountId", controllers.GetAccountDevice)
+	engine.GET("/account_class/:accountId/:searchId",controllers.GetAccountClass)
+
+	engine.GET("/account_device/:accountId/:getAdviceId", controllers.GetAccountDevice)
 
 	engine.POST("/account_device/:accountId", controllers.TransAccountDevice)
 
+	// group
 	engine.POST("/group", controllers.CreateGroup)
 
 	engine.POST("/group/update", controllers.UpdateGroup)
 
-	engine.GET("/group/delete", controllers.DeleteGroup)
+	engine.POST("/group/delete", controllers.DeleteGroup)
 
 	engine.POST("/group/devices/update", controllers.UpdateGroupDevice)
 
+	// device
 	engine.POST("/device/import/:account_name", controllers.ImportDeviceByRoot)
-
 
 	return engine
 }
@@ -97,10 +110,53 @@ func Cors() gin.HandlerFunc {
 		c.Next() //  处理请求
 	}
 }
+func Logger() gin.HandlerFunc {
+	logClient := logrus.New()
 
-func main() {
-	engine := Prepare()
-	if err := engine.Run(":8080"); err != nil {
-		log.Println("listen is error", err)
+	//禁止logrus的输出
+	src, err := os.OpenFile(os.DevNull, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
+	if err!= nil{
+		fmt.Println("err", err)
+	}
+	logClient.Out = src
+	logClient.SetLevel(logrus.DebugLevel)
+	apiLogPath := "api.log"
+	logWriter, err := rotatelogs.New(
+		apiLogPath+".%Y-%m-%d-%H-%M.log",
+		rotatelogs.WithLinkName(apiLogPath), // 生成软链，指向最新日志文件
+		rotatelogs.WithMaxAge(7*24*time.Hour), // 文件最大保存时间
+		rotatelogs.WithRotationTime(24*time.Hour), // 日志切割时间间隔
+	)
+	writeMap := lfshook.WriterMap{
+		logrus.InfoLevel:  logWriter,
+		logrus.FatalLevel: logWriter,
+	}
+	lfHook := lfshook.NewHook(writeMap, &logrus.JSONFormatter{})
+	logClient.AddHook(lfHook)
+
+
+	return func (c *gin.Context) {
+		// 开始时间
+		start := time.Now()
+		// 处理请求
+		c.Next()
+		// 结束时间
+		end := time.Now()
+		//执行时间
+		latency := end.Sub(start)
+
+		path := c.Request.URL.Path
+
+		clientIP := c.ClientIP()
+		method := c.Request.Method
+		statusCode := c.Writer.Status()
+		logClient.Infof("| %3d | %13v | %15s | %s  %s |",
+			statusCode,
+			latency,
+			clientIP,
+			method, path,
+		)
 	}
 }
+
+

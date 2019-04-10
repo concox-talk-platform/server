@@ -49,6 +49,7 @@ func (wssu *WebServiceServerImpl) ImportDeviceByRoot(ctx context.Context, req *p
 			UserName:  string([]byte(v)[7:len(v)]),
 			PassWord:  string([]byte(v)[7:len(v)]),
 			AccountId: int(req.GetAccountId()),
+			ParentId: "1",
 		})
 	}
 

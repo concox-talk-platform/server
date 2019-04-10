@@ -19,7 +19,7 @@ import (
 	"strconv"
 )
 
-// TODO web更新群组中的设备
+// web更新群组中的设备
 func UpdateGroupDevice(c *gin.Context) {
 	gList := &model.GroupList{}
 	if err := c.BindJSON(gList); err != nil {
@@ -71,7 +71,7 @@ func UpdateGroupDevice(c *gin.Context) {
 	}
 	log.Println("group member update :gList.GroupInfo.Id :", gList.GroupInfo.Id)
 	status, _ := strconv.Atoi(gList.GroupInfo.Status)
-	resCreat, err := webCli.UpdateGroup(context.Background(), &pb.UpdateGroupReq{
+	resUpd, err := webCli.UpdateGroup(context.Background(), &pb.UpdateGroupReq{
 		DeviceIds:   deviceIds,
 		DeviceInfos: deviceInfos,
 		GroupInfo: &pb.Group{
@@ -86,10 +86,10 @@ func UpdateGroupDevice(c *gin.Context) {
 		return
 	}
 
-	log.Println(resCreat)
+	log.Println(resUpd)
 	c.JSON(http.StatusOK, gin.H{
 		"result": "success",
-		"msg":    resCreat.ResultMsg.Msg,
+		"msg":    resUpd.ResultMsg.Msg,
 	})
 }
 
@@ -118,21 +118,21 @@ func CreateGroup(c *gin.Context) {
 		return
 	}
 
-		// 组名查重
-		res, err := tg.CheckDuplicateGName(gList.GroupInfo)
-		if err != nil {
-			log.Printf("CheckDuplicateGName fail , error: %s", err)
-			c.JSON(http.StatusInternalServerError, model.ErrorDBError)
-			return
-		}
-		if res > 0 {
-			log.Printf("CheckDuplicateGName error: %s", err)
-			c.JSON(http.StatusUnprocessableEntity, gin.H{
-				"msg":  "group name duplicate",
-				"code": "422",
-			})
-			return
-		}
+	// 组名查重
+	res, err := tg.CheckDuplicateGName(gList.GroupInfo)
+	if err != nil {
+		log.Printf("CheckDuplicateGName fail , error: %s", err)
+		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
+		return
+	}
+	if res > 0 {
+		log.Printf("CheckDuplicateGName error: %s", err)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"msg":  "group name duplicate",
+			"code": "422",
+		})
+		return
+	}
 
 	// 创建群组
 	log.Println("start rpc")
@@ -141,10 +141,13 @@ func CreateGroup(c *gin.Context) {
 		log.Printf("grpc.Dial err : %v", err)
 	}
 	webCli := pb.NewTalkCloudClient(conn)
-
-	deviceIds := make([]int64, 0)
+	var deviceIds string
 	for _, v := range gList.DeviceIds {
-		deviceIds = append(deviceIds, int64(v))
+		if v == -1 {
+			deviceIds = "-1"
+		} else {
+
+		}
 	}
 
 	deviceInfos := make([]*pb.Member, 0)
@@ -155,15 +158,14 @@ func CreateGroup(c *gin.Context) {
 			Id:       int32((vMap["id"]).(float64)),
 			IMei:     (vMap["imei"]).(string),
 			UserName: (vMap["user_name"]).(string),
-			//NickName:  (vMap["nick_name"]).(nil),
-			Pwd: (vMap["password"]).(string),
-			//UserType:  (vMap["user_type"]).(int32),
-			//AccountId: (vMap["account_id"]).(int32),
-			//ParentId:  (vMap["parent_id"]).(string),
+			Pwd:      (vMap["password"]).(string),
 		})
 	}
 	status, _ := strconv.Atoi(gList.GroupInfo.Status)
-	resCreat, err := webCli.CreateGroup(context.Background(), &pb.CreateGroupReq{
+
+	log.Println("gList.GroupInfo.GroupName:", gList.GroupInfo.GroupName)
+
+	resCreate, err := webCli.CreateGroup(context.Background(), &pb.CreateGroupReq{
 		DeviceIds:   deviceIds,
 		DeviceInfos: deviceInfos,
 		GroupInfo: &pb.Group{
@@ -172,20 +174,21 @@ func CreateGroup(c *gin.Context) {
 			AccountId: int32(gList.GroupInfo.AccountId),
 			Status:    int32(status)},
 	})
+	log.Printf("group: %+v", resCreate.GroupInfo.GroupName)
 	if err != nil {
 		log.Printf("create group fail , error: %s", err)
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
 	}
 
-	log.Println(resCreat)
+	log.Println(resCreate)
 	c.JSON(http.StatusOK, gin.H{
 		"result": "success",
-		"msg":    resCreat.ResultMsg.Msg,
+		"msg":    resCreate.Res.Msg,
 	})
 }
 
-// TODO 群组更新 目前web只用更新群组名字
+// 群组更新 目前web只用更新群组名字
 func UpdateGroup(c *gin.Context) {
 	gI := &model.GroupInfo{}
 	if err := c.BindJSON(gI); err != nil {
@@ -230,7 +233,7 @@ func UpdateGroup(c *gin.Context) {
 	})
 }
 
-// TODO 群组删除
+// 群组删除
 func DeleteGroup(c *gin.Context) {
 	gI := &model.GroupInfo{}
 	if err := c.BindJSON(gI); err != nil {

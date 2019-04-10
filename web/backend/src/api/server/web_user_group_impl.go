@@ -30,7 +30,6 @@ func (wssu *WebServiceServerImpl) UpdateGroup(ctx context.Context, req *pb.Updat
 
 	deviceInfos := make([]interface{}, 0)
 	for _, v := range req.DeviceInfos {
-		//id, _ := strconv.Atoi()
 		log.Println("web impl vid:", v.Id)
 		deviceInfos = append(deviceInfos, map[string]interface{}{
 			"id":         int(v.Id),
@@ -67,7 +66,7 @@ func (wssu *WebServiceServerImpl) UpdateGroup(ctx context.Context, req *pb.Updat
 	}
 
 	// TODO 增加到缓存
-	if err := tg.AddGroupInCache(gl, cache.GetRedisClient()); err != nil {
+	if err := tg.AddGroupAndUserInCache(gl, cache.GetRedisClient()); err != nil {
 		log.Println("insert cache error")
 		return &pb.UpdateGroupResp{ResultMsg: &pb.Result{Msg: "Update group unsuccessful, please try again later", Code: 422}}, err
 	}

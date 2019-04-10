@@ -76,7 +76,7 @@
 ``` json
 {
 	"success": true,
-	"msg": "delete session id is successful",
+	"msg": "SignOut is successful",
 }
 ```
 
@@ -89,7 +89,7 @@
 
 请求参数：**请求头中添加返回的session_id**  
 
-返回参数：body中：  // 具体需要哪些待定
+返回参数：body中：  （返回都是json格式）
 ``` json
 {
 
@@ -97,6 +97,7 @@
 	"account_info" : "账户的信息",
 	"group_list" : "群组的信息",
 	"device_list" ： "账户下所有的设备"
+	"tree_data": "账户的层级关系"
 }
 ```
 
@@ -108,17 +109,25 @@
 
 请求地址：`/account/info/update`
 
-请求参数：**请求头中添加返回的session_id**  
-
-返回参数：body中：  (以下字段json格式，可以为空)
-```
-	Id       string `json:"id"`
-	NickName string `json:"nick_name"`
+请求参数：**请求头中添加返回的session_id**   (以下字段json格式，可以为空)
+``` go
+	Id       string `json:"id"`   //不能为空
+	LoginId  string `json:"login_id"`   //不能为空
+	NickName string `json:"nick_name"`  // 不能为空
+	Username string `json:"username"`  
+	TypeId   string `json:"type_id"`
 	Phone    string `json:"phone"`
 	Email    string `json:"email"`
 	Address  string `json:"address"`
 	Remark   string `json:"remark"`
 	Contact  string `json:"contact"`
+```
+
+返回参数：body中： 
+
+``` go
+			"success": "true",
+			"msg":     "update account success",
 ```
 
 ### 6. 修改账户密码
@@ -129,15 +138,20 @@
 请求地址：`/account/pwd/update`
 
 请求参数：**请求头中添加返回的session_id**  
-
-返回参数：body中：  // 具体需要哪些待定
-
-``` json
+``` go
 {
-	Id string `json:"id"`    // 账户id
+	Id         string `json:"id"`    // 账户id
 	OldPwd     string `json:"old_pwd"`
 	NewPwd     string `json:"new_pwd"`
 	ConfirmPwd string `json:"confirm_pwd"`
+}
+```
+
+返回参数：body中： 
+``` go
+{
+	"result": "success",
+	"msg":    "Password changed successfully",
 }
 ```
 
@@ -146,12 +160,13 @@
 
 请求方式：`POST`
 
-请求地址：`/account_class/:accountId`
+请求地址：`/account_class/:accountId/:searchId`
 
-请求参数：**请求头中添加返回的session_id**  
+请求参数：accountId是登录者的ip, searchId是需要获取的用户的下级目录的id **请求头中添加返回的session_id**  
 
 返回参数：body中：  (以下字段json格式)
-```
+
+``` go
 		"result":    "success",
 		"tree_data": resp,
 
@@ -165,9 +180,9 @@
 
 请求方式：`GET`
 
-请求地址：`/account_device/:accountId`
+请求地址：`/account_device/:accountId/:getAdviceId`
 
-请求参数：**请求头中添加返回的session_id**  
+请求参数：accountId是登录者的id, searchId是需要获取的用户的下级目录的id **请求头中添加返回的session_id**  
 
 返回参数：body中：  (以下字段json格式)
 ```
@@ -183,7 +198,7 @@
 
 请求地址：`/account_device/:accountId`
 
-请求参数：**请求头中添加返回的session_id**  
+请求参数：accountId是登录者的id, **请求头中添加返回的session_id**  
 
 返回参数：body中：  (以下字段json格式)
 ```
@@ -192,7 +207,7 @@
 ```
 
 
-### 10. 导入设备
+### 10. 导入设备  grpc
 
 请求协议：`http`
 
@@ -200,7 +215,12 @@
 
 请求地址：`/device/import/SurpeRoot`
 
-请求参数：**请求头中添加返回的session_id**  
+请求参数：**请求头中添加返回的session_id** 
+
+请求body：一个string数组
+``` go
+	DeviceIMei []string `json:"device_imei"`
+```
 
 返回参数：body中：  (以下字段json格式)
 ```
@@ -208,23 +228,20 @@
 ```
 
 
-### 11. 创建组
+### 11. 创建组  grpc
 请求协议：`http`
 
 请求方式：`POST`
 
-请求地址：`/group/`
+请求地址：`/group`
 
 请求参数：**cookie中添加返回的session_id**  // 调试的时候暂时注释
 
 
 ``` json
 {
-  "device_infos": [
-    8,
-    10,
-    11   // 至少有一个设备
-  ],
+  "device_ids": [ -1 ],
+  "device_infos": [设备对象]
   "group_info": {
     "group_name": "重庆组",    // 必须的
     "account_id": 6,         // 必须的
@@ -233,7 +250,6 @@
   }
 }
 ```
-
 返回参数：  
 
 ``` json
@@ -242,11 +258,87 @@
 ```
 
 ### 12. 更新组名  目前web只用改组名
-/group/update
 
-### 13. 删除组 
-/group/delete
+请求协议：`http`
 
-### 14. 更新组成员
-/group/devices/update
+请求方式：`POST`
+
+请求地址：`/group/update`
+
+请求参数：**cookie中添加返回的session_id**  // 调试的时候暂时注释
+
+
+``` json
+{
+  "group_info": {
+    "group_name": "重庆组",    // 必须的
+    "account_id": 6,         // 必须的
+    "status": "1",
+    "c_time": "2019-03-18 10:28:26"
+  }
+}
+```
+返回参数：  
+
+``` json
+		"result": "success",
+		"msg":    "Update group successfully",
+```
+
+### 13. 删除组 grpc
+请求协议：`http`
+
+请求方式：`POST`
+
+请求地址：`/group/delete`
+
+请求参数：**cookie中添加返回的session_id**  // 调试的时候暂时注释
+
+
+``` json
+{
+  "group_info": {
+    "group_name": "重庆组",    // 必须的
+    "account_id": 6,         // 必须的
+    "status": "1",
+    "c_time": "2019-03-18 10:28:26"
+  }
+}
+```
+返回参数：  
+
+``` json
+		"result": "success",
+		"msg":    "Delete group successfully",
+```
+
+### 14. 更新组成员  grpc
+
+请求协议：`http`
+
+请求方式：`POST`
+
+请求地址：`/group/devices/update`
+
+请求参数：**cookie中添加返回的session_id**  // 调试的时候暂时注释
+
+
+``` json
+{
+  "group_info": {
+    "group_name": "重庆组",    // 必须的
+    "account_id": 6,         // 必须的
+    "status": "1",
+    "c_time": "2019-03-18 10:28:26"
+  }
+}
+```
+返回参数：  
+
+``` json
+		"result": "success",
+		"msg":    resUpd.ResultMsg.Msg,
+
+```
+
 

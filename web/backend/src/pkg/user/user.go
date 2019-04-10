@@ -21,7 +21,7 @@ func AddUser(u *model.User, db ...interface{}) error {
 	stmtInsB.SET("name", u.UserName)
 	stmtInsB.SET("passwd", u.PassWord)
 	stmtInsB.SET("cid", u.AccountId)
-	stmtInsB.SET("pid", u.ParentId)
+	//stmtInsB.SET("pid", u.ParentId)
 	stmtInsB.SET("nick_name", u.NickName) // 注册的时候默认把username当做昵称
 	stmtInsB.SET("user_type", 1)
 	t := time.Now()
@@ -64,9 +64,9 @@ func SelectUserByKey(key interface{}) (*model.User, error) {
 	var err error
 	switch t := key.(type) {
 	case int:
-		stmtOut, err = dbConn.Prepare("SELECT id, name, nick_name, passwd, imei, user_type, pid, cid, create_time, last_login_time, change_time FROM user WHERE id = ?")
+		stmtOut, err = dbConn.Prepare("SELECT id, name, nick_name, passwd, imei, user_type, pid, cid, create_time, last_login_time, change_time FROM `user` WHERE id = ?")
 	case string:
-		stmtOut, err = dbConn.Prepare("SELECT id, name, nick_name, passwd, imei, user_type, pid, cid, create_time, last_login_time, change_time  FROM user WHERE name = ?")
+		stmtOut, err = dbConn.Prepare("SELECT id, name, nick_name, passwd, imei, user_type, pid, cid, create_time, last_login_time, change_time  FROM `user` WHERE name = ?")
 	default:
 		_ = t
 		return nil, err

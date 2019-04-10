@@ -15,9 +15,9 @@ import (
 const GROUP_PORT = "9000"
 
 func main() {
-	host := "113.105.153.240"
-	//host := "172.16.0.74"
-	//conn, err := grpc.Dial(host+GROUP_PORT, grpc.WithInsecure())
+	//host := "113.105.153.240"
+	host := "172.16.1.18"
+
 	conn, err := grpc.Dial(host+":9000", grpc.WithInsecure())
 	if err != nil {
 		log.Printf("grpc.Dial err : %v", err)
@@ -28,77 +28,73 @@ func main() {
 			log.Printf("connection err : %v", err)
 		}
 	}()
-
-	//groupCli := pb.NewTalkCloudClient(conn)
-	//resp, err := groupCli.AppRegister(context.Background(), &pb.AppRegReq{
-	//	Name:     "雷坤",
-	//	Password: "123d",
-	//})
-	//if err != nil {
-	//	log.Printf("group client err : %v", err)
-	//}
-	//
-	//log.Println(resp)
-	//
-	//if err != nil {
-	//	log.Printf("grpc.Dial err : %v", err)
-	//}
-
 	//webCli := pb.NewWebServiceClient(conn)
 	//res, err := webCli.ImportDeviceByRoot(context.Background(), &pb.ImportDeviceReq{
 	//	DeviceImei:[]string{"1234567897777777"},
 	//	AccountId: 1,
 	//})
-/*
-	res, err := webCli.CreateGroup(context.Background(), &pb.CreateGroupReq{
-		DeviceIds: []int64{1000,1001,1002},
+
+	userClient := pb.NewTalkCloudClient(conn)
+	/*res, err := userClient.AppRegister(context.Background(), &pb.AppRegReq{
+		Name:     "姚明6666",
+		Password: "123456",
+	})*/
+	res, err := userClient.CreateGroup(context.Background(), &pb.CreateGroupReq{
+		DeviceIds: "1482,333,1003,1004",
 		DeviceInfos: nil,
+		GroupName:"papi组",
+		AccountId: 333,
 		GroupInfo: &pb.Group{
 			Id:0,
-			GroupName:"雷坤6组",
-			AccountId: 0,   // 如果写自己，岂不是普通用户也变成调度员了
+			GroupName:"papi酱40组",
+			AccountId: 333,   // 如果写自己，岂不是普通用户也变成调度员了
 			Status: 1,
-		}})*/
+		}})
 
-	//res, err := webCli.DeleteGroup(context.Background(), &pb.Group{
+	/*res, err := webCli.DeleteGroup(context.Background(), &pb.Group{
 	//	Id: 102,
-	//})
+	//})*/
 
 
-	userFriendCli := pb.NewTalkCloudClient(conn)
-	/*res, err := userFriendCli.AddFriend(context.Background(), &pb.FriendNewReq{
+	/*res, err := userClient.AddFriend(context.Background(), &pb.FriendNewReq{
 		Uid:333,
 		Fuid:500,
 	})*/
 
-	/*res, err := userFriendCli.Login(context.Background(), &pb.LoginReq{
+    /*res, err := userClient.Login(context.Background(), &pb.LoginReq{
 		Name:"264333",
 		Passwd:"123456",
 	})*/
 
-	res, err := userFriendCli.SearchUserByKey(context.Background(), &pb.UserSearchReq{
+	/*res, err := userClient.SearchUserByKey(context.Background(), &pb.UserSearchReq{
 		Uid:uint64(333),
 		Target:"",
-	})
-	/*res, err := userFriendCli.GetGroupList(context.Background(), &pb.GrpListReq{
+	})*/
+/*
+    res, err := userClient.GetGroupList(context.Background(), &pb.GrpListReq{
 		Uid:uint64(333),
 	})*/
-	/*
-	res, err := userFriendCli.SearchGroup(context.Background(), &pb.GrpSearchReq{
+
+	/*res, err := userClient.SearchGroup(context.Background(), &pb.GrpSearchReq{
 		Uid:uint64(333),
 		Target:"雷坤",
 	})
 	*/
-/*
-	res , err := userFriendCli.SearchUserByKey(context.Background(), &pb.UserSearchReq{
+
+	/*res , err := userClient.SearchUserByKey(context.Background(), &pb.UserSearchReq{
 		Uid:333,
 		Target:"121422",
+	})*/
+
+	/*res, err := userClient.JoinGroup(context.Background(), &pb.GrpUserAddReq{
+		Uid:333,
+		Gid:152,
 	})*/
 	if err != nil {
 		log.Println("error : ", err)
 		return
 	}
-	log.Println(res.UserList)
+	log.Printf("%+v",res)
 	//for _, v := range res.UserList {
 	//	log.Println(v.Uid, v.Name, v.IsFriend)
 	//}

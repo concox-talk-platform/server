@@ -54,6 +54,7 @@ func GetRedisClient() redis.Conn {
 }
 
 func init() {
+
 	cfg := config.NewRedisConfig()
 	if err := cfg.LoadConfig("redis", DEFAULT_REDIS_CONFIG); err != nil {
 		RedisPool = nil

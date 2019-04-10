@@ -48,7 +48,7 @@ func ImportDeviceByRoot(c * gin.Context) {
 		return
 	}
 
-	log.Println("start rpc")
+	log.Println("ImportDeviceByRoot start rpc")
 	conn, err := client_pool.GetConn(service.Addr)
 	if err != nil {
 		log.Printf("grpc.Dial err : %v", err)
@@ -59,9 +59,9 @@ func ImportDeviceByRoot(c * gin.Context) {
 		AccountId: 1,
 	})
 	if err != nil {
-		log.Println("import device error : ", err)
+		log.Println("Import device error : ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":"import device error, Please try again later.",
+			"error":"Import device error, Please try again later.",
 			"error_code":"500",
 		})
 		return
@@ -70,10 +70,4 @@ func ImportDeviceByRoot(c * gin.Context) {
 	c.JSON(int(res.Result.Code), gin.H{
 		"msg": res.Result.Msg,
 	})
-
-	defer func() {
-		if err := conn.Close(); err != nil {
-			log.Printf("connection err : %v", err)
-		}
-	}()
 }

@@ -26,7 +26,7 @@ func CreateAccountBySuperior(c *gin.Context) {
 	// 1. 取出Post中的表单内容
 	uBody := &model.CreateAccount{}
 	if err := c.BindJSON(uBody); err != nil {
-		log.Println("bind json error")
+		log.Println("bind json error : ", err)
 		c.JSON(http.StatusUnprocessableEntity, model.ErrorRequestBodyParseFailed)
 		return
 	}
@@ -34,34 +34,70 @@ func CreateAccountBySuperior(c *gin.Context) {
 	// 2. 数据格式合法性校验，首先不能为空，其次每个格式都必须校验
 	if uBody.NickName == "" || uBody.Username == "" || uBody.Pwd == "" || uBody.ConfirmPwd == "" {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
-			"error": " Please fill in the required fields ",
+			"error":      " Please fill in the required fields ",
+			"error_code": "0001",
 		})
 		return
 	}
 
-	if !utils.CheckName(uBody.Username) || !utils.CheckName(uBody.NickName) || !utils.CheckPwd(uBody.ConfirmPwd) || !utils.CheckPwd(uBody.Pwd) {
-		log.Println("username or nickname or pwd format is error")
-		c.JSON(http.StatusUnprocessableEntity, model.ErrorRequestBodyParseFailed)
+	// 校验昵称
+	if !utils.CheckNickName(uBody.NickName) {
+		log.Println("NickName format error", uBody.NickName)
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error":      "昵称只能输入1-20个以字母或者数字开头、可以含中文、下划线的字串。",
+			"error_code": "0002",
+		})
 		return
 	}
 
-	// 只有创建 1是普通用户， 2是调度员， 3是经销商 4是超级管理员root
-	if uBody.RoleId < 4 && uBody.RoleId >= 1 {
-	} else {
-		c.JSON(http.StatusUnprocessableEntity, model.ErrorRequestBodyParseFailed)
+	if !utils.CheckUserName(uBody.Username) {
+		log.Println("Username format error")
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error":      "用户名只能输入5-20个包含字母、数字或下划线的字串",
+			"error_code": "0003",
+		})
 		return
 	}
 
 	// 名字查重
 	aCount, err := tc.GetAccountByName(uBody.Username)
 	if err != nil {
+		log.Println("db error : ", err)
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
 	}
 	if aCount > 0 {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
-			"error": "User is exist already",
+			"error":      "User is exist already",
+			"error_code": "0005",
 		})
+		return
+	}
+
+	// 校验密码
+	if !utils.CheckPwd(uBody.ConfirmPwd) || !utils.CheckPwd(uBody.Pwd) {
+		log.Println("Pwd format error")
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error":      "密码6位-16位，至少包含一个数字字母",
+			"error_code": "0004",
+		})
+		return
+	}
+	if uBody.ConfirmPwd != uBody.Pwd {
+		log.Println("Confirm Pwd is not match pwd")
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error":      "两次输入密码必须一致",
+			"error_code": "0005",
+		})
+		return
+	}
+
+	// 只有创建 1是普通用户， 2是调度员， 3是经销商 4是公司，5是超级管理员root
+	log.Println("创建等级:", uBody.RoleId)
+	if uBody.RoleId < 5 && uBody.RoleId >= 1 {
+	} else {
+		log.Println("创建权限出错")
+		c.JSON(http.StatusUnprocessableEntity, model.ErrorRequestBodyParseFailed)
 		return
 	}
 
@@ -71,10 +107,10 @@ func CreateAccountBySuperior(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
 	}
-
 	// 只能给下级创建
 	if parentAccount.RoleId <= uBody.RoleId {
 		c.JSON(http.StatusInternalServerError, model.ErrorCreateAccountError)
+		return
 	}
 
 	// 3. 添加账户
@@ -84,8 +120,7 @@ func CreateAccountBySuperior(c *gin.Context) {
 		return
 	}
 
-	//4. 生成session，返回消息内容
-	//id := service.GenerateNewSessionId(uBody.Username)
+	//4. 返回消息内容
 	c.JSON(http.StatusCreated, gin.H{
 		"success":    "true",
 		"account_id": uId,
@@ -141,7 +176,6 @@ func GetAccountInfo(c *gin.Context) {
 		if err != nil {
 			log.Printf("Error in Get Group devices: %s", err)
 		}
-		log.Println(us)
 		groupMember := make([]interface{}, 0)
 		groupMember = append(groupMember, ai)
 		for _, u := range us {
@@ -201,6 +235,7 @@ func GetAccountInfo(c *gin.Context) {
 		Children:        cList,
 	}
 
+	ai.Pwd = ""  // 不把密码暴露出去
 	c.JSON(http.StatusOK, gin.H{
 		"message":      "User information obtained successfully",
 		"account_info": ai,
@@ -210,7 +245,7 @@ func GetAccountInfo(c *gin.Context) {
 	})
 }
 
-// 更新账户信息 如果父id == 0 就是修改自己。
+// 更新下级账户信息
 func UpdateAccountInfo(c *gin.Context) {
 	accInf := &model.AccountUpdate{}
 	if err := c.BindJSON(accInf); err != nil {
@@ -243,17 +278,6 @@ func UpdateAccountInfo(c *gin.Context) {
 		return
 	}
 
-	/*if accInf.Phone == "" && accInf.Email == "" &&
-		accInf.NickName == "" && accInf.Address == "" &&
-		accInf.Remark == "" && accInf.Contact == "" {
-		log.Printf("All changed parameters are null")
-		c.JSON(http.StatusUnprocessableEntity, gin.H{
-			"error":      "Change at least one parameter",
-			"error_code": "004",
-		})
-		return
-	}*/
-
 	if err := tc.UpdateAccount(accInf); err != nil {
 		log.Println("Update account error :", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -278,18 +302,46 @@ func UpdateAccountPwd(c *gin.Context) {
 		return
 	}
 
-	// 使用session来校验用户
+	// 使用session来校验用户是否登录
 	aid, _ := strconv.Atoi(accPwd.Id)
 	if !service.ValidateAccountSession(c.Request, aid) {
 		c.JSON(http.StatusUnauthorized, model.ErrorNotAuthSession)
 		return
 	}
-	// 校验参数信息 ：校首先必须要有id，其次是每个参数的合法性，首先都不允许为空，TODO 其次每一个参数的合法性，比如只能有汉字
+	// 校验参数信息 ：校首先必须要有id，都不允许为空
 	if accPwd.Id == "" {
 		log.Printf("account id is nil")
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"error":      "account id is null",
 			"error_code": "001",
+		})
+		return
+	}
+
+	// 校验密码
+	if !utils.CheckPwd(accPwd.ConfirmPwd) || !utils.CheckPwd(accPwd.NewPwd) {
+		log.Println("Pwd format error")
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error":      "密码6位-16位，至少包含一个数字字母",
+			"error_code": "0004",
+		})
+		return
+	}
+	// 两次输入的密码必须一致
+	if accPwd.ConfirmPwd != accPwd.NewPwd {
+		log.Println("Confirm Pwd is not match pwd")
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error":      "两次输入密码必须一致",
+			"error_code": "0005",
+		})
+		return
+	}
+
+	// 新密码不能和旧密码不同
+	if accPwd.NewPwd == accPwd.OldPwd {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error":      "The new password cant't be the same as the old password.",
+			"error_code": "003",
 		})
 		return
 	}
@@ -311,24 +363,6 @@ func UpdateAccountPwd(c *gin.Context) {
 		return
 	}
 
-	// 新密码不能和旧密码不同
-	if accPwd.NewPwd == accPwd.OldPwd {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{
-			"error":      "The new password cant't be the same as the old password.",
-			"error_code": "003",
-		})
-		return
-	}
-
-	// 两次输入的密码必须一致
-	if accPwd.NewPwd != accPwd.ConfirmPwd {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{
-			"error":      "The two passwords don't match",
-			"error_code": "004",
-		})
-		return
-	}
-
 	// 更新密码
 	id, _ := strconv.Atoi(accPwd.Id)
 	if err := tc.UpdateAccountPwd(accPwd.NewPwd, id); err != nil {
@@ -346,25 +380,30 @@ func UpdateAccountPwd(c *gin.Context) {
 // 获取账户下级目录
 func GetAccountClass(c *gin.Context) {
 	accountId := c.Param("accountId")
+	searchId := c.Param("searchId")
 
-	// 使用session来校验用户
+	log.Println("searchId:", searchId, "accountId", accountId)
+	//使用session来校验用户
 	aid, _ := strconv.Atoi(accountId)
+	sid, _ := strconv.Atoi(searchId)
+
+
 	if !service.ValidateAccountSession(c.Request, aid) {
 		c.JSON(http.StatusUnauthorized, model.ErrorNotAuthSession)
 		return
 	}
 
 	// 查询数据返回
-	root, err := tc.GetAccount(aid)
+	root, err := tc.GetAccount(sid)
 	if err != nil {
-		log.Printf("db error : %s", err)
+		log.Printf("GetAccount db error : %s", err)
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
 	}
 
-	resElem, err := tc.SelectChildByPId(aid)
+	resElem, err := tc.SelectChildByPId(sid)
 	if err != nil {
-		log.Printf("db error : %s", err)
+		log.Printf("SelectChildByPId db error : %s", err)
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
 	}
@@ -386,7 +425,7 @@ func GetAccountClass(c *gin.Context) {
 	}
 
 	resp := &model.AccountClass{
-		Id:              aid,
+		Id:              sid,
 		AccountName:     root.Username,
 		AccountNickName: root.NickName,
 		Children:        cList,
@@ -401,15 +440,17 @@ func GetAccountClass(c *gin.Context) {
 // 获取账户的设备信息
 func GetAccountDevice(c *gin.Context) {
 	accountId := c.Param("accountId")
+	getAdviceId := c.Param("getAdviceId")
 
-	// 使用session来校验用户 TODO 考虑加一个, 保证只有上级用户和自己能访问这个接口
+	// 使用session来校验用户, 保证上级用户已登录
 	aid, _ := strconv.Atoi(accountId)
-	//if !service.ValidateAccountSession(c.Request, aid) {
-	//	c.JSON(http.StatusUnauthorized, model.ErrorNotAuthSession)
-	//	return
-	//}
+	getAId, _ := strconv.Atoi(getAdviceId)
+	if !service.ValidateAccountSession(c.Request, aid) {
+		c.JSON(http.StatusUnauthorized, model.ErrorNotAuthSession)
+		return
+	}
 	// 获取账户信息
-	ai, err := tc.GetAccount(aid)
+	ai, err := tc.GetAccount(getAId)
 	if err != nil {
 		log.Printf("Error in GetAccountInfo: %s", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -434,7 +475,7 @@ func GetAccountDevice(c *gin.Context) {
 
 // 转移设备
 func TransAccountDevice(c *gin.Context) {
-	//aidStr := c.Param("accountId")
+	aidStr := c.Param("accountId")
 	accountDevices := &model.AccountDeviceTransReq{}
 	if err := c.BindJSON(accountDevices); err != nil {
 		log.Printf("json parse fail , error : %s", err)
@@ -443,16 +484,22 @@ func TransAccountDevice(c *gin.Context) {
 	}
 
 	// 使用session来校验用户
-	//aid, _ := strconv.Atoi(aidStr)
-	//if !service.ValidateAccountSession(c.Request, aid) {
-	//	c.JSON(http.StatusUnauthorized, model.ErrorNotAuthSession)
-	//	return
-	//}
+	aid, _ := strconv.Atoi(aidStr)
+	if !service.ValidateAccountSession(c.Request, aid) {
+		c.JSON(http.StatusUnauthorized, model.ErrorNotAuthSession)
+		return
+	}
 
+	// IMEI号只能是15位数字
+	// 结构体为空
+	if accountDevices.Devices == nil {
+		c.JSON(http.StatusBadRequest, model.ErrorRequestBodyParseFailed)
+		return
+	}
 	for _, v := range accountDevices.Devices {
-		if v.IMei == "" {
+		if v.IMei == ""{
 			c.JSON(http.StatusUnprocessableEntity, gin.H{
-				"error":      "Imei can't be empty.",
+				"error":      "Imei is not correct.",
 				"error_code": "001",
 			})
 			return

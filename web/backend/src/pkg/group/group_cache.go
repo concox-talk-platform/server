@@ -21,6 +21,7 @@ const (
 	GRP_MEM_KEY_FMT  = "grp:%d:mem"
 	GRP_DATA_KEY_FMT = "grp:%d:data"
 	USR_DATA_KEY_FMT = "usr:%d:data"
+	USR_GROUP_KEY_FMT = "usr:%d:grps"
 )
 
 type MemStat uint8
@@ -59,6 +60,11 @@ func MakeGroupDataKey(gid int64) string {
 func MakeUserDataKey(uid int64) string {
 	return fmt.Sprintf(USR_DATA_KEY_FMT, uid)
 }
+
+func MakeUserGroupKey(uid int64) string {
+	return fmt.Sprintf(USR_GROUP_KEY_FMT, uid)
+}
+
 
 // check the key whether exists or not
 func IsKeyExists(key string, rd redis.Conn) (bool, error) {
@@ -240,12 +246,37 @@ func SetUserStat(uid int64, stat MemStat, rd redis.Conn) error {
 	return nil
 }
 
-func AddGroupInCache(gl *model.GroupList, rd redis.Conn) error {
+// 更新群组的data
+func AddGroupInCache(gl *pb.GroupListRsp, rd redis.Conn) error {
 	if rd == nil {
 		return errors.New("rd is null")
 	}
 
-	grpData, err := json.Marshal(&pb.GroupRecord{Gid: uint64(gl.GroupInfo.Id), GroupName: gl.GroupInfo.GroupName})
+	_ = rd.Send("MULTI")
+	for  _, v := range gl.GroupList {
+		grpData, err := json.Marshal(&pb.GroupInfo{Gid: v.Gid, GroupName: v.GroupName})
+		if err != nil {
+			log.Printf("json marshal error: %s\n", err)
+			return err
+		}
+		grpKey := MakeGroupDataKey(int64(v.Gid))
+		_ = rd.Send("SET", grpKey, grpData)
+	}
+
+	if _, err := rd.Do("EXEC"); err != nil {
+		log.Printf("Add group data to cache error: %s\n", err)
+		return err
+	}
+
+	return nil
+}
+
+func AddGroupAndUserInCache(gl *model.GroupList, rd redis.Conn) error {
+	if rd == nil {
+		return errors.New("rd is null")
+	}
+
+	grpData, err := json.Marshal(&pb.GroupInfo{Gid: int32(gl.GroupInfo.Id), GroupName: gl.GroupInfo.GroupName})
 	if err != nil {
 		log.Printf("json marshal error: %s\n", err)
 		return err
@@ -254,11 +285,18 @@ func AddGroupInCache(gl *model.GroupList, rd redis.Conn) error {
 	grpKey := MakeGroupDataKey(int64(gl.GroupInfo.Id))
 	memKey := MakeGroupMemKey(int64(gl.GroupInfo.Id))
 
+
 	// TODO redis 错误处理
 	_ = rd.Send("MULTI")
 
+	// 1. 新建一个组，涉及到的是一个组加入了很多个成员，就有一个groupDataKey值和一个memberKey，
 	for _, v := range gl.DeviceInfo {
 		_ = rd.Send("SADD", memKey, v.(map[string]interface{})["id"])
+
+	}
+	// 2.更新每一个userGroups的key里面的组数
+	for _, v := range gl.DeviceIds {
+		_ = rd.Send("SADD", MakeUserGroupKey(int64(v)), gl.GroupInfo.Id)
 	}
 	_ = rd.Send("SET", grpKey, grpData)
 
@@ -271,11 +309,3 @@ func AddGroupInCache(gl *model.GroupList, rd redis.Conn) error {
 	return nil
 }
 
-func init() {
-	loadCache()
-}
-
-// 加载所有用户在哪些组
-func loadCache() {
-
-}
