@@ -14,7 +14,7 @@ import (
 	"log"
 )
 
-func CheckFriendExist(uid, fuid uint64, db *sql.DB) (bool, error) {
+func CheckFriendExist(uid, fuid int32, db *sql.DB) (bool, error) {
 	if db == nil {
 		return false, fmt.Errorf("db is nil")
 	}
@@ -44,7 +44,7 @@ func CheckFriendExist(uid, fuid uint64, db *sql.DB) (bool, error) {
 }
 
 // 添加好友
-func AddFriend(uid, fuid uint64, db *sql.DB) (bool, error) {
+func AddFriend(uid, fuid int32, db *sql.DB) (bool, error) {
 	ret, err := CheckFriendExist(uid, fuid, db)
 	if err != nil {
 		return false, err
@@ -64,7 +64,7 @@ func AddFriend(uid, fuid uint64, db *sql.DB) (bool, error) {
 }
 
 // 删除好友
-func RemoveFriend(uid, fuid uint64, db *sql.DB) (bool, error) {
+func RemoveFriend(uid, fuid int32, db *sql.DB) (bool, error) {
 	if db == nil {
 		return false, fmt.Errorf("db is nil")
 	}
@@ -80,7 +80,7 @@ func RemoveFriend(uid, fuid uint64, db *sql.DB) (bool, error) {
 }
 
 // 获取好友请求列表
-func GetFriendReqList(uid uint64, db *sql.DB) (*pb.FriendsRsp, *map[uint64]string, error) {
+func GetFriendReqList(uid int32, db *sql.DB) (*pb.FriendsRsp, *map[int32]string, error) {
 	if db == nil {
 		return nil, nil, errors.New("db is nil")
 	}
@@ -94,7 +94,7 @@ func GetFriendReqList(uid uint64, db *sql.DB) (*pb.FriendsRsp, *map[uint64]strin
 	defer rows.Close()
 
 	friends := &pb.FriendsRsp{Uid: uid, FriendList: nil}
-	friendsMap := map[uint64]string{}
+	friendsMap := map[int32]string{}
 	for rows.Next() {
 		friend := new(pb.FriendRecord)
 		err = rows.Scan(&friend.Uid, &friend.Name, &friend.Imei)
@@ -109,7 +109,7 @@ func GetFriendReqList(uid uint64, db *sql.DB) (*pb.FriendsRsp, *map[uint64]strin
 }
 
 // 查找用户
-func SearchUserByName(_ uint64, target string, db *sql.DB) (*pb.UserSearchRsp, error) {
+func SearchUserByName(_ int32, target string, db *sql.DB) (*pb.UserSearchRsp, error) {
 	if db == nil {
 		return nil, errors.New("db is nil")
 	}

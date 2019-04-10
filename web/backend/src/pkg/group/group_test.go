@@ -4,6 +4,7 @@ import (
 	"cache"
 	"db"
 	"model"
+	"strings"
 	"testing"
 )
 
@@ -19,8 +20,10 @@ func testDeleteGroup(t *testing.T)  {
 	}
 }
 
-func testCreateGroupByWeb(t *testing.T) {
-	//nums := []int{9000, 10000, 11000, 12000, 13000}
+func TestCreateGroup(t *testing.T) {
+	s := strings.Split("123,abc,157,1235", ",")
+	t.Log(s)
+	/*nums := []int{1278, 1279, 1280}
 	ds := make([]interface{}, 0)
 	ds = append(ds, &model.User{
 		Id: 333,
@@ -31,11 +34,11 @@ func testCreateGroupByWeb(t *testing.T) {
 		UserType: 1,
 	})
 
-	//g := &model.GroupInfo{GroupName: "天津组1", AccountId: 2, Id: 333} // 用户id
-	//gl := &model.GroupList{DeviceIds: nums, GroupInfo: g, DeviceInfo:ds}
-	//if _, err := CreateGroupByWeb(gl, 1); err != nil {
-	//	t.Errorf("create group test error: %v", err)
-	//}
+	g := &model.GroupInfo{GroupName: "天津组2", AccountId: 334, Id: 334} // 用户id
+	gl := &model.GroupList{DeviceIds: nums, GroupInfo: g, DeviceInfo:ds}
+	if _, err := CreateGroup(gl, 0); err != nil {   // 1是管理员创建， 0是普通用户创建
+		t.Errorf("create group test error: %v", err)
+	}*/
 }
 
 //func testGetGroupList(t *testing.T) {
@@ -63,26 +66,26 @@ func testAddGroupCache(t *testing.T) {
 
 	g := &model.GroupInfo{GroupName: "天津组2", AccountId: 2, Id: 101} // 用户id
 	gl := &model.GroupList{DeviceIds: nums, GroupInfo: g, DeviceInfo:ds}
-	if err := AddGroupInCache(gl, cache.GetRedisClient()); err != nil {
+	if err := AddGroupAndUserInCache(gl, cache.GetRedisClient()); err != nil {
 		t.Logf("Add GroupCache error: %v", err)
 	} else {
 		//t.Logf("res:%v", res)
 	}
 }
 
-//func testGetGroupList(t *testing.T) {
-//	res, err := user.GetGroupList(uint64(1000), cache.GetRedisClient())
-//	if err != nil && err != cache.NofindInCacheError {
-//		t.Logf("Add GroupCache error: %v", err)
-//	} else if err == cache.NofindInCacheError {
-//		t.Logf("Can't find in cache")
-//	} else {
-//		t.Logf("find group list:%-v", res)
-//	}
-//}
+func testGetGroupList(t *testing.T) {
+	//res, err := user.GetGroupList(uint64(1000), cache.GetRedisClient())
+	//if err != nil && err != cache.NofindInCacheError {
+	//	t.Logf("Add GroupCache error: %v", err)
+	//} else if err == cache.NofindInCacheError {
+	//	t.Logf("Can't find in cache")
+	//} else {
+	//	t.Logf("find group list:%-v", res)
+	//}
+}
 
 
-func TestSearchGroup(t *testing.T) {
+func testSearchGroup(t *testing.T) {
 	res, err := SearchGroup("雷坤", db.DBHandler)
 	if err != nil {
 		t.Logf("Add GroupCache error: %v", err)

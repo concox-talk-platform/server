@@ -48,6 +48,7 @@ func MultiUpdateDevice(accountDevices *model.AccountDeviceTransReq) error {
 	for _, v := range accountDevices.Devices {
 		dImeiArr = append(dImeiArr, v.IMei)
 	}
+	log.Println("multi imeis:", dImeiArr)
 	ub.Where(dbs.IN("imei", dImeiArr))
 
 	if _, err := ub.Exec(dbConn); err != nil {

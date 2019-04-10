@@ -3,15 +3,19 @@ package server
 import (
 	"api/talk_cloud"
 	pb "api/talk_cloud"
+	"cache"
 	"context"
 	"database/sql"
+	"db"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"log"
 	"math/rand"
 	"model"
 	s "pkg/session"
-	u "pkg/user"
+	tu "pkg/user"
+	"pkg/user_friend"
+	"server/web/backend/src/pkg/group"
 	"strconv"
 	"time"
 	"utils"
@@ -25,7 +29,7 @@ func (serv *TalkCloudService) AppRegister(ctx context.Context, req *pb.AppRegReq
 	appRegResp := &pb.AppRegRsp{}
 
 	// 查重
-	ifExist, err := u.GetUserByName(req.Name)
+	ifExist, err := tu.GetUserByName(req.Name)
 	if err != nil {
 		log.Printf("app register error : %s", err)
 		appRegResp.Res = &pb.Result{
@@ -45,12 +49,13 @@ func (serv *TalkCloudService) AppRegister(ctx context.Context, req *pb.AppRegReq
 	user := &model.User{
 		UserName:  req.Name,
 		PassWord:  req.Password,
-		AccountId: 1, // TODO 默认给谁  普通用户默认是0
+		AccountId: -1, //  app用户是-1 调度员是0，设备用户是受管理的账号id
 		IMei:      iMei,
 		UserType:  1,
 	}
 
-	if err := u.AddUser(user); err != nil {
+	log.Println("app register start")
+	if err := tu.AddUser(user); err != nil {
 		log.Printf("app register error : %s", err)
 		appRegResp.Res = &pb.Result{
 			Code: 500,
@@ -59,7 +64,7 @@ func (serv *TalkCloudService) AppRegister(ctx context.Context, req *pb.AppRegReq
 		return appRegResp, nil
 	}
 
-	res, err := u.SelectUserByKey(req.Name)
+	res, err := tu.SelectUserByKey(req.Name)
 	if err != nil {
 		log.Printf("app register error : %s", err)
 		appRegResp.Res = &pb.Result{
@@ -69,7 +74,7 @@ func (serv *TalkCloudService) AppRegister(ctx context.Context, req *pb.AppRegReq
 		return appRegResp, nil
 	}
 
-	return &pb.AppRegRsp{Id: int64(res.Id)}, nil
+	return &pb.AppRegRsp{Id: int32(res.Id), UserName:req.Name, Res:&pb.Result{Code:200, Msg:"User registration successful"}}, nil
 }
 
 // 设备注册
@@ -83,7 +88,7 @@ func (serv *TalkCloudService) DeviceRegister(ctx context.Context, req *pb.Device
 		IMei:      req.DeviceList,
 	}
 
-	if err := u.AddUser(user); err != nil {
+	if err := tu.AddUser(user); err != nil {
 		log.Printf("app register error : %s", err)
 		return &pb.DeviceRegRsp{Res: &pb.Result{Code: 500, Msg: "Device registration failed. Please try again later"}}, err
 	}
@@ -93,13 +98,14 @@ func (serv *TalkCloudService) DeviceRegister(ctx context.Context, req *pb.Device
 
 // 用户登录
 func (serv *TalkCloudService) Login(ctx context.Context, req *pb.LoginReq) (*talk_cloud.LoginRsp, error) {
+	log.Println("enter login")
 	//　验证用户名是否存在以及密码是否正确，然后就生成一个uuid session, 把sessionid放进metadata返回给客户端，
 	//  然后之后的每一次连接都需要客户端加入这个metadata，使用拦截器，对用户进行鉴权
 	if req.Name == "" || req.Passwd == "" {
 		return &pb.LoginRsp{Res: &pb.Result{Code: 422, Msg: "用户名或密码不能为空"}}, nil
 	}
 
-	res, err := u.SelectUserByKey(req.Name)
+	res, err := tu.SelectUserByKey(req.Name)
 	if err != nil && err != sql.ErrNoRows {
 		log.Printf("App login error : %s", err)
 		loginRsp := &pb.LoginRsp{
@@ -160,13 +166,37 @@ func (serv *TalkCloudService) Login(ctx context.Context, req *pb.LoginReq) (*tal
 		NickName: res.NickName,
 		UserType: int32(res.UserType),
 	}
+
+	// 好友列表
+	fList, _, err := user_friend.GetFriendReqList(int32(res.Id), db.DBHandler)
+	if err != nil {
+		return &pb.LoginRsp{Res: &pb.Result{Code: 500, Msg: "process error, please try again"}}, err
+	}
+
+	// 群组列表
+	// 先去缓存取，取不出来再去mysql取
+	gList, err := tu.GetGroupList(int32(res.Id), cache.GetRedisClient())
+	if err != nil && err != sql.ErrNoRows {
+		log.Println("cache.NofindInCacheError")
+		return &pb.LoginRsp{Res: &pb.Result{Code: 500, Msg: "process error, please try again"}}, err
+	}
+	if err == sql.ErrNoRows {
+		log.Println("get")
+		gList, _, err = group.GetGroupList(int32(res.Id), db.DBHandler)
+		if err != nil {
+			return &pb.LoginRsp{Res: &pb.Result{Code: 500, Msg: "process error, please try again"}}, err
+		}
+	}
+
 	return &pb.LoginRsp{
+		UserInfo:   userInfo,
+		FriendList: fList.FriendList,
+		GroupList: gList.GroupList,
 		Res:      &pb.Result{Code: 200, Msg: req.Name + " login successful"},
-		UserInfo: userInfo,
 	}, nil
 }
 
-// 用户注销
+// 用户注销 TODO
 func (serv *TalkCloudService) Logout(ctx context.Context, req *pb.LogoutReq) (*talk_cloud.LogoutRsp, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
@@ -174,7 +204,7 @@ func (serv *TalkCloudService) Logout(ctx context.Context, req *pb.LogoutReq) (*t
 		return &pb.LogoutRsp{Res: &pb.Result{Code: 403, Msg: "server internal error"}}, nil
 	}
 	// TODO 考虑要不要验证sessionInfo中的name和password
-	if err := s.DeleteSession(md.Get("sessionId")[1]); err != nil {
+	if err := s.DeleteSession(md.Get("sessionId")[1], nil); err != nil {
 		log.Panicf("sessionid metadata delete  error%s", err)
 		return &pb.LogoutRsp{Res: &pb.Result{Code: 500, Msg: "server internal error"}}, err
 	}

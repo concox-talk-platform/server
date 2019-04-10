@@ -36,7 +36,7 @@ func AddGroupMember(uid, gid int64, userType RoleType, db *sql.DB) error {
 	return nil
 }
 
-func RemoveGroupMember(uid, gid uint64, db *sql.DB) error {
+func RemoveGroupMember(uid, gid int32, db *sql.DB) error {
 	if db == nil {
 		return fmt.Errorf("db is nil")
 	}
@@ -66,7 +66,7 @@ func RemoveGroupUser(uid, gid uint64, db *sql.DB) error {
 	return nil
 }
 
-func RemoveGroup(gid uint64, db *sql.DB) error {
+func RemoveGroup(gid int32, db *sql.DB) error {
 	if db == nil {
 		return fmt.Errorf("db is nil")
 	}
@@ -81,7 +81,7 @@ func RemoveGroup(gid uint64, db *sql.DB) error {
 	return nil
 }
 
-func ClearGroupMember(gid uint64, db *sql.DB) error {
+func ClearGroupMember(gid int32, db *sql.DB) error {
 	if db == nil {
 		return fmt.Errorf("db is nil")
 	}
@@ -97,7 +97,7 @@ func ClearGroupMember(gid uint64, db *sql.DB) error {
 }
 
 // 获取该用户在哪几个群组
-func GetGroupList(uid uint64, db *sql.DB) (*pb.GroupListRsp, *map[uint64]string, error) {
+func GetGroupList(uid int32, db *sql.DB) (*pb.GroupListRsp, *map[int32]string, error) {
 	if db == nil {
 		return nil, nil, errors.New("db is nil")
 	}
@@ -116,9 +116,9 @@ func GetGroupList(uid uint64, db *sql.DB) (*pb.GroupListRsp, *map[uint64]string,
 
 	groups := &pb.GroupListRsp{Uid: uid, GroupList: nil}
 
-	gMap := make(map[uint64]string, 0)
+	gMap := make(map[int32]string, 0)
 	for rows.Next() {
-		group := &pb.GroupRecord{}
+		group := &pb.GroupInfo{}
 		err = rows.Scan(&group.Gid, &group.GroupName)
 		if err != nil {
 			return nil, nil, err
@@ -146,7 +146,7 @@ func SearchGroup(target string, db *sql.DB) (*pb.GroupListRsp, error) {
 	groups := &pb.GroupListRsp{GroupList: nil}
 
 	for rows.Next() {
-		group := new(pb.GroupRecord)
+		group := new(pb.GroupInfo)
 		err = rows.Scan(&group.Gid, &group.GroupName)
 		if err != nil {
 			return nil, err
@@ -159,7 +159,7 @@ func SearchGroup(target string, db *sql.DB) (*pb.GroupListRsp, error) {
 }
 
 // 查找当前管理员能管理的群组
-func GetGruopMembers(gid uint64, db *sql.DB) (*pb.GrpMemberList, error) {
+func GetGruopMembers(gid int32, db *sql.DB) (*pb.GrpMemberList, error) {
 	if db == nil {
 		return nil, fmt.Errorf("db is nil")
 	}
@@ -253,18 +253,16 @@ func CreateGroup(gl *model.GroupList, userType int) (int64, error) {
 	// 如果是1就是web用户 range 每个设备的id
 	if userType == 1 {
 		for _, v := range gl.DeviceInfo {
-			log.Printf("%T", v)
-			log.Println("web test", (v.(map[string]interface{}))["id"])
 			ib.Values(groupId, (v.(map[string]interface{}))["id"], 0)
 		}
 		ib.Values(groupId, gl.GroupInfo.AccountId, 1)
 	} else {
-		for index, v := range gl.DeviceIds {
-			if index == 0 { // 默认把创建群组的切片第一个作为管理员
-				ib.Values(groupId, v, 1)
+		for _, v := range gl.DeviceIds {
+			if v !=  gl.GroupInfo.AccountId {
+				ib.Values(groupId, v, 0)
 			}
-			ib.Values(groupId, v, 0)
 		}
+		ib.Values(groupId, gl.GroupInfo.AccountId, 1)  // 默认accountId属性作为group_member的群主，TODO 会有歧义，就是app用户创建的群组，调度员能否可见。
 	}
 
 	stmtInsGD, value, err := ib.ToSQL()
@@ -283,8 +281,9 @@ func CreateGroup(gl *model.GroupList, userType int) (int64, error) {
 		groupDeviceAff, _ = insGroupDeviceRes.RowsAffected()
 	}
 
-	log.Println(groupAff, groupDeviceAff, len(gl.DeviceIds)+1, len(gl.DeviceInfo)+1)
-	if (groupDeviceAff == int64(len(gl.DeviceInfo)+1) || groupDeviceAff == int64(len(gl.DeviceIds)+1)) && groupAff == 1 {
+	log.Println(groupAff, groupDeviceAff, len(gl.DeviceIds), len(gl.DeviceInfo)+1)
+	if (groupDeviceAff == int64(len(gl.DeviceInfo)+1) || groupDeviceAff == int64(len(gl.DeviceIds))) && groupAff == 1 {
+		log.Println("commit")
 		if err := tx.Commit(); err != nil {
 			log.Println("tx commit")
 			return -1, err

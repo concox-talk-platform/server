@@ -34,22 +34,31 @@ func CheckEmail(email string) bool {
 // 校验密码：只能输入6-20个字母、数字、下划线
 func CheckPwd(pwd string) bool {
 
-	reg, err := regexp.Compile("^(\\w){6,20}$")
+	reg, err := regexp.Compile("^([a-zA-Z0-9]|[_]){6,20}$")
 	if err != nil {
 		fmt.Println(err)
 	}
 	return reg.MatchString(pwd)
 }
 
-// 校验登录名：只能输入5-20个以字母开头、可带数字、“_”的字串
-func CheckName(name string) bool {
-	reg, err := regexp.Compile("^[a-zA-Z]{1}([a-zA-Z0-9]|[_]){4,19}$")
+
+// 校验昵称：只能输入1-20个以字母或者数字开头、可以含中文、下划线的字串。
+func CheckNickName(name string) bool {
+	reg, err := regexp.Compile("^([a-zA-Z0-9]|[\u4e00-\u9fa5]){1}([a-zA-Z0-9]|[_]|[\u4e00-\u9fa5]){0,20}$")
 	if err != nil {
 		fmt.Println(err)
 	}
 	return reg.MatchString(name)
 }
 
-func maint() {
-	log.Println(CheckPhone("13769569111"))
+//func CheackIMei(name string) bool {}
+
+
+// 校验用户名：只能输入5-20个包含字母、数字或下划线的字串。
+func CheckUserName(name string) bool {
+	reg, err := regexp.Compile("^[a-zA-Z]{1}([a-zA-Z0-9]|[_]){4,19}$")
+	if err != nil {
+		fmt.Println(err)
+	}
+	return reg.MatchString(name)
 }

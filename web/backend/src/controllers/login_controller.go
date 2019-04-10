@@ -8,12 +8,12 @@ package controllers
 import (
 	"database/sql"
 	"github.com/gin-gonic/gin"
-	"github.com/syssam/go-validator"
 	"log"
 	"model"
 	"net/http"
 	tc "pkg/customer"
-	"service"
+	ss "service"
+	"utils"
 )
 
 // 登录
@@ -37,12 +37,32 @@ func SignIn(c *gin.Context) {
 		return
 	}
 
-	// 3. 数据库查询密码，看是否和发过来的相同
+	// 3. 对登录表单进行验证
+	if !utils.CheckUserName(signINBody.Username) {
+		log.Println("Username format error")
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error":      "用户名只能输入5-20个包含字母、数字或下划线的字串",
+			"error_code": "0023",
+		})
+		return
+	}
+
+	// 校验密码
+	if !utils.CheckPwd(signINBody.Pwd) {
+		log.Println("Pwd format error")
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error":      "密码6位-16位，至少包含一个数字字母",
+			"error_code": "0023",
+		})
+		return
+	}
+
+	// 4. 数据库查询密码，看是否和发过来的相同
 	uInfo, err := tc.GetAccount(signINBody.Username)
 	if err != nil && err != sql.ErrNoRows {
 		log.Println("login db err:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":      "db ops err",
+			"error":      "process error, please try again.",
 			"error_code": "003",
 		})
 		return
@@ -65,32 +85,13 @@ func SignIn(c *gin.Context) {
 		return
 	}
 
-	// 4. 对登录表单进行验证
-	var vBody = model.AccountValidate{Pwd: signINBody.Pwd, Username: signINBody.Username}
-	err = validator.ValidateStruct(vBody)
-	if err != nil {
-		for _, err := range err.(validator.Errors) {
-			log.Println("form validate err: ", err)
-		}
-		c.JSON(http.StatusUnprocessableEntity, gin.H{
-			"error":      "account or password format is not correct.",
-			"error_code": "0023",
-		})
-		return
-	}
-
-	// 5. 更新session
+	// 5. 插入session，由于有用name有用id来验证的，所以设置两个key
 	// 先取session，不用判断这里不用判断session是否过期，因为，你已经login请求了，说明新建立一个session，直接更新session
-	var sInfo = &model.SessionInfo{
-		SessionID: service.GetSessionId(c.Request),
-		UserName:  signINBody.Username,
-		AccountId: uInfo.Id,
-	}
-	id, err := service.UpdateUserSessionId(sInfo)
+	sId, err := ss.InsertSessionInfo(uInfo)
 	if err != nil {
 		log.Println("login update session err: ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Update user SessionId error",
+			"error": "Process error, please try again later.",
 		})
 		return
 	}
@@ -98,7 +99,7 @@ func SignIn(c *gin.Context) {
 	// 6. 返回登录成功的消息
 	c.JSON(http.StatusOK, gin.H{
 		"success":    "true",
-		"session_id": id,
+		"session_id": sId,
 	})
 }
 
@@ -112,19 +113,19 @@ func SignOut(c *gin.Context) {
 		return
 	}
 
-	// 2. TODO 验证session
-	if !service.ValidateAccountSession(c.Request, signOutBody.Username) {
+	// 2. 验证session
+	if !ss.ValidateAccountSession(c.Request, signOutBody.Username) {
 		c.JSON(http.StatusUnauthorized, gin.H{
-			"error":      "Request body is not correct.",
-			"error_code": "002",
+			"error":      "Session is not exist.",
+			"error_code": "401",
 		})
 		return
 	}
 	// 3. 删除session
-	if err := service.DeleteExpiredSession(service.GetSessionId(c.Request)); err != nil {
-		log.Printf("SignOut delete session error : %s", err)
+	if err := ss.DeleteSessionInfo(ss.GetSessionId(c.Request), signOutBody); err != nil {
+		log.Printf("SignOut delete session db error : %s", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":      "SignOut delete session DB error",
+			"error":      "Process error, please try again later.",
 			"error_code": "003",
 		})
 		return
@@ -133,6 +134,6 @@ func SignOut(c *gin.Context) {
 	// 4. 返回消息
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
-		"msg":     "delete session id is successful",
+		"msg":     "SignOut is successful",
 	})
 }

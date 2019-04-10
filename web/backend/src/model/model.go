@@ -18,8 +18,8 @@ type AccountPwd struct {
 
 type AccountDeviceTransReq struct {
 	Devices  []*Device      `json:"devices"`
-	Sender   Account        `json:"sender"`
 	Receiver DeviceReceiver `json:"receiver"`
+	Sender   Account        `json:"sender"`
 }
 
 type AccountImportDeviceReq struct {
@@ -58,7 +58,6 @@ type AccountGroupsResp struct {
 
 type GroupList struct {
 	DeviceIds []int `json:"device_ids"`
-	//DeviceInfo []*Device  `json:"device_infos"`
 	DeviceInfo []interface{} `json:"device_infos"`
 	GroupInfo  *GroupInfo    `json:"group_info"`
 }
@@ -97,7 +96,7 @@ type User struct {
 	NickName   string `json:"nick_name"`
 	PassWord   string `json:"password"`
 	UserType   int    `json:"user_type"`  // 用户类型(暂定1是普通用户，2是调度员，3是经销商, 4是超级管理员)
-	ParentId   string `json:"parent_id"`  // 如果是普通用户注册的时候，默认是0， 如果是上级用户创建下级账户，就用来表示创建者的id
+	ParentId   string `json:"parent_id"`  // 如果是普通APP用户和设备注册的时候，默认是0， 如果是上级用户创建下级账户，就用来表示创建者的id
 	AccountId  int    `json:"account_id"` // 只有普通用户才有这个字段，表示这个设备属于哪个账户，如果是非普通用户就是默认为0（因为customer表里面没有0号）
 	CreateTime string `json:"create_time"`
 	LLTime     string `json:"last_login_time"`

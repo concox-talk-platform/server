@@ -81,7 +81,7 @@ func AddMultiMsg(req *pb.MsgNewReq, db *sql.DB) error {
 		return nil
 	}
 
-	timeStr := time.Unix(req.CreateTime, 0).Format("2006-01-02 15:04:05")
+	timeStr := time.Unix(int64(req.CreateTime), 0).Format("2006-01-02 15:04:05")
 	sql := fmt.Sprintf("INSERT INTO message(uid, sender_id, msg_type, content, create_time) VALUES")
 
 	var elem string
@@ -102,7 +102,7 @@ func AddMultiMsg(req *pb.MsgNewReq, db *sql.DB) error {
 	return nil
 }
 
-func GetMsg(uid int64, stat pb.MsgStat, db *sql.DB) ([]*pb.MsgData, error) {
+func GetMsg(uid int32, stat pb.MsgStat, db *sql.DB) ([]*pb.MsgData, error) {
 	if db == nil {
 		return nil, fmt.Errorf("db is nil")
 	}
@@ -148,7 +148,7 @@ func SetMsgStat(msgID int64, stat MsgStat, db *sql.DB) error {
 	return nil
 }
 
-func SetMultiMsgStat(msgID []int64, stat pb.MsgStat, db *sql.DB) error {
+func SetMultiMsgStat(msgID []int32, stat pb.MsgStat, db *sql.DB) error {
 	if db == nil {
 		return fmt.Errorf("db is nil")
 	}
@@ -165,7 +165,7 @@ func SetMultiMsgStat(msgID []int64, stat pb.MsgStat, db *sql.DB) error {
 			sql += ","
 		}
 
-		sql += strconv.FormatInt(msgID[i], 10)
+		sql += strconv.FormatInt(int64(msgID[i]), 10)
 	}
 
 	sql += ")"
@@ -194,7 +194,7 @@ func DeleteMsgByID(msgID int64, db *sql.DB) error {
 	return nil
 }
 
-func DeleteMsg(msgID []int64, db *sql.DB) error {
+func DeleteMsg(msgID []int32, db *sql.DB) error {
 	if db == nil {
 		return fmt.Errorf("db is nil")
 	}
@@ -210,7 +210,7 @@ func DeleteMsg(msgID []int64, db *sql.DB) error {
 			sql += ","
 		}
 
-		sql += strconv.FormatInt(msgID[i], 10)
+		sql += strconv.FormatInt(int64(msgID[i]), 10)
 	}
 
 	sql += ")"

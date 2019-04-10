@@ -43,10 +43,14 @@ service TalkCloud {
     }
 
     // 离线消息拉取
-    rpc AddMsg(MsgNewReq) returns (MsgNewRsp) {}
-    rpc GetMsg(MsgReq) returns (MsgRsp) {}
-    rpc SetMsgStat(MsgStatReq) returns (MsgStatRsp) {}
-    rpc DelMsg(MsgDelReq) returns (MsgDelRsp) {}
+    rpc AddMsg (MsgNewReq) returns (MsgNewRsp) {
+    }
+    rpc GetMsg (MsgReq) returns (MsgRsp) {
+    }
+    rpc SetMsgStat (MsgStatReq) returns (MsgStatRsp) {
+    }
+    rpc DelMsg (MsgDelReq) returns (MsgDelRsp) {
+    }
 }
 
 /*************** Register ***************/
@@ -54,7 +58,7 @@ service TalkCloud {
 message Head {
     string version = 1; // 主版本号
     string sub_version = 2; // 子版本号
-    int64 timestamp = 3; // 时间戳
+    int32 timestamp = 3; // 时间戳
 }
 
 // App注册请求
@@ -66,14 +70,14 @@ message AppRegReq {
 
 // App注册响应
 message AppRegRsp {
-    int64 id = 1;
-    int64 timestamp = 2;
+    int32 id = 1;
+    string userName = 2;
     Result res = 3;
 }
 
 // Device注册请求
 message DeviceRegReq {
-    uint64 account_id = 1; // 管理账户ID
+    int32 account_id = 1; // 管理账户ID
     string device_list = 2; // IMEI列表
 }
 
@@ -91,7 +95,9 @@ message LoginReq {
 
 message LoginRsp {
     Member userInfo = 1;
-    Result res = 2;
+    repeated FriendRecord friend_list = 2;
+    repeated GroupInfo group_list = 3;
+    Result res = 4;
 }
 
 // 登出请求
@@ -106,8 +112,8 @@ message LogoutRsp {
 
 /************** User_Friend *************/
 message FriendNewReq {
-    uint64 uid = 1;
-    uint64 fuid = 2;
+    int32 uid = 1;
+    int32 fuid = 2;
 }
 
 message FriendNewRsp {
@@ -115,9 +121,9 @@ message FriendNewRsp {
 }
 
 message FriendDelReq {
-    uint64 uid = 1;
-    uint64 fuid = 2;
-    int64 timestamp = 3;
+    int32 uid = 1;
+    int32 fuid = 2;
+    int32 timestamp = 3;
 }
 
 message FriendDelRsp {
@@ -125,31 +131,31 @@ message FriendDelRsp {
 }
 
 message FriendsReq {
-    uint64 uid = 1;
+    int32 uid = 1;
 }
 
 message FriendRecord {
-    uint64 uid = 1;
+    int32 uid = 1;
     string name = 2;
     int64 imei = 3;
 }
 
 message FriendsRsp {
-    uint64 uid = 1;
+    int32 uid = 1;
     repeated FriendRecord friend_list = 2;
     Result res = 3;
 }
 
 message UserSearchReq {
-    uint64 uid = 1;
+    int32 uid = 1;
     string target = 2;
 }
 
 message UserRecord {
-    uint64 uid = 1;
+    int32 uid = 1;
     string name = 2;
-    uint64 user_type = 3;
-    uint64 grp_role = 4;
+    int32 user_type = 3;
+    int32 grp_role = 4;
     bool isFriend = 5;
 }
 
@@ -165,19 +171,23 @@ enum UserType {
 }
 
 message CreateGroupReq {
-    repeated int64 deviceIds = 2;
-    repeated Member deviceInfos = 3;
-    Group groupInfo = 4;
+    //    repeated int32 deviceIds = 1;
+    string deviceIds = 1;
+    string groupName = 2;
+    int32 accountId = 3;
+    repeated Member deviceInfos = 4;
+    Group groupInfo = 5;
 }
 
 message CreateGroupResp {
-    Result resultMsg = 1;
+    GroupInfo GroupInfo = 1;
+    Result res = 2;
 }
 
 message GrpUserAddReq {
-    uint64 uid = 1;
-    uint64 gid = 2;
-    int64 timestamp = 3;
+    int32 uid = 1;
+    int32 gid = 2;
+    int32 timestamp = 3;
 }
 
 message GrpUserAddRsp {
@@ -185,9 +195,9 @@ message GrpUserAddRsp {
 }
 
 message GrpUserDelReq {
-    uint64 uid = 1;
-    uint64 gid = 2;
-    int64 timestamp = 3;
+    int32 uid = 1;
+    int32 gid = 2;
+    int32 timestamp = 3;
 }
 
 message GrpUserDelRsp {
@@ -195,8 +205,8 @@ message GrpUserDelRsp {
 }
 
 message UserExitReq {
-    uint64 uid = 1;
-    uint64 gid = 2;
+    int32 uid = 1;
+    int32 gid = 2;
 }
 
 message UserExitRsp {
@@ -204,9 +214,9 @@ message UserExitRsp {
 }
 
 message GroupDelReq {
-    uint64 uid = 1;
-    uint64 role_type = 2;
-    uint64 gid = 3;
+    int32 uid = 1;
+    int32 role_type = 2;
+    int32 gid = 3;
 }
 
 message GroupDelRsp {
@@ -214,30 +224,30 @@ message GroupDelRsp {
 }
 
 message GrpListReq {
-    uint64 uid = 1;
+    int32 uid = 1;
 }
 
-message GroupRecord {
-    uint64 gid = 1;
+message GroupInfo {
+    int32 gid = 1;
     string group_name = 2;
     bool isExist = 3;
 }
 
 // 返回模糊查找以及目前用户所在的群组
 message GroupListRsp {
-    uint64 uid = 1;
-    repeated GroupRecord group_list = 2;
+    int32 uid = 1;
+    repeated GroupInfo group_list = 2;
     Result res = 3;
 }
 
 
 message GrpSearchReq {
-    uint64 uid = 1;
+    int32 uid = 1;
     string target = 2;
 }
 
 message GrpMemberList {
-    uint64 gid = 1;
+    int32 gid = 1;
     string group_name = 2;
     repeated UserRecord usr_list = 3;
 }
@@ -245,10 +255,10 @@ message GrpMemberList {
 /************Msg***********/
 enum MsgType {
     PLAIN_TEXT = 0; // 普通文本
-    IMAGE = 1;      // 图片
-    AUDIO = 2;      // 音频
-    VIDEO = 3;      // 视频
-    LOCATION = 4;   // 位置
+    IMAGE = 1; // 图片
+    AUDIO = 2; // 音频
+    VIDEO = 3; // 视频
+    LOCATION = 4; // 位置
 }
 
 enum MsgStat {
@@ -257,11 +267,11 @@ enum MsgStat {
 }
 
 message MsgNewReq {
-    repeated int64 uids = 1;
-    int64 sender_id = 2;
+    repeated int32 uids = 1;
+    int32 sender_id = 2;
     MsgType msg_type = 3;
     string content = 4;
-    int64 create_time =5;
+    int32 create_time = 5;
 }
 
 message MsgNewRsp {
@@ -269,26 +279,26 @@ message MsgNewRsp {
 }
 
 message MsgReq {
-    int64 uid = 1;
+    int32 uid = 1;
     MsgStat stat = 2;
 }
 
 message MsgData {
-    uint64 msg_id = 1;
-    uint64 sender_id = 2;
+    int32 msg_id = 1;
+    int32 sender_id = 2;
     MsgType msg_type = 3;
     string content = 4;
-    uint64 create_time = 5;
+    int32 create_time = 5;
 }
 
 message MsgRsp {
-    int64 uid = 1;
+    int32 uid = 1;
     MsgStat stat = 2;
     repeated MsgData msg_list = 3;
 }
 
 message MsgStatReq {
-    repeated int64 msg_ids = 1;
+    repeated int32 msg_ids = 1;
     MsgStat stat = 2;
 }
 
@@ -297,7 +307,7 @@ message MsgStatRsp {
 }
 
 message MsgDelReq {
-    repeated int64 msg_ids = 1;
+    repeated int32 msg_ids = 1;
 }
 
 message MsgDelRsp {
