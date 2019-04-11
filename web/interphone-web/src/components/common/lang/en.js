@@ -157,6 +157,9 @@ module.exports = {
             same_account:'The account name already exists',
             nick_name: 'Please enter a customer name',
             success:'Data updated successfully',
+        },
+        video:{
+            message:"Do you initiate a video call?",
         }
     
 

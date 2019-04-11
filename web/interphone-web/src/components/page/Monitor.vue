@@ -47,7 +47,15 @@
     </div>
 </div>
 </el-aside>
-
+ <div  class="video_room" v-if="video_show" @mousedown.self="video_move"> 
+        <div id="videocall">
+         <div id="videos" class="hide">
+              <div id="videoleft"></div>
+              <div id="videoright"></div>
+            </div>
+        </div>
+        <el-button type="danger" round @click="video_hangup" class="video_close">hangup</el-button>
+ </div>
     <!-- 创建组 -->
     <el-dialog :title="$t('group.add_group')" :visible.sync="group_div" :show-close="false">
         <div class="dialog_div">
@@ -105,12 +113,12 @@
         </div>
     </el-dialog>
     <!-- 组内详细设备 -->
-    <div class="device_detail" v-if="group_div_show"  @click="hide">
+    <div class="device_detail" v-if="group_div_show"  @click="hide"  >
         <div class="device_detail_tittle">
             <span class="device_detail_name">{{device_group_name}}</span>
             <span class="device_detail_close" @click="close_device_detail">x</span>
         </div>
-        <div class="device_detail_num">
+        <div class="device_detail_num" >
             <ul>
                 <li>       
                     <div class='device_pic' >
@@ -129,7 +137,7 @@
                     </span> 
                     <div class="control_menum" v-if="media_show === index">
                         <div class="control_voice">{{ $t("group.voice") }}</div>
-                        <div class="control_vedio">{{ $t("group.video") }}</div>
+                        <div class="control_vedio" @click="video_begin(item)">{{ $t("group.video") }}</div>
                         <!-- <div class="control_look">视频查看</div> -->
                         <div class="control_text">{{ $t("group.messaging") }}</div>
                     </div>
@@ -175,8 +183,6 @@
                 @change="handleChange"
                 :props="{key: 'id',label:'name'}"
                 :data="member_data">
-                <!-- <el-button class="transfer-footer" slot="left-footer" size="small">操作</el-button>
-                <el-button class="transfer-footer" slot="right-footer" size="small">操作</el-button> -->
             </el-transfer>
             <div>
              <div class="select_cancel" @click="modified_cancel">{{$t("button_message.cancel")}}</div>
@@ -191,10 +197,12 @@
 </template>
 
 <script>
+import adapter from 'webrtc-adapter'
+import $ from 'jquery'
+import Janus from '../../assets/videocall/janus.js'
 export default {
     data() {   
         return {
-                // local_device_list:JSON.parse(localStorage.getItem('device_list')),
                 local_group_list:[],
                 yesData: [],
                 select_Data:[],
@@ -246,6 +254,12 @@ export default {
                         { required: true, message: this.$t('group.message'), trigger: 'blur' },
                     ],
                 },
+                // 视频
+                video_show:false,
+                video_name:'',
+                call_name:'',
+                videocall : null,
+                video_hang:'',
         }
     },
     methods: {
@@ -470,7 +484,6 @@ export default {
           this.amend_show = false ;
           this.Modify_group_form.name = '';
         },
-
         // 左侧成员编辑
         modified_member(){
             this.modified_member_show=true;
@@ -575,7 +588,557 @@ export default {
             .catch( (error) => {
             window.console.log(error);
             }); 
+        },
+        //视频通话
+        video_begin(item){
+            window.console.log(sessionStorage.getItem('id'))
+            window.console.log(item.id);
+            var self =this;
+            var server = [
+            "ws://" + "113.105.153.240" + ":8188",
+            "/janus"
+            ];
+            var janus = null;
+            var opaqueId = "videocalltest-"+Janus.randomString(12);
+            var myusername = null;
+            var yourusername = null;
+            if(!Janus.isWebrtcSupported()) {
+                        alert("No WebRTC support... ");
+                    return;
             }
+            Janus.init({debug: true, callback: function() {
+            janus = new Janus({
+                server: server,
+                success: function() {
+                janus.attach({
+                    plugin: "janus.plugin.videocall",
+                    opaqueId: opaqueId,
+                    success: function(pluginHandle) {
+                        self.videocall = pluginHandle;
+                        Janus.log("Plugin attached! (" + self.videocall.getPlugin() + ", id=" + self.videocall.getId() + ")");
+                        $('#videocall').removeClass('hide').show();
+                        $('#login').removeClass('hide').show();
+                        // $('#register').click(registerUsername);
+                    },
+                    error: function(error) {
+                        Janus.error("  -- Error attaching plugin...", error);
+                        alert("  -- Error attaching plugin... " + error);
+                    },
+                    consentDialog: function(on) {
+                        Janus.debug("Consent dialog should be " + (on ? "on" : "off") + " now");
+                    },
+                    mediaState: function(medium, on) {
+                        Janus.log("Janus " + (on ? "started" : "stopped") + " receiving our " + medium);
+                    },
+                    webrtcState: function(on) {
+                        Janus.log("Janus says our WebRTC PeerConnection is " + (on ? "up" : "down") + " now");
+                    },
+                    onmessage: function(msg, jsep) {
+                        Janus.debug(" ::: Got a message :::");
+                        Janus.debug(msg);
+                        var result = msg["result"];
+                        if(result !== null && result !== undefined) {
+                            if(result["list"] !== undefined && result["list"] !== null) {
+                                var list = result["list"];
+                                Janus.debug("Got a list of registered peers:");
+                                Janus.debug(list);
+                                for(var mp in list) {
+                                Janus.debug("  >> [" + list[mp] + "]");
+                                }
+                            } else if(result["event"] !== undefined && result["event"] !== null) {
+                            var event = result["event"];
+                            if(event === 'registered') {
+                                myusername = result["username"];
+                                Janus.log("Successfully registered as " + myusername + "!");
+                                self.videocall.send({"message": { "request": "list" }});
+                                $('#phone').removeClass('hide').show();
+                                // $('#call').unbind('click').click(doCall);
+                                $('#peer').focus();
+                            } else if(event === 'calling') {
+                                Janus.log("Waiting for the peer to answer...");
+                                // alert("Waiting for the peer to answer...");
+                            } else if(event === 'incomingcall') {
+                                Janus.log("Incoming call from " + result["username"] + "!");
+                                yourusername = result["username"];
+                            incoming = 	self.videocall.createAnswer(
+                                {
+                                jsep: jsep,
+                                media: { data: true },	
+                                simulcast: self.doSimulcast,
+                                success: function(jsep) {
+                                    Janus.debug("Got SDP!");
+                                    Janus.debug(jsep);
+                                    var body = { "request": "accept" };
+                                    self.videocall.send({"message": body, "jsep": jsep});
+                                },
+                                error: function(error) {
+                                    Janus.error("WebRTC error:", error);
+                                }
+                                });
+                            } else if(event === 'accepted') {
+                                var peer = result["username"];
+                                if(peer === null || peer === undefined) {
+                                Janus.log("Call started!");
+                                } else {
+                                Janus.log(peer + " accepted the call!");
+                                yourusername = peer;
+                                }
+                                if(jsep)
+                                self.videocall.handleRemoteJsep({jsep: jsep});
+                            } else if(event === 'update') {
+                                if(jsep) {
+                                if(jsep.type === "answer") {
+                                    self.videocall.handleRemoteJsep({jsep: jsep});
+                                } else {
+                                    self.videocall.createAnswer(
+                                    {
+                                        jsep: jsep,
+                                        media: { data: true },	// Let's negotiate data channels as well
+                                        success: function(jsep) {
+                                        Janus.debug("Got SDP!");
+                                        Janus.debug(jsep);
+                                        var body = { "request": "set",
+                                        // "audio" : false,
+                                         "video" : false, 
+                                         };
+                                        self.videocall.send({"message": body, "jsep": jsep});
+                                        },
+                                        error: function(error) {
+                                        Janus.error("WebRTC error:", error);
+                                        alert("WebRTC error... " + JSON.stringify(error));
+                                        }
+                                    });
+                                }
+                                }
+                            } else if(event === 'hangup') {
+                                Janus.log("Call hung up by " + result["username"] + " (" + result["reason"] + ")!");
+                                // Reset status
+                                self.videocall.hangup();
+                                $('#waitingvideo').remove();
+                                $('#videos').hide();
+                                $('#peer').removeAttr('disabled').val('');
+                            }
+                            }
+                        } else {
+                            var error = msg["error"];
+                            alert(error);
+                            self.video_hang.destroy();
+                            self.video_show=false;
+                            if(error.indexOf("already taken") > 0) {
+                            // FIXME Use status codes...
+                            $('#username').removeAttr('disabled').val("");
+                            // $('#register').removeAttr('disabled').unbind('click').click(registerUsername);
+                            }
+                            self.videocall.hangup();
+                            $('#waitingvideo').remove();
+                            $('#videos').hide();
+                            $('#peer').removeAttr('disabled').val('');
+                            // $('#call').removeAttr('disabled').html('Call')
+                            //   .removeClass("btn-danger").addClass("btn-success")
+                            //   .unbind('click').click(doCall);
+                        }
+                    },
+                    onlocalstream: function(stream) {
+                        Janus.debug(" ::: Got a local stream :::");
+                        Janus.debug(stream);
+                        $('#videos').removeClass('hide').show();
+                        if($('#myvideo').length === 0)
+                            $('#videoleft').append('<video class="rounded centered" id="myvideo" width=131 height=83 autoplay playsinline muted="muted"/>');
+                        Janus.attachMediaStream($('#myvideo').get(0), stream);
+                        $("#myvideo").get(0).muted = "muted";
+                        if(self.videocall.webrtcStuff.pc.iceConnectionState !== "completed" &&
+                            self.videocall.webrtcStuff.pc.iceConnectionState !== "connected") {
+                            $('#videoright').append('<video class="rounded centered" id="waitingvideo" width=406 height=271 />');
+                        }
+                        var videoTracks = stream.getVideoTracks();
+                        if(videoTracks === null || videoTracks === undefined || videoTracks.length === 0) {
+                            // No webcam
+                            $('#myvideo').hide();
+                            if($('#videoleft .no-video-container').length === 0) {
+                            $('#videoleft').append(
+                                '<div class="no-video-container">' +
+                                '<span class="no-video-text">No webcam available</span>' +
+                                '</div>');
+                            }
+                        } else {
+                            $('#videoleft .no-video-container').remove();
+                            $('#myvideo').removeClass('hide').show();
+                        }
+                    },
+                    onremotestream: function(stream) {
+                        Janus.debug(" ::: Got a remote stream :::");
+                        Janus.debug(stream);
+                        var addButtons = false;
+                        if($('#remotevideo').length === 0) {
+                        addButtons = true;
+                        $('#videoright').append('<video class="rounded centered hide" id="remotevideo" width=406 height=271 autoplay playsinline/>');
+                        $("#remotevideo").bind("playing", function () {
+                            $('#waitingvideo').remove();
+                            if(this.videoWidth)
+                            $('#remotevideo').removeClass('hide').show();
+                            var width = this.videoWidth;
+                            var height = this.videoHeight;
+                        });
+                        }
+                        Janus.attachMediaStream($('#remotevideo').get(0), stream);
+                        var videoTracks = stream.getVideoTracks();
+                        if(videoTracks === null || videoTracks === undefined || videoTracks.length === 0) {
+                        // No remote video
+                        $('#remotevideo').hide();
+                        if($('#videoright .no-video-container').length === 0) {
+                            $('#videoright').append(
+                            '<div class="no-video-container">' +
+                                '<span class="no-video-text">No remote video available</span>' +
+                            '</div>');
+                        }
+                        } else {
+                        $('#videoright .no-video-container').remove();
+                        $('#remotevideo').removeClass('hide').show();
+                        }
+                        if(!addButtons)
+                        return;
+                    },
+                    });
+                },
+                error: function(error) {
+                    Janus.error(error);
+                    alert(error, function() {
+                    // window.location.reload();
+                    });
+                },
+                destroyed: function() {
+                    // window.location.reload();
+                }
+                });
+            }})
+            this.video_hang=janus;
+            this.$confirm(this.$t('video.message'), {
+                confirmButtonText: this.$t("button_message.confirm"),
+                cancelButtonText: this.$t("button_message.cancel"),
+                type: 'warning'
+                }).then(() => {
+                this.video_show=true;
+                var username =sessionStorage.getItem('id').toString();
+                window.console.log(this.video_name)
+                var register = { "request": "register", "username": username };
+                this.videocall.send({"message": register});   
+                    var userpeer = item.id.toString();
+                    this.videocall.createOffer(
+                    {
+                        media: { data: true },	
+                        success: function(jsep) {
+                        var body = { "request": "call", "username": userpeer };
+                        self.videocall.send({"message": body, "jsep": jsep});
+                        },
+                        error: function(error) {
+                        Janus.error("WebRTC error...", error);
+                        }
+                    });	  
+                }).catch(() => {
+                       
+                });
+
+        },
+        // video_start(){
+        //     var self =this;
+        //     var server = [
+        //     "ws://" + "113.105.153.240" + ":8188",
+        //     "/janus"
+        //     ];
+        //     var janus = null;
+        //     var opaqueId = "videocalltest-"+Janus.randomString(12);
+        //     var myusername = null;
+        //     var yourusername = null;
+        //     if(!Janus.isWebrtcSupported()) {
+        //                 alert("No WebRTC support... ");
+        //             return;
+        //     }
+        //     Janus.init({debug: true, callback: function() {
+        //     janus = new Janus({
+        //         server: server,
+        //         success: function() {
+        //         janus.attach({
+        //             plugin: "janus.plugin.videocall",
+        //             opaqueId: opaqueId,
+        //             success: function(pluginHandle) {
+        //                 self.videocall = pluginHandle;
+        //                 Janus.log("Plugin attached! (" + self.videocall.getPlugin() + ", id=" + self.videocall.getId() + ")");
+        //                 $('#videocall').removeClass('hide').show();
+        //                 $('#login').removeClass('hide').show();
+        //                 // $('#register').click(registerUsername);
+        //             },
+        //             error: function(error) {
+        //                 Janus.error("  -- Error attaching plugin...", error);
+        //                 alert("  -- Error attaching plugin... " + error);
+        //             },
+        //             consentDialog: function(on) {
+        //                 Janus.debug("Consent dialog should be " + (on ? "on" : "off") + " now");
+        //             },
+        //             mediaState: function(medium, on) {
+        //                 Janus.log("Janus " + (on ? "started" : "stopped") + " receiving our " + medium);
+        //             },
+        //             webrtcState: function(on) {
+        //                 Janus.log("Janus says our WebRTC PeerConnection is " + (on ? "up" : "down") + " now");
+        //             },
+        //             onmessage: function(msg, jsep) {
+        //                 Janus.debug(" ::: Got a message :::");
+        //                 Janus.debug(msg);
+        //                 var result = msg["result"];
+        //                 if(result !== null && result !== undefined) {
+        //                     if(result["list"] !== undefined && result["list"] !== null) {
+        //                         var list = result["list"];
+        //                         Janus.debug("Got a list of registered peers:");
+        //                         Janus.debug(list);
+        //                         for(var mp in list) {
+        //                         Janus.debug("  >> [" + list[mp] + "]");
+        //                         }
+        //                     } else if(result["event"] !== undefined && result["event"] !== null) {
+        //                     var event = result["event"];
+        //                     if(event === 'registered') {
+        //                         myusername = result["username"];
+        //                         Janus.log("Successfully registered as " + myusername + "!");
+        //                         self.videocall.send({"message": { "request": "list" }});
+        //                         $('#phone').removeClass('hide').show();
+        //                         // $('#call').unbind('click').click(doCall);
+        //                         $('#peer').focus();
+        //                     } else if(event === 'calling') {
+        //                         Janus.log("Waiting for the peer to answer...");
+        //                         // alert("Waiting for the peer to answer...");
+        //                     } else if(event === 'incomingcall') {
+        //                         Janus.log("Incoming call from " + result["username"] + "!");
+        //                         yourusername = result["username"];
+        //                     incoming = 	self.videocall.createAnswer(
+        //                         {
+        //                         jsep: jsep,
+        //                         media: { data: true },	
+        //                         simulcast: self.doSimulcast,
+        //                         success: function(jsep) {
+        //                             Janus.debug("Got SDP!");
+        //                             Janus.debug(jsep);
+        //                             var body = { "request": "accept" };
+        //                             self.videocall.send({"message": body, "jsep": jsep});
+        //                         },
+        //                         error: function(error) {
+        //                             Janus.error("WebRTC error:", error);
+        //                         }
+        //                         });
+        //                     } else if(event === 'accepted') {
+        //                         var peer = result["username"];
+        //                         if(peer === null || peer === undefined) {
+        //                         Janus.log("Call started!");
+        //                         } else {
+        //                         Janus.log(peer + " accepted the call!");
+        //                         yourusername = peer;
+        //                         }
+        //                         if(jsep)
+        //                         self.videocall.handleRemoteJsep({jsep: jsep});
+        //                     } else if(event === 'update') {
+        //                         if(jsep) {
+        //                         if(jsep.type === "answer") {
+        //                             self.videocall.handleRemoteJsep({jsep: jsep});
+        //                         } else {
+        //                             self.videocall.createAnswer(
+        //                             {
+        //                                 jsep: jsep,
+        //                                 media: { data: true },	// Let's negotiate data channels as well
+        //                                 success: function(jsep) {
+        //                                 Janus.debug("Got SDP!");
+        //                                 Janus.debug(jsep);
+        //                                 var body = { "request": "set" };
+        //                                 self.videocall.send({"message": body, "jsep": jsep});
+        //                                 },
+        //                                 error: function(error) {
+        //                                 Janus.error("WebRTC error:", error);
+        //                                 alert("WebRTC error... " + JSON.stringify(error));
+        //                                 }
+        //                             });
+        //                         }
+        //                         }
+        //                     } else if(event === 'hangup') {
+        //                         Janus.log("Call hung up by " + result["username"] + " (" + result["reason"] + ")!");
+        //                         // Reset status
+        //                         self.videocall.hangup();
+        //                         $('#waitingvideo').remove();
+        //                         $('#videos').hide();
+        //                         $('#peer').removeAttr('disabled').val('');
+        //                     }
+        //                     }
+        //                 } else {
+        //                     var error = msg["error"];
+        //                     alert(error);
+        //                     if(error.indexOf("already taken") > 0) {
+        //                     // FIXME Use status codes...
+        //                     $('#username').removeAttr('disabled').val("");
+        //                     // $('#register').removeAttr('disabled').unbind('click').click(registerUsername);
+        //                     }
+        //                     self.videocall.hangup();
+        //                     $('#waitingvideo').remove();
+        //                     $('#videos').hide();
+        //                     $('#peer').removeAttr('disabled').val('');
+        //                     // $('#call').removeAttr('disabled').html('Call')
+        //                     //   .removeClass("btn-danger").addClass("btn-success")
+        //                     //   .unbind('click').click(doCall);
+        //                 }
+        //             },
+        //             onlocalstream: function(stream) {
+        //                 Janus.debug(" ::: Got a local stream :::");
+        //                 Janus.debug(stream);
+        //                 $('#videos').removeClass('hide').show();
+        //                 if($('#myvideo').length === 0)
+        //                     $('#videoleft').append('<video class="rounded centered" id="myvideo" width=320 height=240 autoplay playsinline muted="muted"/>');
+        //                 Janus.attachMediaStream($('#myvideo').get(0), stream);
+        //                 $("#myvideo").get(0).muted = "muted";
+        //                 if(self.videocall.webrtcStuff.pc.iceConnectionState !== "completed" &&
+        //                     self.videocall.webrtcStuff.pc.iceConnectionState !== "connected") {
+        //                     $('#videoright').append('<video class="rounded centered" id="waitingvideo" width=320 height=240 />');
+        //                 }
+        //                 var videoTracks = stream.getVideoTracks();
+        //                 if(videoTracks === null || videoTracks === undefined || videoTracks.length === 0) {
+        //                     // No webcam
+        //                     $('#myvideo').hide();
+        //                     if($('#videoleft .no-video-container').length === 0) {
+        //                     $('#videoleft').append(
+        //                         '<div class="no-video-container">' +
+        //                         '<span class="no-video-text">No webcam available</span>' +
+        //                         '</div>');
+        //                     }
+        //                 } else {
+        //                     $('#videoleft .no-video-container').remove();
+        //                     $('#myvideo').removeClass('hide').show();
+        //                 }
+        //             },
+        //             onremotestream: function(stream) {
+        //                 Janus.debug(" ::: Got a remote stream :::");
+        //                 Janus.debug(stream);
+        //                 var addButtons = false;
+        //                 if($('#remotevideo').length === 0) {
+        //                 addButtons = true;
+        //                 $('#videoright').append('<video class="rounded centered hide" id="remotevideo" width=320 height=240 autoplay playsinline/>');
+        //                 $("#remotevideo").bind("playing", function () {
+        //                     $('#waitingvideo').remove();
+        //                     if(this.videoWidth)
+        //                     $('#remotevideo').removeClass('hide').show();
+        //                     var width = this.videoWidth;
+        //                     var height = this.videoHeight;
+        //                 });
+        //                 }
+        //                 Janus.attachMediaStream($('#remotevideo').get(0), stream);
+        //                 var videoTracks = stream.getVideoTracks();
+        //                 if(videoTracks === null || videoTracks === undefined || videoTracks.length === 0) {
+        //                 // No remote video
+        //                 $('#remotevideo').hide();
+        //                 if($('#videoright .no-video-container').length === 0) {
+        //                     $('#videoright').append(
+        //                     '<div class="no-video-container">' +
+        //                         '<span class="no-video-text">No remote video available</span>' +
+        //                     '</div>');
+        //                 }
+        //                 } else {
+        //                 $('#videoright .no-video-container').remove();
+        //                 $('#remotevideo').removeClass('hide').show();
+        //                 }
+        //                 if(!addButtons)
+        //                 return;
+        //             },
+        //             });
+        //         },
+        //         error: function(error) {
+        //             Janus.error(error);
+        //             alert(error, function() {
+        //             // window.location.reload();
+        //             });
+        //         },
+        //         destroyed: function() {
+        //             // window.location.reload();
+        //         }
+        //         });
+        //     }})
+        //     this.video_hang=janus
+
+        // },
+    // video_register(){
+    //     window.console.log(this.videocall)
+    //     var username =this.video_name;
+    //     window.console.log(this.video_name)
+    //     var register = { "request": "register", "username": this.video_name };
+    //     this.videocall.send({"message": register});
+    // },
+    // video_call(){
+    //     var userpeer = this.call_name;
+    //         window.console.log(this.call_name)
+    //         var call_this = this;
+    //         this.videocall.createOffer(
+    //         {
+    //             media: { data: true },	
+    //             // simulcast: this.doSimulcast,
+    //             success: function(jsep) {
+    //             var body = { "request": "call", "username": userpeer };
+    //             call_this.videocall.send({"message": body, "jsep": jsep});
+    //             },
+    //             error: function(error) {
+    //             Janus.error("WebRTC error...", error);
+    //             }
+    //         });	
+    // },
+    video_hangup(){
+        var hangup = { "request": "hangup" };
+        window.console.log(this.videocall)
+        this.videocall.send({"message": hangup});
+        this.videocall.hangup();
+        this.yourusername = null;
+        this.video_hang.destroy();
+        this.video_show=false;
+    },
+    // 视频移动
+    video_move(e){
+      let odiv = e.target;    //获取目标元素
+       
+      //算出鼠标相对元素的位置
+      let disX = e.clientX - odiv.offsetLeft;
+      let disY = e.clientY - odiv.offsetTop;
+      document.onmousemove = (e)=>{    //鼠标按下并移动的事件
+        //用鼠标的位置减去鼠标相对元素的位置，得到元素的位置
+        let left = e.clientX - disX;  
+        let top = e.clientY - disY;
+         
+        //绑定元素位置到positionX和positionY上面
+        // this.positionX = top;
+        // this.positionY = left;
+         
+        //移动当前元素
+        odiv.style.left = left + 'px';
+        odiv.style.top = top + 'px';
+      };
+      document.onmouseup = (e) => {
+        document.onmousemove = null;
+        document.onmouseup = null;
+      };
+    },
+    // 设备盒子移动
+    // device_move(g){
+    //     let gdiv = g.target;    //获取目标元素
+       
+    //   //算出鼠标相对元素的位置
+    //   let gisX = g.clientX - gdiv.offsetLeft;
+    //   let gisY = g.clientY - gdiv.offsetTop;
+    //   document.onmousemove = (g)=>{    //鼠标按下并移动的事件
+    //     //用鼠标的位置减去鼠标相对元素的位置，得到元素的位置
+    //     let left = g.clientX - gisX;  
+    //     let top = g.clientY - gisY;
+         
+    //     //绑定元素位置到positionX和positionY上面
+    //     // this.positionX = top;
+    //     // this.positionY = left;
+         
+    //     //移动当前元素
+    //     gdiv.style.left = left + 'px';
+    //     gdiv.style.top = top + 'px';
+    //   };
+    //   document.onmouseup = (g) => {
+    //     document.onmousemove = null;
+    //     document.onmouseup = null;
+    //   };
+    // }
 
     },
     computed:{
@@ -674,7 +1237,7 @@ export default {
 }
 </script>
 
-<style scoped>
+<style >
 .el-aside{
     overflow: visible
 }
@@ -967,6 +1530,32 @@ export default {
     display: inline-block;
     margin-left: 7px;  
 }
-
+.video_room{
+    width: 361px;
+    height: 314px;
+    background-color: black;
+    position: absolute;
+    top: 5%;
+    left: 50%;
+    z-index: 666;
+}
+#remotevideo{
+    position: absolute;
+    left:-22px
+    /* top: 10px; */
+}
+#myvideo{
+position: absolute;
+    bottom: 43px;
+    z-index: 888;
+    right: -10px;
+    z-index: 777;
+}
+.video_close{
+    position: absolute;
+    bottom: 6px;
+    text-align: center;
+    left: 140px;
+}
 
 </style>

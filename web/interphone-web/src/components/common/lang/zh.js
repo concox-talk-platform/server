@@ -160,6 +160,9 @@ module.exports = {
         same_account:'账户名已存在',
         nick_name:'请填写客户名称',
         success:'资料更新成功',
+    },
+    video:{
+        message:"是否发起视频通话?",
     }
 
 }
