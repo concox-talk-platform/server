@@ -57,7 +57,7 @@ type AccountGroupsResp struct {
 }
 
 type GroupList struct {
-	DeviceIds []int `json:"device_ids"`
+	DeviceIds  []int         `json:"device_ids"`
 	DeviceInfo []interface{} `json:"device_infos"`
 	GroupInfo  *GroupInfo    `json:"group_info"`
 }
@@ -78,29 +78,30 @@ type DeviceReceiver struct {
 
 // device
 type Device struct {
-	Id           int            `json:"id"`
-	IMei         string         `json:"imei"`
-	UserName     string         `json:"user_name"`
-	PassWord     string         `json:"password"`
-	AccountId    int            `json:"account_id"`
-	CreateTime   string `json:"create_time"`
-	LLTime       string `json:"last_login_time"`
-	ChangeTime   string `json:"change_time"`
+	Id         int    `json:"id"`
+	IMei       string `json:"imei"`
+	UserName   string `json:"user_name"`
+	PassWord   string `json:"password"`
+	AccountId  int    `json:"account_id"`
+	CreateTime string `json:"create_time"`
+	LLTime     string `json:"last_login_time"`
+	ChangeTime string `json:"change_time"`
 }
 
 // User
 type User struct {
-	Id         int    `json:"id"`
-	IMei       string `json:"imei"`
-	UserName   string `json:"user_name"`
-	NickName   string `json:"nick_name"`
-	PassWord   string `json:"password"`
-	UserType   int    `json:"user_type"`  // 用户类型(暂定1是普通用户，2是调度员，3是经销商, 4是超级管理员)
-	ParentId   string `json:"parent_id"`  // 如果是普通APP用户和设备注册的时候，默认是0， 如果是上级用户创建下级账户，就用来表示创建者的id
-	AccountId  int    `json:"account_id"` // 只有普通用户才有这个字段，表示这个设备属于哪个账户，如果是非普通用户就是默认为0（因为customer表里面没有0号）
-	CreateTime string `json:"create_time"`
-	LLTime     string `json:"last_login_time"`
-	ChangeTime string `json:"change_time"`
+	Id          int    `json:"id"`
+	IMei        string `json:"imei"`
+	UserName    string `json:"user_name"`
+	NickName    string `json:"nick_name"`
+	PassWord    string `json:"password"`
+	UserType    int    `json:"user_type"`  // 用户类型(暂定1是普通用户，2是调度员，3是经销商, 4是超级管理员)
+	ParentId    string `json:"parent_id"`  // 如果是普通APP用户和设备注册的时候，默认是0， 如果是上级用户创建下级账户，就用来表示创建者的id
+	AccountId   int    `json:"account_id"` // 只有普通用户才有这个字段，表示这个设备属于哪个账户，如果是非普通用户就是默认为0（因为customer表里面没有0号）
+	LockGroupId int    `json:"lock_group_id"`
+	CreateTime  string `json:"create_time"`
+	LLTime      string `json:"last_login_time"`
+	ChangeTime  string `json:"change_time"`
 }
 
 type Customer struct {
@@ -174,4 +175,10 @@ type AccountUpdate struct {
 	Address  string `json:"address"`
 	Remark   string `json:"remark"`
 	Contact  string `json:"contact"`
+}
+
+type UpLoadFileParmas struct {
+	Id         int `json:"id"`
+	SendType   int `json:"send_type"` // 0代表发给单人， 1代表发给群组
+	ReceiverId int `json:"receiver_id"`
 }

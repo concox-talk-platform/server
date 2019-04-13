@@ -42,7 +42,7 @@ func SignIn(c *gin.Context) {
 		log.Println("Username format error")
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"error":      "用户名只能输入5-20个包含字母、数字或下划线的字串",
-			"error_code": "0023",
+			"error_code": "0022",
 		})
 		return
 	}
@@ -71,7 +71,7 @@ func SignIn(c *gin.Context) {
 		log.Println("no found this user")
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error":      "User does not exist.",
-			"error_code": "0021",
+			"error_code": "0024",
 		})
 		return
 	}
@@ -80,7 +80,7 @@ func SignIn(c *gin.Context) {
 	if err != nil || uInfo.Pwd != signINBody.Pwd {
 		c.JSON(http.StatusUnauthorized, gin.H{
 			"error":      "User password is wrong.",
-			"error_code": "0022",
+			"error_code": "0025",
 		})
 		return
 	}

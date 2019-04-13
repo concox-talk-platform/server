@@ -13,10 +13,14 @@ func testCheckPwd(t *testing.T) {
 	t.Log(CheckPwd("gagdfh"))
 }
 
-func TestCheckNickName(t *testing.T) {
+func testCheckNickName(t *testing.T) {
 	t.Log(CheckNickName("中"))
 }
 
 func testCheckUserName(t *testing.T) {
 	t.Log(CheckUserName("safs"))
+}
+
+func TestCheckId(t *testing.T) {
+	t.Log(CheckId(-1))
 }

@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 )
 
 // 校验手机号码
@@ -61,4 +62,15 @@ func CheckUserName(name string) bool {
 		fmt.Println(err)
 	}
 	return reg.MatchString(name)
+}
+
+func CheckId(id int) bool {
+	if id == 0 {
+		return false
+	}
+	reg, err := regexp.Compile("^[0-9]{1,10}$")
+	if err != nil {
+		fmt.Println(err)
+	}
+	return reg.MatchString(strconv.Itoa(id))
 }
