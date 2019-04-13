@@ -54,6 +54,8 @@ module.exports = {
         pwd_err: '两次输入密码不一致',
         account_error: '账号不存在',
         login_error: '密码错误',
+        login_serve:'未与服务器建立连接',
+        login_length:'密码长度不对',
         device_num: '请添加设备',
         subordinate: '请选择转移的用户'
    },
@@ -160,6 +162,13 @@ module.exports = {
         same_account:'账户名已存在',
         nick_name:'请填写客户名称',
         success:'资料更新成功',
+    },
+    video:{
+        message:"是否发起视频通话?",
+        audio:"是否发起语音通话?",
+        audio_text:'语音通话',
+        video_text:'视频通话',
+        loding:'连接中......'
     }
 
 }

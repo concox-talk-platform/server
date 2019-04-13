@@ -52,7 +52,9 @@ module.exports = {
          account_type: 'Please select account type',
          pwd_err: 'Entered passwords differ',
          account_error: 'Account does not exist',
+         login_serve:'No connection was established to the server',
          login_error: ' Wrong password',
+         login_length:'Password length incorrect',
          device_num: 'Please add device',
          subordinate: 'Please select a subordinate account'
         },
@@ -157,6 +159,13 @@ module.exports = {
             same_account:'The account name already exists',
             nick_name: 'Please enter a customer name',
             success:'Data updated successfully',
+        },
+        video:{
+            message:"Do you initiate a video call?",
+            audio:"Do you initiate a voice call?",
+            audio_text:'Voice Communication',
+            video_text:'Video Call',
+            loding:'Connecting......'
         }
     
 
