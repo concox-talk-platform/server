@@ -134,16 +134,26 @@
                         }.bind(this))
                         .catch( (error) => {
                         window.console.log(error.response.data);
-                        if(error.response.data.error_code == '0021'){
+                        if(error.response.data.error_code == '0024'){
                                 this.$message({
                                 message: this.$t('prompt_message.account_error'),
                                 type: 'warning'
                                 });
-                        }else if(error.response.data.error_code == '0022'){
+                        }else if(error.response.data.error_code == '0025'){
                                 this.$message({
                                 message: this.$t('prompt_message.login_error'),
                                 type: 'warning'
                                 });
+                         }else if(error.response.data.error_code == '0023'){
+                                this.$message({
+                                message: this.$t('prompt_message.login_length'),
+                                type: 'warning'
+                                });
+                         }else {
+                                this.$message({
+                                message: this.$t('prompt_message.login_serve'),
+                                type: 'warning'
+                                });                            
                          }
                         }); 
                                            

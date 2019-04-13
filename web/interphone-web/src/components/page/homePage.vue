@@ -14,7 +14,7 @@
             </el-input> -->
             <!-- <el-tree @node-click="handleNodeClick"  class="filter-tree" :data="ztree_data" :props="defaultProps" default-expand-all :filter-node-method="filterNode" ref="ztree" :empty-text="$t('table.no_data')">
             </el-tree> -->
-            <el-tree @node-click="handleNodeClick"  class="filter-tree"  :props="defaultProps" 
+            <el-tree @node-click="handleNodeClick"  class="filter-tree"  :props="defaultProps" node-key="id" :default-expanded-keys="[5]" 
             lazy :load="get_newtree"   ref="ztree" :empty-text="$t('table.no_data')" v-if="tree_show">
             </el-tree>
         </div>
@@ -82,10 +82,17 @@
                             <el-table-column type="selection" width="55" ></el-table-column>
                             <el-table-column  type="index" width="80" :label="$t('table.number')"></el-table-column>
                             <el-table-column prop="imei" label="IMEI" width="240"> </el-table-column>
-                            <el-table-column prop="bind_status.String" :label="$t('table.model')" width="240" > </el-table-column>
+                            <el-table-column prop="bind_status.String" :label="$t('table.model')" width="80" > </el-table-column>
                             <el-table-column prop="user_name" :label="$t('table.name')" width="240" > </el-table-column>
-                            <el-table-column prop="crate_time.String" :label="$t('table.time')" width="240"> </el-table-column>
-                            <el-table-column :label="$t('table.operation')">
+                            <el-table-column prop="create_time" :label="$t('table.time')" width="140"> </el-table-column>
+                            <el-table-column :label="$t('table.operation')" >
+                            <!-- <el-table-column type="selection" style="width: 10%" ></el-table-column>
+                            <el-table-column  type="index" style="width: 30%" :label="$t('table.number')"></el-table-column>
+                            <el-table-column prop="imei" label="IMEI" style="width: 30%"> </el-table-column>
+                            <el-table-column prop="bind_status.String" :label="$t('table.model')" style="width: 10%" > </el-table-column>
+                            <el-table-column prop="user_name" :label="$t('table.name')" style="width: 10%" > </el-table-column>
+                            <el-table-column prop="create_time" :label="$t('table.time')" style="width: 5%"> </el-table-column>
+                            <el-table-column :label="$t('table.operation')" style="width: 5%" >  -->
                                 <template slot-scope="scope">
                                             <el-button size="mini" @click="device_export(scope.$index, scope.row)">{{$t('table.export')}}</el-button>
                                     </template>
@@ -448,15 +455,10 @@ export default {
                         }else{
                             register_info.address=''
                         }
-                          
-                        window.console.log(register_info)   
                         this.$axios.post('/account',register_info,{ headers: 
                             {"Authorization" : sessionStorage.getItem('setSession_id')}
                                 })
                         .then(function (response) {
-                        //  this.$router.push('/homePage');
-                          window.console.log(response);
-                          window.console.log(response.data.success);
                           if(response.data.success){
                                 this.$message({                                   
                                 message: this.$t('establish.success'),
@@ -505,8 +507,6 @@ export default {
                 });
             },
             filterNode(value, data) {
-                window.console.log(value)
-                window.console.log(data)
                 // if (!value) return true;
                 // return data.label.indexOf(value) !== -1;
             },
@@ -582,7 +582,6 @@ export default {
                          break;                                                                   
                      }
                 }
-                window.console.log(this.personal_info);
                 this.subordinate.adress = this.personal_info.address.String;
                 this.subordinate.email = this.personal_info.email.String;
                 this.subordinate.phone = this.personal_info.phone.String;
@@ -590,10 +589,6 @@ export default {
                 this.subordinate.name = this.personal_info.nick_name;
                 this.subordinate.remark = this.personal_info.remark.String;
                 this.subordinate.contact = this.personal_info.contact.String;
-                
-
-                
-                
             },
             // 重置
             reset(){
@@ -617,7 +612,6 @@ export default {
                 subordinate_info.address = this.subordinate.adress;
                 subordinate_info.remark = this.subordinate.remark;
                 subordinate_info.contact = this.subordinate.contact;
-                window.console.log(subordinate_info);
                 let  same_name  = true;
                 if(this.personal_info.nick_name == this.subordinate.name){
                     same_name  = true;
@@ -677,8 +671,6 @@ export default {
             this.currentPage =currentPage
             },
             transfer(){ 
-                window.console.log(this.children_infor)
-                window.console.log(this.updata_list.children)
                 // this.update_data()
                 if(this.multipleSelection.length !== 0){
                     this.transfer_dialog = true;
@@ -703,7 +695,6 @@ export default {
                    cancelButtonText: this.$t("button_message.cancel")
                 })
                 .then(_ => {
-                    window.console.log(_)
                     let transinformation={};
                     transinformation.devices=this.gridData;
                     let receiver ={}
@@ -712,12 +703,10 @@ export default {
                             receiver =element
                         }
                     });
-                    window.console.log(receiver)
                     let facility={};
                     facility.account_id =receiver.id;
                     facility.account_name=receiver.account_name;
                     transinformation.receiver=facility;
-                    window.console.log(transinformation)
                     if(transinformation.account_id ==''){
                         this.$message({
                         message: this.$t('prompt_message.subordinate'),
@@ -769,7 +758,6 @@ export default {
                     cancelButtonText: this.$t("button_message.cancel")
                 })
                 .then(_ => {
-                    window.console.log(_);
                     this.device_imei = this.imei_data.map(e =>{
                         if(e.hasOwnProperty('iemi')){
                             return e.iemi.toString()
@@ -886,15 +874,12 @@ export default {
             get_newtree(node, resolve) {
                if(node.level == 0){
                    resolve(this.tree_info)
-                   window.console.log(node);
                }
                if(node.level == 1){
                    this.second_tree = this.tree_info[0].children
                    resolve(this.second_tree)
-                      window.console.log(this.tree_info[0]);
                }
                if(node.level > 1){
-                   window.console.log(node.data)
                     this.$axios.get('/account_class/'+sessionStorage.getItem('id')+'/'+node.data.id,
                     { headers: 
                     {
@@ -902,11 +887,9 @@ export default {
                     }
                     })
                     .then((response) =>{
-                     window.console.log(response.data.tree_data.children)
                      resolve(response.data.tree_data.children)
                     })
                     .catch( (error) => {
-                    window.console.log(error);
                     resolve([])
                     });                    
                 }
@@ -946,7 +929,6 @@ export default {
                 .then((response) =>{
                 this.ztree_data.push( response.data.tree_data);  
                 this.updata_list = response.data.tree_data;      
-                window.console.log(this.tree_info[0].children);
                 let tree_length = this.tree_info[0].children.length-1
                 this.second_tree.push(this.tree_info[0].children[tree_length]);
                 localStorage.setItem('children_list', JSON.stringify(response.data.tree_data));
@@ -967,7 +949,6 @@ export default {
                 this.ztree_data.push( response.data.tree_data);  
                 this.updata_list = response.data.tree_data;      
                 localStorage.setItem('children_list', JSON.stringify(response.data.tree_data));
-                // window.console.log(this.tree_info[0].children);
                 // this.get_newtree(node, resolve)
 
                 
@@ -1079,9 +1060,6 @@ export default {
        this. get_ztreeData();
        this.get_device_data();
        this.root_Show();
-       
-    //    this.get_total_mumber()
-       
     }
  
 }
@@ -1173,15 +1151,6 @@ background-color: white;
 .account_info_tittle{
     padding-left: 10px;
 }
-/* .account_detailed_info{
-   width: 650px;
-   height: 100px;
-   border: 1px solid #d6d6d6;
-   background-color: bisque;
-}
-.account_detailed_tittle{
-
-} */
 .account_detailed_info td{
         height: 32px;
     padding-right: 35px;
@@ -1212,7 +1181,7 @@ background-color: white;
     text-align: center;
 }
 .equipment_table{
- height: 560px;
+ height: 568px;
  overflow: auto;
 }
 .transfer_tittle{
@@ -1227,6 +1196,13 @@ background-color: white;
     border-radius: 3px;
     cursor: pointer;
     border: 1px solid #e4e7ed;
+}
+/* 表格居中 */
+.el-table__row td{
+    text-align: center
+}
+.has-gutter tr th {
+    text-align: center
 }
 .mass_transfer:hover{
     color: #409eff;

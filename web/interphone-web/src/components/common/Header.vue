@@ -263,9 +263,11 @@ import vSidebar from './Sidebar.vue';
             //     // });  
             // },
             outlogin(){
-             this.$router.push('/login');   
+             this.$router.push('/login'); 
+            //    this.$router.go('/login');   
              localStorage.clear();       
-             sessionStorage.clear();       
+             sessionStorage.clear();
+            //  this.$router.go(0);        
             },
             // 全屏事件
             handleFullScreen(){
