@@ -13,8 +13,26 @@ service TalkCloud {
     }
     rpc Login (LoginReq) returns (LoginRsp) {
     }
+
     rpc Logout (LogoutReq) returns (LogoutRsp) {
     }
+    rpc SetLockGroupId (SetLockGroupIdReq) returns (SetLockGroupIdResp) {
+    };
+
+    // 推送初次登录的数据
+    rpc LoginProcess (stream LoginReqData) returns (loginRespData) {
+    };
+
+    // 推送保活数据
+    rpc KeepAlive (stream keepAliveReq) returns ( keepAliveResp) {
+    };
+
+    // 推送im数据
+    rpc ImMessagePublish (stream ImMsgReqData) returns (ImMsgRespData) {
+    };
+
+    rpc DataPublish (stream StreamRequest) returns (stream StreamResponse) {
+    };
 
     // 好友管理
     rpc AddFriend (FriendNewReq) returns (FriendNewRsp) {
@@ -100,6 +118,31 @@ message LoginRsp {
     Result res = 4;
 }
 
+// 登录请求处理需要的数据 // 和Login的一样
+message LoginReqData {
+    Head head = 1;
+    string name = 2;
+    string passwd = 3;
+}
+
+// 初次登录应该返回的数据   // 和之前的版本一样
+message loginRespData {
+    Member userInfo = 1;
+    repeated FriendRecord friend_list = 2;
+    repeated GroupInfo group_list = 3;
+    Result res = 4;
+}
+
+// 获取ImMsg请求  // 实际用不到
+message ImMsgReqData {
+
+}
+
+// 推送Im数据   // TODO 使用sync.map记录在线人数，考虑使用runner schedule timer来调度，内容待定
+message ImMsgRespData {
+
+}
+
 // 登出请求
 message LogoutReq {
     Head head = 1;
@@ -108,6 +151,68 @@ message LogoutReq {
 
 message LogoutRsp {
     Result res = 1;
+}
+
+// 设置群组锁定
+message SetLockGroupIdReq {
+    int32 uId = 1;
+    int32 gId = 2;
+}
+
+message SetLockGroupIdResp {
+    Result Res = 1;
+}
+
+message keepAliveReq {
+    int32 uid = 1; // 用户id
+    int32 ACK = 2;
+}
+
+message keepAliveResp {
+    int32 uid = 1;
+    int32 SYN = 2; // 服务端向客户端推送syn=1，在线
+}
+
+message StreamRequest {
+    int32 uid = 1;
+    int32 dataType = 2; // 1 登录， 2 是保持连接
+
+    string name = 4;
+    string passwd = 5;
+
+    int32 ACK = 3;
+
+    FileData fileData = 6;
+}
+
+message FileData {
+    bytes pluginContent = 1;
+    string id = 2;
+}
+
+
+message StreamResponse {
+    int32 DataType = 1; // 1 是返回登录数据， 2是推送ImMsgData， 3 是keepalive
+    FirstLoginData loginResp = 2;
+    ImMsgData imMsgData = 3;
+    KeepAlive keepAlive = 4;
+    Result res = 5;
+}
+
+message FirstLoginData {
+    Member userInfo = 1;
+    repeated FriendRecord friend_list = 2;
+    repeated GroupInfo group_list = 3;
+}
+
+message KeepAlive {
+    int32 uid = 1;
+    int32 SYN = 2;
+}
+
+message ImMsgData {
+    int32 uid = 1;
+    string path = 2;
 }
 
 /************** User_Friend *************/

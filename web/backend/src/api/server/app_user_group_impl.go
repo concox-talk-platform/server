@@ -83,11 +83,11 @@ func (serv *TalkCloudService) CreateGroup(ctx context.Context, req *pb.CreateGro
 
 func (serv *TalkCloudService) JoinGroup(ctx context.Context, req *pb.GrpUserAddReq) (*pb.GrpUserAddRsp, error) {
 	// 如果已经在群组里，就直接返回
-	_, gMapg, err := group.GetGroupList(req.Uid, db.DBHandler)
+	_, gMap, err := group.GetGroupList(req.Uid, db.DBHandler)
 	if err != nil {
 		return &pb.GrpUserAddRsp{Res: &pb.Result{Msg: "Join group unsuccessful, please try again later", Code: 422}}, err
 	}
-	if _, ok := (*gMapg)[req.Gid]; ok {
+	if _, ok := (*gMap)[req.Gid]; ok {
 		log.Println("User join this group already")
 		return &pb.GrpUserAddRsp{Res: &pb.Result{Code: 422, Msg: "User join this group already"}}, nil
 	}
@@ -120,7 +120,7 @@ func (serv *TalkCloudService) GetGroupList(ctx context.Context, req *pb.GrpListR
 			return &pb.GroupListRsp{Res: &pb.Result{Code: 500, Msg: "process error, please try again"}}, err
 		}
 		// 其次更新一个userSet
-		if err := tu.AddUsersToCache(res, cache.GetRedisClient()); err != nil {
+		if err := tu.AddUserInGroupToCache(res, cache.GetRedisClient()); err != nil {
 			return &pb.GroupListRsp{Res: &pb.Result{Code: 500, Msg: "process error, please try again"}}, err
 		}
 	}

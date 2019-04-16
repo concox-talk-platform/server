@@ -1,8 +1,10 @@
 package user
 
 import (
+	pb "api/talk_cloud"
 	"database/sql"
 	"db"
+	"errors"
 	"github.com/smartwalle/dbs"
 	"log"
 	"model"
@@ -64,9 +66,9 @@ func SelectUserByKey(key interface{}) (*model.User, error) {
 	var err error
 	switch t := key.(type) {
 	case int:
-		stmtOut, err = dbConn.Prepare("SELECT id, name, nick_name, passwd, imei, user_type, pid, cid, create_time, last_login_time, change_time FROM `user` WHERE id = ?")
+		stmtOut, err = dbConn.Prepare("SELECT id, name, nick_name, passwd, imei, user_type, pid, cid, lock_gid, create_time, last_login_time, change_time FROM `user` WHERE id = ?")
 	case string:
-		stmtOut, err = dbConn.Prepare("SELECT id, name, nick_name, passwd, imei, user_type, pid, cid, create_time, last_login_time, change_time  FROM `user` WHERE name = ?")
+		stmtOut, err = dbConn.Prepare("SELECT id, name, nick_name, passwd, imei, user_type, pid, cid, lock_gid, create_time, last_login_time, change_time  FROM `user` WHERE name = ?")
 	default:
 		_ = t
 		return nil, err
@@ -77,26 +79,27 @@ func SelectUserByKey(key interface{}) (*model.User, error) {
 	}
 
 	var (
-		id, userType, cId                                             int
+		id, userType, cId, lockGId                                    int
 		pId, userName, nickName, pwd, iMei, cTime, llTime, changeTime string
 	)
-	err = stmtOut.QueryRow(key).Scan(&id, &userName, &nickName, &pwd, &iMei, &userType, &pId, &cId, &cTime, &llTime, &changeTime)
+	err = stmtOut.QueryRow(key).Scan(&id, &userName, &nickName, &pwd, &iMei, &userType, &pId, &cId, &lockGId, &cTime, &llTime, &changeTime)
 	if err != nil {
 		return nil, err
 	}
 
 	res := &model.User{
-		Id:         id,
-		IMei:       iMei,
-		UserName:   userName,
-		PassWord:   pwd,
-		NickName:   nickName,
-		UserType:   userType,
-		ParentId:   pId,
-		AccountId:  cId,
-		CreateTime: cTime,
-		LLTime:     llTime,
-		ChangeTime: changeTime,
+		Id:          id,
+		IMei:        iMei,
+		UserName:    userName,
+		PassWord:    pwd,
+		NickName:    nickName,
+		UserType:    userType,
+		ParentId:    pId,
+		AccountId:   cId,
+		LockGroupId: lockGId,
+		CreateTime:  cTime,
+		LLTime:      llTime,
+		ChangeTime:  changeTime,
 	}
 
 	defer func() {
@@ -135,9 +138,11 @@ func SelectUserByAccountId(aid int) (interface{}, error) {
 		}
 
 		d := &model.Device{
-			Id: id, IMei: iMei,
-			UserName: userName, //PassWord: pwd,
-			AccountId:  accountId,
+			Id: id,
+			IMei: iMei,
+			UserName:  userName, //PassWord: pwd,
+			AccountId: accountId,
+			CreateTime: cTime,
 		}
 		res = append(res, d)
 	}
@@ -148,4 +153,23 @@ func SelectUserByAccountId(aid int) (interface{}, error) {
 		}
 	}()
 	return res, nil
+}
+
+// 设置用户锁定默认组
+func SetLockGroupId(req *pb.SetLockGroupIdReq, db *sql.DB) error {
+	if db == nil {
+		return errors.New("set Lock group Id error, db is nil")
+	}
+
+	updStmt, err := db.Prepare("UPDATE`user` SET lock_gid = ? WHERE id = ?")
+	if err != nil {
+		return errors.New("set Lock group Id error, updStmt error " + err.Error())
+	}
+
+	_, err = updStmt.Exec(req.GId, req.UId)
+	if err != nil {
+		return errors.New("set Lock group Id error, updStmt.Exec error " + err.Error())
+	}
+
+	return nil
 }

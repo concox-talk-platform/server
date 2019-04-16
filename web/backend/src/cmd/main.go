@@ -12,6 +12,7 @@ import (
 	"github.com/lestrrat/go-file-rotatelogs"
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
+	"github.com/unrolled/secure"
 	"io"
 	"log"
 	"net/http"
@@ -39,6 +40,11 @@ func Prepare() *gin.Engine {
 
 	// 日志， 解决跨域问题
 	engine.Use(Logger(),Cors())
+
+	// runTls error
+	/*if err := engine.RunTLS(":8888", "fullchain.pem", "privkey.pem");err != nil {
+		log.Println("")
+	}*/
 
 	// 注册路由
 	// account
@@ -71,6 +77,9 @@ func Prepare() *gin.Engine {
 
 	// device
 	engine.POST("/device/import/:account_name", controllers.ImportDeviceByRoot)
+
+	// upload file
+	engine.POST("/upload", controllers.UploadFile)
 
 	return engine
 }
@@ -160,3 +169,19 @@ func Logger() gin.HandlerFunc {
 }
 
 
+func TlsHandler() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		secureMiddleware := secure.New(secure.Options{
+			SSLRedirect: true,
+			SSLHost:     "localhost:8080",
+		})
+		err := secureMiddleware.Process(c.Writer, c.Request)
+
+		// If there was an error, do not continue.
+		if err != nil {
+			return
+		}
+
+		c.Next()
+	}
+}

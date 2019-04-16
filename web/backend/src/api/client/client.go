@@ -10,6 +10,7 @@ import (
 	"context"
 	"google.golang.org/grpc"
 	"log"
+	"time"
 )
 
 const GROUP_PORT = "9000"
@@ -23,11 +24,11 @@ func main() {
 		log.Printf("grpc.Dial err : %v", err)
 	}
 
-	defer func() {
-		if err := conn.Close(); err != nil {
-			log.Printf("connection err : %v", err)
-		}
-	}()
+	//defer func() {
+	//	if err := conn.Close(); err != nil {
+	//		log.Printf("connection err : %v", err)
+	//	}
+	//}()
 	//webCli := pb.NewWebServiceClient(conn)
 	//res, err := webCli.ImportDeviceByRoot(context.Background(), &pb.ImportDeviceReq{
 	//	DeviceImei:[]string{"1234567897777777"},
@@ -39,7 +40,7 @@ func main() {
 		Name:     "姚明6666",
 		Password: "123456",
 	})*/
-	res, err := userClient.CreateGroup(context.Background(), &pb.CreateGroupReq{
+	/*res, err := userClient.CreateGroup(context.Background(), &pb.CreateGroupReq{
 		DeviceIds: "1482,333,1003,1004",
 		DeviceInfos: nil,
 		GroupName:"papi组",
@@ -50,7 +51,7 @@ func main() {
 			AccountId: 333,   // 如果写自己，岂不是普通用户也变成调度员了
 			Status: 1,
 		}})
-
+*/
 	/*res, err := webCli.DeleteGroup(context.Background(), &pb.Group{
 	//	Id: 102,
 	//})*/
@@ -69,6 +70,9 @@ func main() {
 	/*res, err := userClient.SearchUserByKey(context.Background(), &pb.UserSearchReq{
 		Uid:uint64(333),
 		Target:"",
+	})*/
+	/*res, err := userClient.GetFriendList(context.Background(), &pb.FriendsReq{
+		Uid:333,
 	})*/
 /*
     res, err := userClient.GetGroupList(context.Background(), &pb.GrpListReq{
@@ -90,12 +94,53 @@ func main() {
 		Uid:333,
 		Gid:152,
 	})*/
+	/*res, err := userClient.SetLockGroupId(context.Background(), &pb.SetLockGroupIdReq{
+		UId:333,
+		GId:215,
+	})*/
+
+	a := make(chan int, 1)
+	a<-1
+	log.Println(<-a)
+	log.Println("*************")
+
+
+	//服务端 客户端 双向流
+	allStr,_ := userClient.DataPublish(context.Background())
+	go func() {
+		for {
+			data,_ := allStr.Recv()
+			log.Println(data)
+		}
+	}()
+
+	go func() {
+		for {
+			if err := allStr.Send(&pb.StreamRequest{
+				Uid:333,
+				DataType:1,
+				Name:"264333",
+				Passwd:"123456",
+			}); err != nil {
+			}
+			time.Sleep(time.Second)
+		}
+	}()
 	if err != nil {
 		log.Println("error : ", err)
 		return
 	}
-	log.Printf("%+v",res)
-	//for _, v := range res.UserList {
-	//	log.Println(v.Uid, v.Name, v.IsFriend)
-	//}
+	//log.Printf("%+v",res)
+	select {
+	}
+
+
+	/*time.Sleep(time.Second*30)
+
+	ress, err := userClient.GetGroupList(context.Background(), &pb.GrpListReq{
+		Uid:int32(333),
+	})
+
+	log.Println("ress:", ress)
+*/
 }

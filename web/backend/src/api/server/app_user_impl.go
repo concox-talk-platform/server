@@ -1,30 +1,25 @@
 package server
 
 import (
-	"api/talk_cloud"
 	pb "api/talk_cloud"
 	"cache"
 	"context"
-	"database/sql"
 	"db"
-	"google.golang.org/grpc"
+	"errors"
 	"google.golang.org/grpc/metadata"
 	"log"
 	"math/rand"
 	"model"
 	s "pkg/session"
 	tu "pkg/user"
-	"pkg/user_friend"
-	"server/web/backend/src/pkg/group"
 	"strconv"
 	"time"
 	"utils"
 )
 
-type TalkCloudService struct{}
 
 // 注册App
-func (serv *TalkCloudService) AppRegister(ctx context.Context, req *pb.AppRegReq) (*pb.AppRegRsp, error) {
+func (tcs *TalkCloudService) AppRegister(ctx context.Context, req *pb.AppRegReq) (*pb.AppRegRsp, error) {
 	iMei := strconv.FormatInt(int64(rand.New(rand.NewSource(time.Now().UnixNano())).Int63n(1000000000000000)), 10)
 	appRegResp := &pb.AppRegRsp{}
 
@@ -74,11 +69,11 @@ func (serv *TalkCloudService) AppRegister(ctx context.Context, req *pb.AppRegReq
 		return appRegResp, nil
 	}
 
-	return &pb.AppRegRsp{Id: int32(res.Id), UserName:req.Name, Res:&pb.Result{Code:200, Msg:"User registration successful"}}, nil
+	return &pb.AppRegRsp{Id: int32(res.Id), UserName: req.Name, Res: &pb.Result{Code: 200, Msg: "User registration successful"}}, nil
 }
 
 // 设备注册
-func (serv *TalkCloudService) DeviceRegister(ctx context.Context, req *pb.DeviceRegReq) (*pb.DeviceRegRsp, error) {
+func (tcs *TalkCloudService) DeviceRegister(ctx context.Context, req *pb.DeviceRegReq) (*pb.DeviceRegRsp, error) {
 	// TODO 设备串号和账户id进行校验
 	name := string([]byte(req.DeviceList)[9:len(req.DeviceList)])
 	user := &model.User{
@@ -96,108 +91,8 @@ func (serv *TalkCloudService) DeviceRegister(ctx context.Context, req *pb.Device
 	return &pb.DeviceRegRsp{Res: &pb.Result{Code: 200, Msg: "Device registration successful"}}, nil
 }
 
-// 用户登录
-func (serv *TalkCloudService) Login(ctx context.Context, req *pb.LoginReq) (*talk_cloud.LoginRsp, error) {
-	log.Println("enter login")
-	//　验证用户名是否存在以及密码是否正确，然后就生成一个uuid session, 把sessionid放进metadata返回给客户端，
-	//  然后之后的每一次连接都需要客户端加入这个metadata，使用拦截器，对用户进行鉴权
-	if req.Name == "" || req.Passwd == "" {
-		return &pb.LoginRsp{Res: &pb.Result{Code: 422, Msg: "用户名或密码不能为空"}}, nil
-	}
-
-	res, err := tu.SelectUserByKey(req.Name)
-	if err != nil && err != sql.ErrNoRows {
-		log.Printf("App login error : %s", err)
-		loginRsp := &pb.LoginRsp{
-			Res: &pb.Result{
-				Code: 500,
-				Msg:  "User Login Process failed. Please try again later"},
-		}
-		return loginRsp, nil
-	}
-
-	if err == sql.ErrNoRows {
-		log.Printf("App login error : %s", err)
-		loginRsp := &pb.LoginRsp{
-			Res: &pb.Result{
-				Code: 500,
-				Msg:  "User is not exist error. Please try again later"},
-		}
-		return loginRsp, nil
-	}
-
-	if res.PassWord != req.Passwd {
-		log.Printf("App login error : %s", err)
-		loginRsp := &pb.LoginRsp{
-			Res: &pb.Result{
-				Code: 500,
-				Msg:  "User Login pwd error. Please try again later"},
-		}
-		return loginRsp, nil
-	}
-
-	sessionId, err := utils.NewUUID()
-	if err != nil {
-		log.Panicf("session id is error%s", err)
-		return &pb.LoginRsp{Res: &pb.Result{Code: 500, Msg: "server internal error"}}, err
-	}
-
-	ct := time.Now().UnixNano() / 1000000
-	ttl := ct + 30*60*1000 // Severside session valid time: 30 min
-	ttlStr := strconv.FormatInt(ttl, 10)
-
-	sInfo := &model.SessionInfo{SessionID: sessionId, UserName: req.Name, UserPwd: req.Passwd, TTL: ttlStr}
-	if err := s.InsertSession(sInfo); err != nil {
-		log.Panicf("session id insert is error%s", err)
-		return &pb.LoginRsp{Res: &pb.Result{Code: 500, Msg: "server internal error"}}, err
-	}
-
-	// create and send header
-	header := metadata.Pairs("sessionId", sessionId)
-	if err := grpc.SendHeader(ctx, header); err != nil {
-		log.Panicf("sessionid metadata set  error%s", err)
-		return &pb.LoginRsp{Res: &pb.Result{Code: 500, Msg: "server internal error"}}, err
-	}
-
-	userInfo := &pb.Member{
-		Id:       int32(res.Id),
-		IMei:     res.IMei,
-		UserName: res.UserName,
-		NickName: res.NickName,
-		UserType: int32(res.UserType),
-	}
-
-	// 好友列表
-	fList, _, err := user_friend.GetFriendReqList(int32(res.Id), db.DBHandler)
-	if err != nil {
-		return &pb.LoginRsp{Res: &pb.Result{Code: 500, Msg: "process error, please try again"}}, err
-	}
-
-	// 群组列表
-	// 先去缓存取，取不出来再去mysql取
-	gList, err := tu.GetGroupList(int32(res.Id), cache.GetRedisClient())
-	if err != nil && err != sql.ErrNoRows {
-		log.Println("cache.NofindInCacheError")
-		return &pb.LoginRsp{Res: &pb.Result{Code: 500, Msg: "process error, please try again"}}, err
-	}
-	if err == sql.ErrNoRows {
-		log.Println("get")
-		gList, _, err = group.GetGroupList(int32(res.Id), db.DBHandler)
-		if err != nil {
-			return &pb.LoginRsp{Res: &pb.Result{Code: 500, Msg: "process error, please try again"}}, err
-		}
-	}
-
-	return &pb.LoginRsp{
-		UserInfo:   userInfo,
-		FriendList: fList.FriendList,
-		GroupList: gList.GroupList,
-		Res:      &pb.Result{Code: 200, Msg: req.Name + " login successful"},
-	}, nil
-}
-
-// 用户注销 TODO
-func (serv *TalkCloudService) Logout(ctx context.Context, req *pb.LogoutReq) (*talk_cloud.LogoutRsp, error) {
+// 用户注销
+func (tcs *TalkCloudService) Logout(ctx context.Context, req *pb.LogoutReq) (*pb.LogoutRsp, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
 		log.Panicf("sessionid metadata set  error%s")
@@ -211,31 +106,27 @@ func (serv *TalkCloudService) Logout(ctx context.Context, req *pb.LogoutReq) (*t
 	return &pb.LogoutRsp{Res: &pb.Result{Code: 200, Msg: req.Name + "logout successful"}}, nil
 }
 
-//// authenticateClient check the client credentials
-//func authenticateClient(ctx context.Context) (string, error) {
-//	if md, ok := metadata.FromIncomingContext(ctx); ok {
-//		clientUsername := strings.Join(md["username"], "")
-//		//if clientUsername != "valineliu" {
-//		//	return "", fmt.Errorf("unknown user %s", clientUsername)
-//		//}
-//		clientSessionId := strings.Join(md["sessionId"], "")
-//		sInfo, err := pkg.GetSessionValue(clientSessionId)
-//		if err != nil {
-//			log.Printf("authenticated client: %s", clientUsername)
-//			return "", fmt.Errorf("missing credentials")
-//		}
-//		log.Printf("authenticated client: %s", clientUsername)
-//		return "9527", nil
-//	}
-//	return "", fmt.Errorf("missing credentials")
-//}
-//
-//// unaryInterceptor calls authenticateClient with current context
-//func unaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-//	clientID, err := authenticateClient(ctx)
-//	if err != nil {
-//		return nil, err
-//	}
-//	ctx = context.WithValue(ctx, "clientID", clientID)
-//	return handler(ctx, req)
-//}
+// 设置用户所在默认锁定组 TODO 对每一个用户设置操作都做鉴权
+func (tcs *TalkCloudService) SetLockGroupId(ctx context.Context, req *pb.SetLockGroupIdReq) (*pb.SetLockGroupIdResp, error) {
+	if !utils.CheckId(int(req.UId)) || !utils.CheckId(int(req.GId)) {
+		err := errors.New("uid or gid is not valid")
+		log.Println("service SetLockGroupId error :", err)
+		return &pb.SetLockGroupIdResp{Res: &pb.Result{Msg: "User id or group id is not valid, please try again later.", Code: 500}}, nil
+	}
+
+	// TODO 用户id是否在组所传id中
+
+	if err := tu.SetLockGroupId(req, db.DBHandler); err != nil {
+		log.Println("service SetLockGroupId error :", err)
+		return &pb.SetLockGroupIdResp{Res: &pb.Result{Msg: "Set lock default group error, please try again later.", Code: 500}}, nil
+	}
+
+	// 更新缓存
+	if err := tu.UpdateLockGroupIdInCache(req, cache.GetRedisClient()); err != nil {
+		log.Println("service SetLockGroupId error :", err)
+		// TODO 去把数据库里的群组恢复？
+		return &pb.SetLockGroupIdResp{Res: &pb.Result{Msg: "Set lock default group error, please try again later.", Code: 500}}, nil
+	}
+
+	return &pb.SetLockGroupIdResp{Res: &pb.Result{Msg: "Set lock default group success", Code: 200}}, nil
+}

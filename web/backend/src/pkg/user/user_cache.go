@@ -36,7 +36,7 @@ func MakeGroupDataKey(gid int64) string {
 	return fmt.Sprintf(GRP_DATA_KEY_FMT, gid)
 }
 
-func MakeUserDataKey(uid int64) string {
+func MakeUserDataKey(uid int32) string {
 	return fmt.Sprintf(USR_DATA_KEY_FMT, uid)
 }
 
@@ -88,7 +88,7 @@ func GetGroupList(uId int32, rd redis.Conn) (*pb.GroupListRsp, error) {
 }
 
 // 一个用户添加进组 可以在加载数据的时候用
-func AddUserCache(uId, gid int32, rd redis.Conn) error {
+func AddUserForSingleGroupCache(uId, gid int32, rd redis.Conn) error {
 	if rd == nil {
 		return errors.New("redis conn is nil")
 	}
@@ -101,9 +101,8 @@ func AddUserCache(uId, gid int32, rd redis.Conn) error {
 	return nil
 }
 
-
 // 一个用户在多个组， 用来更新，获取群组列表之后，去缓存中获取群组列表
-func AddUsersToCache(gl *pb.GroupListRsp, rd redis.Conn) error {
+func AddUserInGroupToCache(gl *pb.GroupListRsp, rd redis.Conn) error {
 	if rd == nil {
 		return errors.New("redis conn is nil")
 	}
@@ -114,6 +113,44 @@ func AddUsersToCache(gl *pb.GroupListRsp, rd redis.Conn) error {
 	_, err := rd.Do("EXEC")
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+// 向缓存添加用户信息数据
+func AddUserDataInCache(m *pb.Member, redisCli redis.Conn) error {
+	if redisCli == nil {
+		return errors.New("redis conn is nil")
+	}
+
+	if _, err := redisCli.Do("HMSET", MakeUserDataKey(m.Id),
+		"id", m.Id, "imei", m.IMei, "username", m.UserName, "online", m.Online, "lock_gid", m.LockGroupId); err != nil {
+		return errors.New("hSet failed with error: " + err.Error())
+	}
+
+	return nil
+}
+
+// 更新用户所在默认用户组，就是更新用户data
+func UpdateLockGroupIdInCache(req *pb.SetLockGroupIdReq, redisCli redis.Conn) error {
+	if redisCli == nil {
+		return errors.New("redis conn is nil")
+	}
+
+	if _, err := redisCli.Do("HSET", MakeUserDataKey(req.UId), "lock_gid", req.GId); err != nil {
+		return errors.New("UpdateLockGroupIdInCache hSet failed with error:" + err.Error())
+	}
+	return nil
+}
+
+// 更新用户在线状态
+func UpdateOnlineInCache(m *pb.Member, redisCli redis.Conn) error {
+	if redisCli == nil {
+		return errors.New("redis conn is nil")
+	}
+
+	if _, err := redisCli.Do("HSET", MakeUserDataKey(m.Id), "online", m.Online); err != nil {
+		return errors.New("UpdateLockGroupIdInCache hSet failed with error:" + err.Error())
 	}
 	return nil
 }

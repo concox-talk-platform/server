@@ -2,10 +2,14 @@ syntax = "proto3";
 
 package talk_cloud;
 
-service TalkCloud {
+import "talk_cloud_model.proto";
+service TalkCloudLocation {
     // 上报设备数据
-    rpc ReportGPSData ( /*stream*/ ReportDataReq) returns (ReportDataResp) {
+    rpc ReportGPSData (ReportDataReq) returns (ReportDataResp) {
     };
+
+    //
+
 }
 
 message ReportDataReq {
@@ -63,10 +67,4 @@ message BlueTooth {
 
 message ReportDataResp {
     Result res = 1;
-}
-
-// 结果信息
-message Result {
-    int64 code = 1; // 错误码, 0表示成功，其他表示失败
-    string msg = 2; // 错误消息
 }
