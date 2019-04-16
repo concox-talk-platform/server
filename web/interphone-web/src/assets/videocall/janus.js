@@ -1766,6 +1766,7 @@ function Janus(gatewayCallbacks) {
 				createDataChannel(handleId, event.channel.label, event.channel);
 			};
 		}
+		Janus.log("--------------------"+jsep);
 		// If there's a new local stream, let's notify the application
 		if(config.myStream)
 			pluginHandle.onlocalstream(config.myStream);
@@ -1773,6 +1774,7 @@ function Janus(gatewayCallbacks) {
 		if(jsep === null || jsep === undefined) {
 			createOffer(handleId, media, callbacks);
 		} else {
+
 			config.pc.setRemoteDescription(jsep)
 				.then(function() {
 					Janus.log("Remote description accepted!");

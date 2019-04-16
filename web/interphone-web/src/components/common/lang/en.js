@@ -165,7 +165,8 @@ module.exports = {
             audio:"Do you initiate a voice call?",
             audio_text:'Voice Communication',
             video_text:'Video Call',
-            loding:'Connecting......'
+            loding:'Connecting......',
+            call_message:'Incoming call from'
         }
     
 

@@ -168,7 +168,8 @@ module.exports = {
         audio:"是否发起语音通话?",
         audio_text:'语音通话',
         video_text:'视频通话',
-        loding:'连接中......'
+        loding:'连接中......',
+        call_message:'有视频呼叫来自'
     }
 
 }
