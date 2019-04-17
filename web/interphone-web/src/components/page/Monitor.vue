@@ -47,27 +47,27 @@
     </div>
 </div>
 </el-aside>
- <div  class="video_room" v-if="video_show" @mousedown.self="video_move"> 
+ <div  class="video_room" v-show="video_show" @mousedown.self="video_move"> 
      <span class="video_tittle">{{$t('video.video_text')}}</span>
         <div id="videocall">
-         <div id="videos" class="hide">
+         <div id="videos" >
               <div id="videoleft"></div>
               <div id="videoright"></div>
             </div>
         </div>
         <el-button type="danger" round @click="video_hangup" class="video_close">hangup</el-button>
  </div> 
- <div  class="audio_room" v-if="aduio_show" @mousedown.self="video_move"> 
-     <div class="audio_tittle">{{$t('video.audio_text')}}</div>
-      <div class="audio_loding"> {{$t('video.loding')}}</div>
-     <div id="audio_box"> <img class="audio_img" src="../../assets/img/inter.png" alt=""> </div>
+ <div  class="audio_room" v-show="aduio_show" @mousedown.self="video_move"> 
+     <div class="audio_tittle" >{{$t('video.audio_text')}}</div>
+      <div class="audio_loding"  v-show="audio_logo"> {{$t('video.loding')}}</div>
+     <div id="audio_box" v-show="!audio_logo"> <img class="audio_img" src="../../assets/img/inter.png" alt=""> </div>
         <div id="audiocall">
          <div id="audios" class="hide">
               <div id="audioleft"></div>
               <div id="audioright"></div>
             </div>
         </div>
-        <el-button type="danger" round @click="video_hangup" class="audio_close">hangup</el-button>
+        <el-button type="danger" round @click="audio_hangup" class="audio_close">hangup</el-button>
  </div>
     <!-- 创建组 -->
     <el-dialog :title="$t('group.add_group')" :visible.sync="group_div" :show-close="false">
@@ -204,6 +204,18 @@
        
        
     </el-dialog>
+    <!-- 接听视频 -->
+            <!-- <el-dialog
+        title="提示"
+        :visible.sync="calling_Visible"
+        width="30%"
+        >
+        <span>这是一段信息</span>
+        <span slot="footer" class="dialog-footer">
+            <el-button @click="calling_Visible = false">取 消</el-button>
+            <el-button type="primary" @click="call_answer">确 定</el-button>
+        </span>
+        </el-dialog> -->
 
 
 </div>
@@ -273,7 +285,12 @@ export default {
                 video_name:'',
                 call_name:'',
                 videocall : null,
+                audio_answer:false,
                 video_hang:'',
+                audio_hang:'',
+                audio_logo:true,
+                // calling_Visible:false,
+                jesp_code:'',
         }
     },
     methods: {
@@ -630,7 +647,10 @@ export default {
                     success: function(pluginHandle) {
                         self.videocall = pluginHandle;
                         Janus.log("Plugin attached! (" + self.videocall.getPlugin() + ", id=" + self.videocall.getId() + ")");
-                        $('#videocall').removeClass('hide').show();
+                        // $('#videocall').removeClass('hide').show();
+                        var user_register =sessionStorage.getItem('id').toString();
+                        var viedo_register = { "request": "register", "username": user_register };
+                        self.videocall.send({"message": viedo_register});   
                     },
                     error: function(error) {
                         Janus.error("  -- Error attaching plugin...", error);
@@ -661,40 +681,48 @@ export default {
                             var event = result["event"];
                             if(event === 'registered') {
                                 myusername = result["username"];
-                                Janus.log("Successfully registered as " + myusername + "!");
                                 self.videocall.send({"message": { "request": "list" }});
-                                $('#phone').removeClass('hide').show();
-                                // $('#call').unbind('click').click(doCall);
-                                $('#peer').focus();
                             } else if(event === 'calling') {
                                 Janus.log("Waiting for the peer to answer...");
                                 // alert("Waiting for the peer to answer...");
                             } else if(event === 'incomingcall') {
                                 Janus.log("Incoming call from " + result["username"] + "!");
                                 yourusername = result["username"];
-                            incoming = 	self.videocall.createAnswer(
-                                {
-                                jsep: jsep,
-                                media: { data: true },	
-                                simulcast: self.doSimulcast,
-                                success: function(jsep) {
-                                    Janus.debug("Got SDP!");
-                                    Janus.debug(jsep);
-                                    var body = { "request": "accept" };
-                                    self.videocall.send({"message": body, "jsep": jsep});
-                                },
-                                error: function(error) {
-                                    Janus.error("WebRTC error:", error);
-                                }
+                                self.$confirm("Incoming call from " + result["username"] + "!" , {
+                                confirmButtonText: self.$t("button_message.confirm"),
+                                cancelButtonText: self.$t("button_message.cancel"),
+                                type: 'warning'
+                                }).then(() => {
+                                // window.console.log(self.jesp_code)
+                                incoming=null;
+                                self.videocall.createAnswer(
+                                    {
+                                        jsep: jsep,
+                                        // No media provided: by default, it's sendrecv for audio and video
+                                        media: { data: true },	
+                                        // Let's negotiate data channels as well
+                                        // If you want to test simulcasting (Chrome and Firefox only), then
+                                        // pass a ?simulcast=true when opening this demo page: it will turn
+                                        // the following 'simulcast' property to pass to janus.js to true
+                                        // simulcast: true,
+                                        success: function(jsep) {
+                                            Janus.debug("Got SDP!");
+                                            Janus.debug(jsep); 
+                                            self.video_show= true
+                                            var accept_body = { "request": "accept"};
+                                            self.videocall.send({"message": accept_body, "jsep": jsep});
+                                            $('#videos').show();
+                                        },
+                                        error: function(error) {
+                                            Janus.error("WebRTC error:", error);
+                                            // window.console.log(jsep)
+                                            alert("WebRTC error... " + JSON.stringify(error));
+                                        }
+                                    });	  
+                                }).catch(() => {
+                                    
                                 });
                             } else if(event === 'accepted') {
-                                var peer = result["username"];
-                                if(peer === null || peer === undefined) {
-                                Janus.log("Call started!");
-                                } else {
-                                Janus.log(peer + " accepted the call!");
-                                yourusername = peer;
-                                }
                                 if(jsep)
                                 self.videocall.handleRemoteJsep({jsep: jsep});
                             } else if(event === 'update') {
@@ -710,8 +738,6 @@ export default {
                                         Janus.debug("Got SDP!");
                                         Janus.debug(jsep);
                                         var body = { "request": "set",
-                                        // "audio" : false,
-                                         "video" : false, 
                                          };
                                         self.videocall.send({"message": body, "jsep": jsep});
                                         },
@@ -746,57 +772,119 @@ export default {
                     onlocalstream: function(stream) {
                         Janus.debug(" ::: Got a local stream :::");
                         Janus.debug(stream);
-                        $('#videos').removeClass('hide').show();
-                        if($('#myvideo').length === 0)
-                            $('#videoleft').append('<video class="rounded centered" id="myvideo" width=131 height=83 autoplay playsinline muted="muted" />');
-                        Janus.attachMediaStream($('#myvideo').get(0), stream);
-                        $("#myvideo").get(0).muted = "muted";
-                        var videoTracks = stream.getVideoTracks();
-                        if(videoTracks === null || videoTracks === undefined || videoTracks.length === 0) {
-                            // No webcam
-                            $('#myvideo').hide();
-                            if($('#videoleft .no-video-container').length === 0) {
-                            $('#videoleft').append(
-                                '<div class="no-video-container">' +
-                                '<span class="no-video-text">No webcam available</span>' +
-                                '</div>');
+                        // self.video_show= true
+                        var videoTracks =''
+                        if(self.audio_answer == true){
+                            $('#audios').removeClass('hide').show();
+                            if($('#myaudio').length === 0)
+                            $('#audiocall').append('<video class="rounded centered" id="myaudio"  style="display:none" width=131 height=83 autoplay playsinline muted="muted"  />');
+                            Janus.attachMediaStream($('#myaudio').get(0), stream);
+                            $("#myaudio").get(0).muted = "muted";
+                            // if(audio_self.videocall.webrtcStuff.pc.iceConnectionState !== "completed" &&
+                            //     audio_self.videocall.webrtcStuff.pc.iceConnectionState !== "connected") {
+                            //     $('#audioright').append('<video class="rounded centered" id="waitingvideo" width=406 height=271    />');
+                            // }
+                             videoTracks = stream.getVideoTracks();
+                            if(videoTracks === null || videoTracks === undefined || videoTracks.length === 0) {
+                                // No webcam
+                                $('#myaudio').hide();
+                                if($('#audiocall .no-video-container').length === 0) {
+                                $('#audiocall').append(
+                                    '<div class="no-video-container">' +
+                                    '<span class="no-video-text">No webcam available</span>' +
+                                    '</div>');
+                                }
+                            } else {
+                                $('#audiocall .no-video-container').remove();
+                                // $('#myvideo').removeClass('hide').show();
                             }
-                        } else {
-                            $('#videoleft .no-video-container').remove();
-                            $('#myvideo').removeClass('hide').show();
+                        }else{
+                            $('#videos').show();
+                            if($('#myvideo').length === 0)
+                                $('#videoleft').append('<video class="rounded centered" id="myvideo" width=131 height=83 autoplay playsinline muted="muted" />');
+                            Janus.attachMediaStream($('#myvideo').get(0), stream);
+                            $("#myvideo").get(0).muted = "muted";
+                             videoTracks = stream.getVideoTracks();
+                            if(videoTracks === null || videoTracks === undefined || videoTracks.length === 0) {
+                                // No webcam
+                                $('#myvideo').hide();
+                                if($('#videoleft .no-video-container').length === 0) {
+                                $('#videoleft').append(
+                                    '<div class="no-video-container">' +
+                                    '<span class="no-video-text">No webcam available</span>' +
+                                    '</div>');
+                                }
+                            } else {
+                                $('#videoleft .no-video-container').remove();
+                                $('#myvideo').removeClass('hide').show();
+                            }
                         }
                     },
                     onremotestream: function(stream) {
                         Janus.debug(" ::: Got a remote stream :::");
                         Janus.debug(stream);
                         var addButtons = false;
+                        var videoTracks =''
+                        if(self.audio_answer == true){
+                            if($('#remoteaudio').length === 0) {
+                            addButtons = true;
+                            $('#audioright').append('<video class="rounded centered hide" id="remoteaudio" style="display:none"  width=406 height=271   autoplay playsinline />');
+                            // $('.audio_loding').hide()
+                            self.audio_logo=false                 
+                            // $('#audio_box').show();
+                            $("#remoteaudio").bind("playing", function () {
+                                if(this.videoWidth)
+                                // $('#remotevideo').removeClass('hide').show();
+                                var width = this.videoWidth;
+                                var height = this.videoHeight;
+                            });
+                            }
+                            Janus.attachMediaStream($('#remoteaudio').get(0), stream);
+                            videoTracks = stream.getVideoTracks();
+                            if(videoTracks === null || videoTracks === undefined || videoTracks.length === 0) {
+                            // No remote video
+                            $('#remoteaudio').hide();
+                            if($('#audioright .no-video-container').length === 0) {
+                                $('#audioright').append(
+                                '<div class="no-video-container">' +
+                                    '<span class="no-video-text">No remote video available</span>' +
+                                '</div>');
+                            }
+                            } else {
+                            $('#audioright .no-video-container').remove();
+                            }
+                            if(!addButtons)
+                            return;
+
+                        }else{
                         if($('#remotevideo').length === 0) {
-                        addButtons = true;
-                        $('#videoright').append('<video class="rounded centered hide" id="remotevideo" width=406 height=271   autoplay playsinline/>');
-                        $("#remotevideo").bind("playing", function () {
-                            if(this.videoWidth)
+                            addButtons = true;
+                            $('#videoright').append('<video class="rounded centered hide" id="remotevideo" width=406 height=271   autoplay playsinline/>');
+                            $("#remotevideo").bind("playing", function () {
+                                if(this.videoWidth)
+                                $('#remotevideo').removeClass('hide').show();
+                                var width = this.videoWidth;
+                                var height = this.videoHeight;
+                            });
+                            }
+                            Janus.attachMediaStream($('#remotevideo').get(0), stream);
+                            videoTracks = stream.getVideoTracks();
+                            if(videoTracks === null || videoTracks === undefined || videoTracks.length === 0) {
+                            // No remote video
+                            $('#remotevideo').hide();
+                            if($('#videoright .no-video-container').length === 0) {
+                                $('#videoright').append(
+                                '<div class="no-video-container">' +
+                                    '<span class="no-video-text">No remote video available</span>' +
+                                '</div>');
+                            }
+                            } else {
+                            $('#videoright .no-video-container').remove();
                             $('#remotevideo').removeClass('hide').show();
-                            var width = this.videoWidth;
-                            var height = this.videoHeight;
-                        });
+                            }
+                            if(!addButtons)
+                            return;
                         }
-                        Janus.attachMediaStream($('#remotevideo').get(0), stream);
-                        var videoTracks = stream.getVideoTracks();
-                        if(videoTracks === null || videoTracks === undefined || videoTracks.length === 0) {
-                        // No remote video
-                        $('#remotevideo').hide();
-                        if($('#videoright .no-video-container').length === 0) {
-                            $('#videoright').append(
-                            '<div class="no-video-container">' +
-                                '<span class="no-video-text">No remote video available</span>' +
-                            '</div>');
-                        }
-                        } else {
-                        $('#videoright .no-video-container').remove();
-                        $('#remotevideo').removeClass('hide').show();
-                        }
-                        if(!addButtons)
-                        return;
                     },
                     });
                 },
@@ -813,23 +901,17 @@ export default {
             }})
             this.video_hang=janus;
         },
-
         video_begin(item){
             var selfs =this;
-            window.console.log(sessionStorage.getItem('id'))
-            window.console.log(item.id);
-            this. video_server()
+            this.audio_answer = false
+            // this. video_server()
             this.$confirm(this.$t('video.message'), {
                 confirmButtonText: this.$t("button_message.confirm"),
                 cancelButtonText: this.$t("button_message.cancel"),
                 type: 'warning'
                 }).then(() => {
                 this.video_show=true;
-                var username =sessionStorage.getItem('id').toString();
-                window.console.log(this.video_name)
-                var register = { "request": "register", "username": username };
-                this.videocall.send({"message": register});   
-                    var userpeer = item.id.toString();
+                var userpeer = item.id.toString();
                     this.videocall.createOffer(
                     {
                         media: { data: true },	
@@ -846,213 +928,9 @@ export default {
                 });
 
         },
-    //    语音通话
         audio_begin(item){
-            var audio_self =this;
-            var server = [
-            "ws://" + "113.105.153.240" + ":8188",
-            "/janus"
-            ];
-            // var server = "https://" + "113.105.153.240" + ":8188/janus"
-            var janus = null;
-            var opaqueId = "videocalltest-"+Janus.randomString(12);
-            var myusername = null;
-            var yourusername = null;
-            var incoming  =null;
-            if(!Janus.isWebrtcSupported()) {
-                    alert("No WebRTC support... ");
-                    return;
-            }
-            Janus.init({debug: true, callback: function() {
-            janus = new Janus({
-                server: server,
-                success: function() {
-                janus.attach({
-                    plugin: "janus.plugin.videocall",
-                    opaqueId: opaqueId,
-                    success: function(pluginHandle) {
-                        audio_self.videocall = pluginHandle;
-                        Janus.log("Plugin attached! (" + audio_self.videocall.getPlugin() + ", id=" + audio_self.videocall.getId() + ")");
-                        $('#audiocall').removeClass('hide').show();
-                    },
-                    error: function(error) {
-                        Janus.error("  -- Error attaching plugin...", error);
-                        alert("  -- Error attaching plugin... " + error);
-                    },
-                    consentDialog: function(on) {
-                        Janus.debug("Consent dialog should be " + (on ? "on" : "off") + " now");
-                    },
-                    mediaState: function(medium, on) {
-                        Janus.log("Janus " + (on ? "started" : "stopped") + " receiving our " + medium);
-                    },
-                    webrtcState: function(on) {
-                        Janus.log("Janus says our WebRTC PeerConnection is " + (on ? "up" : "down") + " now");
-                    },
-                    onmessage: function(msg, jsep) {
-                        Janus.debug(" ::: Got a message :::");
-                        Janus.debug(msg);
-                        var result = msg["result"];
-                        if(result !== null && result !== undefined) {
-                            if(result["list"] !== undefined && result["list"] !== null) {
-                                var list = result["list"];
-                                Janus.debug("Got a list of registered peers:");
-                                Janus.debug(list);
-                                for(var mp in list) {
-                                Janus.debug("  >> [" + list[mp] + "]");
-                                }
-                            } else if(result["event"] !== undefined && result["event"] !== null) {
-                            var event = result["event"];
-                            if(event === 'registered') {
-                                myusername = result["username"];
-                                Janus.log("Successfully registered as " + myusername + "!");
-                                audio_self.videocall.send({"message": { "request": "list" }});
-                            } else if(event === 'calling') {
-                                Janus.log("Waiting for the peer to answer...");
-                                // alert("Waiting for the peer to answer...");
-                            } else if(event === 'incomingcall') {
-                                Janus.log("Incoming call from " + result["username"] + "!");
-                                yourusername = result["username"];
-                            incoming = 	audio_self.videocall.createAnswer(
-                                {
-                                jsep: jsep,
-                                media: { data: true },	
-                                simulcast: audio_self.doSimulcast,
-                                success: function(jsep) {
-                                    Janus.debug("Got SDP!");
-                                    Janus.debug(jsep);
-                                    var body = { "request": "accept" };
-                                    audio_self.videocall.send({"message": body, "jsep": jsep});
-                                },
-                                error: function(error) {
-                                    Janus.error("WebRTC error:", error);
-                                }
-                                });
-                            } else if(event === 'accepted') {
-                                var peer = result["username"];
-                                if(peer === null || peer === undefined) {
-                                Janus.log("Call started!");
-                                } else {
-                                Janus.log(peer + " accepted the call!");
-                                yourusername = peer;
-                                }
-                                if(jsep)
-                                audio_self.videocall.handleRemoteJsep({jsep: jsep});
-                            } else if(event === 'update') {
-                                if(jsep) {
-                                if(jsep.type === "answer") {
-                                    audio_self.videocall.handleRemoteJsep({jsep: jsep});
-                                } else {
-                                    audio_self.videocall.createAnswer(
-                                    {
-                                        jsep: jsep,
-                                        media: { data: true },	// Let's negotiate data channels as well
-                                        success: function(jsep) {
-                                        Janus.debug("Got SDP!");
-                                        Janus.debug(jsep);
-                                        var body = { "request": "set",
-                                        // "audio" : false,
-                                         "video" : false, 
-                                         };
-                                        audio_self.videocall.send({"message": body, "jsep": jsep});
-                                        },
-                                        error: function(error) {
-                                        Janus.error("WebRTC error:", error);
-                                        alert("WebRTC error... " + JSON.stringify(error));
-                                        }
-                                    });
-                                }
-                                }
-                            } else if(event === 'hangup') {
-                                Janus.log("Call hung up by " + result["username"] + " (" + result["reason"] + ")!");
-                                // Reset status
-                                audio_self.videocall.hangup();
-                                $('#audios').hide();
-                            }
-                            }
-                        } else {
-                            var error = msg["error"];
-                            alert(error);
-                            audio_self.video_hang.destroy();
-                            audio_self.aduio_show=false;
-                            audio_self.videocall.hangup();
-                            $('#audios').hide();
-                        }
-                    },
-                    onlocalstream: function(stream) {
-                        Janus.debug(" ::: Got a local stream :::");
-                        Janus.debug(stream);
-                        $('#audios').removeClass('hide').show();
-                        if($('#myaudio').length === 0)
-                            $('#audiocall').append('<video class="rounded centered" id="myaudio"  style="display:none" width=131 height=83 autoplay playsinline muted="muted"  />');
-                        Janus.attachMediaStream($('#myaudio').get(0), stream);
-                        $("#myaudio").get(0).muted = "muted";
-                        // if(audio_self.videocall.webrtcStuff.pc.iceConnectionState !== "completed" &&
-                        //     audio_self.videocall.webrtcStuff.pc.iceConnectionState !== "connected") {
-                        //     $('#audioright').append('<video class="rounded centered" id="waitingvideo" width=406 height=271    />');
-                        // }
-                        var videoTracks = stream.getVideoTracks();
-                        if(videoTracks === null || videoTracks === undefined || videoTracks.length === 0) {
-                            // No webcam
-                            $('#myaudio').hide();
-                            if($('#audiocall .no-video-container').length === 0) {
-                            $('#audiocall').append(
-                                '<div class="no-video-container">' +
-                                '<span class="no-video-text">No webcam available</span>' +
-                                '</div>');
-                            }
-                        } else {
-                            $('#audiocall .no-video-container').remove();
-                            // $('#myvideo').removeClass('hide').show();
-                        }
-                    },
-                    onremotestream: function(stream) {
-                        Janus.debug(" ::: Got a remote stream :::");
-                        Janus.debug(stream);
-                        var addButtons = false;
-                        if($('#remoteaudio').length === 0) {
-                        addButtons = true;
-                        $('#audioright').append('<video class="rounded centered hide" id="remoteaudio" style="display:none"  width=406 height=271   autoplay playsinline />');
-                        $('.audio_loding').hide()                 
-                       $('#audio_box').show();
-                       $("#remoteaudio").bind("playing", function () {
-                            if(this.videoWidth)
-                            // $('#remotevideo').removeClass('hide').show();
-                            var width = this.videoWidth;
-                            var height = this.videoHeight;
-                        });
-                        }
-                        Janus.attachMediaStream($('#remoteaudio').get(0), stream);
-                        var videoTracks = stream.getVideoTracks();
-                        if(videoTracks === null || videoTracks === undefined || videoTracks.length === 0) {
-                        // No remote video
-                        $('#remoteaudio').hide();
-                        if($('#audioright .no-video-container').length === 0) {
-                            $('#audioright').append(
-                            '<div class="no-video-container">' +
-                                '<span class="no-video-text">No remote video available</span>' +
-                            '</div>');
-                        }
-                        } else {
-                        $('#audioright .no-video-container').remove();
-                        }
-                        if(!addButtons)
-                        return;
-                    },
-                    });
-                },
-                error: function(error) {
-                    Janus.error(error);
-                    alert(error, function() {
-                    });
-                },
-                destroyed: function() {
-                    // window.location.reload();
-                }
-                });
-            }})
-            this.video_hang=janus;      
-            window.console.log(sessionStorage.getItem('id'))
-            window.console.log(item.id);
+            this.audio_answer = true
+            var audio_self=this
             this.$confirm(this.$t('video.audio'), {
                 confirmButtonText: this.$t("button_message.confirm"),
                 cancelButtonText: this.$t("button_message.cancel"),
@@ -1061,8 +939,8 @@ export default {
                 this.aduio_show=true;
                 var username =sessionStorage.getItem('id').toString();
                 window.console.log(this.video_name)
-                var register = { "request": "register", "username": username };
-                this.videocall.send({"message": register});   
+                // var register = { "request": "register", "username": username };
+                // this.videocall.send({"message": register});   
                     var userpeer = item.id.toString();
                     this.videocall.createOffer(
                     {
@@ -1079,16 +957,34 @@ export default {
                 }).catch(() => {
                        
                 });
-         },
+
+        },
+    
     video_hangup(){
         var hangup = { "request": "hangup" };
         window.console.log(this.videocall)
         this.videocall.send({"message": hangup});
         this.videocall.hangup();
         this.yourusername = null;
-        this.video_hang.destroy();
+        // this.video_hang.destroy();
         this.video_show=false;
+        $('#remotevideo').hide()
+        // this.aduio_show=false;
+    },
+    audio_hangup(){
+        var hangup = { "request": "hangup" };
+        window.console.log(this.videocall)
+        this.videocall.send({"message": hangup});
+        this.videocall.hangup();
+        this.yourusername = null;
+        // this.video_hang.destroy();
         this.aduio_show=false;
+        $('#remotevideo').hide();
+        this.audio_logo=true;
+       
+        // this.audio_hang.destroy();
+        // this.video_server();
+        
     },
     // 视频移动
     video_move(e){
@@ -1203,12 +1099,18 @@ export default {
             },
 
     },
+    created(){
+      
+    },
     beforeMount(){
           this.get_group_list();
           window.console.log( JSON.parse(localStorage.getItem('device_list')))
+           
     },
-    mounted(){
-        
+    mounted(){ 
+        this.video_server();     
+        //  this.video_begin();
+        //  this.asda();
     }
 }
 </script>
@@ -1566,7 +1468,7 @@ margin-top: 10px;
      margin-top: 54px;
      margin-left: 68px;
      background-color: white;
-     display: none
+     /* display: none */
 }
 .audio_img{
     width: 86px;
