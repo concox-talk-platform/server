@@ -95,12 +95,12 @@ func (tcs *TalkCloudService) DeviceRegister(ctx context.Context, req *pb.DeviceR
 func (tcs *TalkCloudService) Logout(ctx context.Context, req *pb.LogoutReq) (*pb.LogoutRsp, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		log.Panicf("sessionid metadata set  error%s")
+		log.Println("session id metadata set  error")
 		return &pb.LogoutRsp{Res: &pb.Result{Code: 403, Msg: "server internal error"}}, nil
 	}
 	// TODO 考虑要不要验证sessionInfo中的name和password
 	if err := s.DeleteSession(md.Get("sessionId")[1], nil); err != nil {
-		log.Panicf("sessionid metadata delete  error%s", err)
+		log.Printf("sessionid metadata delete  error%s", err)
 		return &pb.LogoutRsp{Res: &pb.Result{Code: 500, Msg: "server internal error"}}, err
 	}
 	return &pb.LogoutRsp{Res: &pb.Result{Code: 200, Msg: req.Name + "logout successful"}}, nil

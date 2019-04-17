@@ -153,6 +153,21 @@ func GetGroupData(gid int64, rd redis.Conn) (*GrpRecord, error) {
 	return grpData, nil
 }
 
+
+func GetGroupMem(gid int32, rd redis.Conn) ([]int64, error) {
+	if rd == nil {
+		return nil, fmt.Errorf("rd is nil")
+	}
+	key := MakeGroupMemKey(int64(gid))
+	uids, err := redis.Int64s(rd.Do("SMEMBERS", key))
+	if err != nil {
+		return nil, fmt.Errorf("get members from %s error: %s", key, err)
+	}
+
+	return uids, nil
+}
+
+
 // get user list from the group
 func GetGroupMemData(gid int64, rd redis.Conn) (*GrpMemData, error) {
 	if rd == nil {

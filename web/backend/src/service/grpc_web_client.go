@@ -23,7 +23,7 @@ func init() {
 	//	os.Exit(1)
 	//}
 
-	Addr = "172.16.1.18:9000" //cfg.Section("grpc").Key("addr").String()
+	Addr = "172.16.0.7:9000" //cfg.Section("grpc").Key("addr").String()
 	CilentPool = cp.New(func(addr string) (*grpc.ClientConn, error) {
 		return grpc.Dial(
 			Addr,

@@ -8,6 +8,8 @@
 package controllers
 
 import (
+	pb "api/talk_cloud"
+	"context"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"io"
@@ -15,17 +17,19 @@ import (
 	"model"
 	"net/http"
 	"os"
+	"service"
+	"service/client_pool"
 	"strconv"
 )
 
 const (
-	FILE_BASE_DIR        = "/opt/web/jimi_talk.com/data/"
-	FILE_BASE_URL     = "http://ptt.jimilab.com:81/data/"
+	FILE_BASE_DIR   = "/opt/web/jimi_talk.com/data/"
+	FILE_BASE_URL   = "http://ptt.jimilab.com:81/data/"
 	MAX_UPLOAD_SIZE = 1024 * 1024 * 500 // 1024 byte * 1024 * 500 = 500mb
 )
 
 // 进行文件大小,存在等判断，body里面等参数的判断
-func uploadFilePre(c *gin.Context) error {
+func uploadFilePre(c *gin.Context) (int32, error) {
 	r := c.Request
 	// 判断文件大小
 	r.Body = http.MaxBytesReader(c.Writer, r.Body, MAX_UPLOAD_SIZE)
@@ -33,14 +37,16 @@ func uploadFilePre(c *gin.Context) error {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"msg": "File is too big" + " :" + err.Error(),
 		})
-		return nil
+		return -1, nil
 	}
 
-	return nil
+	// 判断文件类型  TODO
+	fileType := int32(1)
+	return fileType, nil
 }
 
 // 文件存储
-func fileStore(c *gin.Context) (string, *model.UpLoadFileParmas, error){
+func fileStore(c *gin.Context) (string, *model.UpLoadFileParmas, error) {
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {
 		log.Println("err: ", err)
@@ -66,7 +72,6 @@ func fileStore(c *gin.Context) (string, *model.UpLoadFileParmas, error){
 	out, err := os.Create(uIMDir + fName)
 	if err != nil {
 
-
 	}
 	defer func() {
 		_ = out.Close()
@@ -81,7 +86,8 @@ func fileStore(c *gin.Context) (string, *model.UpLoadFileParmas, error){
 
 func UploadFile(c *gin.Context) {
 	log.Println("enter upload file.")
-	if err := uploadFilePre(c); err != nil {
+	fileType, err := uploadFilePre(c)
+	if err != nil {
 		return
 	}
 
@@ -95,7 +101,26 @@ func UploadFile(c *gin.Context) {
 
 	// TODO 调用调用GRPC接口，转发数据
 
+	conn, err := client_pool.GetConn(service.Addr)
+	if err != nil {
+		log.Printf("grpc.Dial err : %v", err)
+	}
+	webCli := pb.NewTalkCloudClient(conn)
+
+	res, err := webCli.ImMessagePublish(context.Background(), &pb.ImMsgReqData{
+		Id:           int32(fParams.Id),
+		ReceiverType: int32(fParams.ReceiverType),
+		ReceiverId:   int32(fParams.ReceiverId),
+		ResourcePath: fUrl,
+		MsgType:      fileType,
+	})
+	if err != nil {
+		log.Println("get data push stream error: ", err)
+		return
+	}
+
 	c.JSON(http.StatusCreated, gin.H{
-		"msg": "Uploaded successfully",
+		"msg":  "Uploaded successfully",
+		"code": res.Result.Code,
 	})
 }

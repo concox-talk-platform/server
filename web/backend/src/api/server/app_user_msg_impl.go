@@ -17,18 +17,19 @@ pb "api/talk_cloud"
 )
 
 func (serv *TalkCloudService) AddMsg(ctx context.Context, req *pb.MsgNewReq) (*pb.MsgNewRsp, error) {
-	err := msg.AddMultiMsg(req, db.DBHandler)
+	//err := msg.AddMultiMsg(req, db.DBHandler)
+	//
+	//rsp := new(pb.MsgNewRsp)
+	//rsp.Res = new(pb.Result)
+	//
+	//if err != nil {
+	//	rsp.Res.Code = -1
+	//	rsp.Res.Msg = err.Error()
+	//	log.Printf("add multi message fail\n")
+	//}
 
-	rsp := new(pb.MsgNewRsp)
-	rsp.Res = new(pb.Result)
-
-	if err != nil {
-		rsp.Res.Code = -1
-		rsp.Res.Msg = err.Error()
-		log.Printf("add multi message fail\n")
-	}
-
-	return rsp, err
+	//return rsp, err
+	return nil, nil
 }
 
 func (serv *TalkCloudService) GetMsg(ctx context.Context, req *pb.MsgReq) (*pb.MsgRsp, error) {
@@ -36,7 +37,7 @@ func (serv *TalkCloudService) GetMsg(ctx context.Context, req *pb.MsgReq) (*pb.M
 	rsp.Uid = req.Uid
 	rsp.Stat = req.Stat
 	var err error
-	rsp.MsgList, err = msg.GetMsg(req.Uid, req.Stat, db.DBHandler)
+	rsp.MsgList, err = nil, nil // msg.GetMsg(req.Uid, req.Stat, db.DBHandler)
 
 	if err != nil {
 		log.Printf("get user(%d) msg fail\n", req.Uid)

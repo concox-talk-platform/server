@@ -13,9 +13,11 @@ service TalkCloudLocation {
 }
 
 message ReportDataReq {
-    int32 dataType = 1;
-    Device deviceInfo = 2;
-    Location locationInfo = 3;
+    int32 uid = 1;
+    string iMei = 2;
+    int32 dataType = 3;
+    Device deviceInfo = 4;
+    Location locationInfo = 5;
 }
 
 message Device {

@@ -178,7 +178,8 @@ type AccountUpdate struct {
 }
 
 type UpLoadFileParmas struct {
-	Id         int `json:"id"`
-	SendType   int `json:"send_type"` // 0代表发给单人， 1代表发给群组
-	ReceiverId int `json:"receiver_id"`
+	Id           int `json:"id"`
+	ReceiverType int `json:"receiver_type"` // 0代表发给单人， 1代表发给群组
+	ReceiverId   int `json:"receiver_id"`
 }
+

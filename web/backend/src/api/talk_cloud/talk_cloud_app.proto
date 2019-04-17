@@ -28,7 +28,7 @@ service TalkCloud {
     };
 
     // 推送im数据
-    rpc ImMessagePublish (stream ImMsgReqData) returns (ImMsgRespData) {
+    rpc ImMessagePublish ( ImMsgReqData) returns (ImMsgRespData) {
     };
 
     rpc DataPublish (stream StreamRequest) returns (stream StreamResponse) {
@@ -135,12 +135,16 @@ message loginRespData {
 
 // 获取ImMsg请求  // 实际用不到
 message ImMsgReqData {
-
+    int32 id = 1;    // 谁发的，
+    int32 ReceiverType  = 2;  // 是单独，还是发给群组
+    int32 ReceiverId = 3;   // 接受者的id，群组就是群组id
+    string ResourcePath = 4;   // 资源文件路径
+    int32 MsgType = 5;
 }
 
-// 推送Im数据   // TODO 使用sync.map记录在线人数，考虑使用runner schedule timer来调度，内容待定
+// http client 返回数据
 message ImMsgRespData {
-
+    Result result = 1;
 }
 
 // 登出请求
@@ -182,21 +186,29 @@ message StreamRequest {
 
     int32 ACK = 3;
 
-    FileData fileData = 6;
+    UploadFileData FileDataReq = 6;
 }
 
-message FileData {
-    bytes pluginContent = 1;
-    string id = 2;
+message UploadFileData {
+    int32 id = 1;    // 谁发的，是单独，还是发给群组
+    int32 sendType  = 2;
+    int32 ReceiverId = 3;   // 接受者的id，群组就是群组id
+}
+
+message ImReceiver {
+    int32 type =  1;  // 1 是发送给群组， 2是发送给个人
+    GroupInfo groupInfo = 2;
+    Member userInfo = 3;
 }
 
 
 message StreamResponse {
-    int32 DataType = 1; // 1 是返回登录数据， 2是推送ImMsgData， 3 是keepalive
-    FirstLoginData loginResp = 2;
-    ImMsgData imMsgData = 3;
-    KeepAlive keepAlive = 4;
-    Result res = 5;
+    int32 uid = 1;
+    int32 DataType = 2; // 1 是返回登录数据， 2是推送ImMsgData， 3 是keepalive
+    FirstLoginData loginResp = 3;
+    ImMsgReqData imMsgData = 4;
+    KeepAlive keepAlive = 5;
+    Result res = 6;
 }
 
 message FirstLoginData {
@@ -213,6 +225,7 @@ message KeepAlive {
 message ImMsgData {
     int32 uid = 1;
     string path = 2;
+    ImReceiver receiver = 3;
 }
 
 /************** User_Friend *************/

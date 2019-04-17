@@ -7,44 +7,39 @@
 package msg
 
 import (
+	pb "api/talk_cloud"
 	"database/sql"
 	"fmt"
+	"github.com/smartwalle/dbs"
 	"log"
 	"strconv"
 	"time"
-	pb "api/talk_cloud"
 )
 
 type MsgType uint8
-type MsgStat uint8
 
 const (
-	MSG_UNREAD MsgStat = iota
-	MSG_READ
-)
-
-const (
-	PLAIN_TEXT MsgType = iota	// 普通文本
-	IMAGE						// 图片
-	AUDIO						// 音频
-	VIDEO						// 视频
-	LOCATION					// 位置
+	PLAIN_TEXT MsgType = iota // 普通文本
+	IMAGE                     // 图片
+	AUDIO                     // 音频
+	VIDEO                     // 视频
+	LOCATION                  // 位置
 )
 
 type MsgData struct {
-	Id int64
-	Uid int64
-	SenderId int64
-	Type MsgType
-	Content string
+	Id         int64
+	Uid        int64
+	SenderId   int64
+	Type       MsgType
+	Content    string
 	CreateTime int64
 }
 
 type LocationData struct {
-	Id int64
-	Uid int64
-	Lat float64
-	Lng float64
+	Id        int64
+	Uid       int64
+	Lat       float64
+	Lng       float64
 	TimeStamp int64
 }
 
@@ -52,14 +47,14 @@ func NewMsg() *MsgData {
 	return new(MsgData)
 }
 
-func AddMsg(msg *MsgData, db *sql.DB) error {
+func AddMsg(msg *pb.ImMsgReqData, db *sql.DB) error {
 	if db == nil {
 		return fmt.Errorf("db is nil")
 	}
 
-	timeStr := time.Unix(msg.CreateTime, 0).Format("2006-01-02 15:04:05")
-	sql := fmt.Sprintf("INSERT INTO message(uid, sender_id, msg_type, content, create_time) " +
-		"VALUES(%d,%d,%d,'%s','%s')", msg.Uid, msg.SenderId, msg.Type, msg.Content, timeStr)
+	timeStr := time.Now().Format("2006-01-02 15:04:05")
+	sql := fmt.Sprintf("INSERT INTO message(sender_id, receiver_id, receiver_type, msg_type, content, create_time) "+
+		"VALUES(%d,%d,%d,'%d','%s','%s')", msg.Id, msg.ReceiverId, msg.ReceiverType, msg.MsgType, msg.ResourcePath, timeStr)
 
 	_, err := db.Query(sql)
 	if err != nil {
@@ -70,45 +65,36 @@ func AddMsg(msg *MsgData, db *sql.DB) error {
 	return nil
 }
 
-func AddMultiMsg(req *pb.MsgNewReq, db *sql.DB) error {
+func AddMultiMsg(msg *pb.ImMsgReqData, receiverId []int32, db *sql.DB) error {
 	if db == nil {
 		return fmt.Errorf("db is nil")
 	}
 
-	sz := len(req.Uids)
-	if 0 == sz {
-		log.Printf("empty uids\n")
-		return nil
+	ib := dbs.NewInsertBuilder()
+	ib.Table("message").Columns("sender_id", "receiver_id", "receiver_type", "gid", "msg_type", "content", "create_time")
+	for _, v := range receiverId {
+		ib.Values(msg.Id, v, msg.ReceiverType, msg.ReceiverId, msg.MsgType, msg.ResourcePath,
+			time.Now().Format("2006-01-02 15:04:05"))
 	}
-
-	timeStr := time.Unix(int64(req.CreateTime), 0).Format("2006-01-02 15:04:05")
-	sql := fmt.Sprintf("INSERT INTO message(uid, sender_id, msg_type, content, create_time) VALUES")
-
-	var elem string
-	for i := 0; i < sz; i++ {
-		if 0 != i {
-			sql += ","
-		}
-		elem = fmt.Sprintf("(%d,%d,%d,'%s','%s')", req.Uids[i], req.SenderId, req.MsgType, req.Content, timeStr)
-		sql += elem
-	}
-
-	_, err := db.Query(sql)
+	stmtIns, values, err := ib.ToSQL()
 	if err != nil {
-		log.Printf("query(%s), error(%s)\n", sql, err)
+		return err
+	}
+	if _, err := db.Exec(stmtIns, values...); err != nil {
+		log.Printf("Add Multi Msg error(%s)\n", err)
 		return err
 	}
 
 	return nil
 }
 
-func GetMsg(uid int32, stat pb.MsgStat, db *sql.DB) ([]*pb.MsgData, error) {
+func GetMsg(uid int32, stat int32, db *sql.DB) ([]*pb.ImMsgReqData, error) {
 	if db == nil {
 		return nil, fmt.Errorf("db is nil")
 	}
 
-	sql := fmt.Sprintf("SELECT id, sender_id, msg_type, content, UNIX_TIMESTAMP(create_time) " +
-		"FROM message WHERE uid=%d AND stat=%d", uid, stat)
+	sql := fmt.Sprintf(`SELECT sender_id, receiver_id, receiver_type, msg_type, content 
+		FROM message WHERE receiver_id=%d AND stat=%d`, uid, stat)
 	rows, err := db.Query(sql)
 	if err != nil {
 		log.Printf("query(%s), error(%s)\n", sql, err)
@@ -117,11 +103,11 @@ func GetMsg(uid int32, stat pb.MsgStat, db *sql.DB) ([]*pb.MsgData, error) {
 
 	defer rows.Close()
 
-	data := make([]*pb.MsgData, 0)
+	data := make([]*pb.ImMsgReqData, 0)
 
 	for rows.Next() {
-		msg := new(pb.MsgData)
-		err = rows.Scan(&msg.MsgId, &msg.SenderId, &msg.MsgType, &msg.Content, &msg.CreateTime)
+		msg := new(pb.ImMsgReqData)
+		err = rows.Scan(&msg.Id, &msg.ReceiverId, &msg.ReceiverType, &msg.MsgType, &msg.ResourcePath)
 		if err != nil {
 			log.Printf("Scan message error: %s\n", err)
 			continue
@@ -133,12 +119,12 @@ func GetMsg(uid int32, stat pb.MsgStat, db *sql.DB) ([]*pb.MsgData, error) {
 	return data, nil
 }
 
-func SetMsgStat(msgID int64, stat MsgStat, db *sql.DB) error {
+func SetMsgStat(msgID int32, stat int, db *sql.DB) error {
 	if db == nil {
 		return fmt.Errorf("db is nil")
 	}
 
-	sql := fmt.Sprintf("UPDATE message SET stat=%d WHERE id=%d", stat, msgID)
+	sql := fmt.Sprintf("UPDATE message SET stat=%d WHERE receiver_id=%d", stat, msgID)
 	_, err := db.Query(sql)
 	if err != nil {
 		log.Printf("query(%s), error(%s)\n", sql, err)
@@ -168,7 +154,7 @@ func SetMultiMsgStat(msgID []int32, stat pb.MsgStat, db *sql.DB) error {
 		sql += strconv.FormatInt(int64(msgID[i]), 10)
 	}
 
-	sql += ")"
+	//sql += ")"
 
 	_, err := db.Query(sql)
 	if err != nil {
@@ -213,7 +199,7 @@ func DeleteMsg(msgID []int32, db *sql.DB) error {
 		sql += strconv.FormatInt(int64(msgID[i]), 10)
 	}
 
-	sql += ")"
+	//sql += ")"
 
 	_, err := db.Query(sql)
 	if err != nil {

@@ -10,14 +10,79 @@ import (
 	"context"
 	"google.golang.org/grpc"
 	"log"
+	"strconv"
+	"sync"
 	"time"
 )
 
 const GROUP_PORT = "9000"
 
+var maps sync.Map
+
+func main1()  {
+	go func() {
+		i := 1
+		for {
+			maps.Store(i, "one" + strconv.Itoa(i))
+			time.Sleep(time.Second * 5)
+			v1, ok1 := maps.Load(1)
+			log.Println("get" ,v1, ok1)
+			time.Sleep(time.Second * 500)
+		}
+	}()
+	go func() {
+		time.Sleep(time.Second * 2)
+		for {
+			v, ok := maps.Load(1)
+			log.Println(v, ok)
+			time.Sleep(time.Second * 5)
+			maps.Delete(1)
+			v1, ok1 := maps.Load(1)
+			log.Println(v1, ok1)
+			time.Sleep(time.Second * 500)
+		}
+	}()
+	time.Sleep(time.Hour)
+}
+
+func main8(){
+	c := make(chan int, 0)
+	maps.Store(1, "one")
+	go timerTask(c)
+	go timerTasks(c)
+    time.Sleep(time.Hour*12)
+}
+
+
+func timerTask(c chan int){
+	timerTask := time.NewTicker(time.Second * time.Duration(1))
+forLoop:
+	for {
+		select {
+		case <-timerTask.C:
+			loop:
+			for {
+				select {
+				case <- c:
+					break forLoop
+				default:
+					log.Println("get maps")
+					break loop
+				}
+			}
+		}
+	}
+}
+
+func timerTasks(c chan int){
+	time.Sleep(time.Second*5)
+	log.Println("set c")
+	c <- 3
+}
+
 func main() {
 	//host := "113.105.153.240"
-	host := "172.16.1.18"
+	host := "172.16.0.7"
 
 	conn, err := grpc.Dial(host+":9000", grpc.WithInsecure())
 	if err != nil {
@@ -56,13 +121,12 @@ func main() {
 	//	Id: 102,
 	//})*/
 
-
 	/*res, err := userClient.AddFriend(context.Background(), &pb.FriendNewReq{
 		Uid:333,
 		Fuid:500,
 	})*/
 
-    /*res, err := userClient.Login(context.Background(), &pb.LoginReq{
+	/*res, err := userClient.Login(context.Background(), &pb.LoginReq{
 		Name:"264333",
 		Passwd:"123456",
 	})*/
@@ -74,10 +138,10 @@ func main() {
 	/*res, err := userClient.GetFriendList(context.Background(), &pb.FriendsReq{
 		Uid:333,
 	})*/
-/*
-    res, err := userClient.GetGroupList(context.Background(), &pb.GrpListReq{
-		Uid:uint64(333),
-	})*/
+	/*
+		res, err := userClient.GetGroupList(context.Background(), &pb.GrpListReq{
+			Uid:uint64(333),
+		})*/
 
 	/*res, err := userClient.SearchGroup(context.Background(), &pb.GrpSearchReq{
 		Uid:uint64(333),
@@ -99,42 +163,60 @@ func main() {
 		GId:215,
 	})*/
 
-	a := make(chan int, 1)
-	a<-1
-	log.Println(<-a)
-	log.Println("*************")
-
-
 	//服务端 客户端 双向流
-	allStr,_ := userClient.DataPublish(context.Background())
-	go func() {
-		for {
-			data,_ := allStr.Recv()
-			log.Println(data)
-		}
-	}()
-
-	go func() {
-		for {
+	allStr, _ := userClient.DataPublish(context.Background())
+	/*go func() {
 			if err := allStr.Send(&pb.StreamRequest{
-				Uid:333,
-				DataType:1,
-				Name:"264333",
-				Passwd:"123456",
+				Uid:      336,
+				DataType: 1,
+				Name:     "264336",
+				Passwd:   "123456",
 			}); err != nil {
 			}
-			time.Sleep(time.Second)
-		}
+			time.Sleep(time.Second * 60)
 	}()
 	if err != nil {
 		log.Println("error : ", err)
 		return
-	}
-	//log.Printf("%+v",res)
-	select {
-	}
+	}*/
+/*
+	go func() {
+		for {
+			log.Println("start send heartbeat")
+			if err := allStr.Send(&pb.StreamRequest{
+				Uid:      334,
+				DataType: 3,
+				ACK:      334,
+			}); err != nil {
+			}
+
+			time.Sleep(time.Second * 3)
+		}
+	}()*/
+
+	go func() {
+		for {
+			log.Println("start send get offline msg")
+			if err := allStr.Send(&pb.StreamRequest{
+				Uid:      334,
+				DataType: 2,
+				ACK:      334,
+			}); err != nil {
+			}
+
+			time.Sleep(time.Second * 600)
+		}
+	}()
 
 
+	go func() {
+		for {
+			data, _ := allStr.Recv()
+			log.Println("client receive :", data)
+		}
+	}()
+
+	select {}
 	/*time.Sleep(time.Second*30)
 
 	ress, err := userClient.GetGroupList(context.Background(), &pb.GrpListReq{
