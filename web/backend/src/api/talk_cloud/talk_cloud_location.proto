@@ -3,15 +3,34 @@ syntax = "proto3";
 package talk_cloud;
 
 import "talk_cloud_model.proto";
+import "annotations.proto";
+
 service TalkCloudLocation {
     // 上报设备数据
     rpc ReportGPSData (ReportDataReq) returns (ReportDataResp) {
     };
 
-    //
+    // 返回gps数据
+    rpc GetGpsData(GPSHttpReq) returns (GPSHttpResp) {
+        // http option
+        option (google.api.http) = {
+            get: "/gps/{uid}"
+        };
+    }
 
 }
 
+message GPSHttpReq {
+    int32 uid = 1;
+    string imei = 2;
+}
+
+message GPSHttpResp {
+    int32 uid = 1;
+    GPS gpsInfo = 2;
+    Result res = 3;
+}
+// GPS 数据上报
 message ReportDataReq {
     int32 uid = 1;
     string iMei = 2;
@@ -37,18 +56,19 @@ message GPS {
     uint64 localTime = 1; // 定位时间 TODO 当地发送数据的即时时间？
     double longitude = 2; // 经度
     double latitude = 3; // 纬度
-    int32 speed = 4; // 速度
-    int32 course = 5; // 航向   TODO 
+    float speed = 4; // 速度
+    float course = 5; // 航向   TODO
 }
 
 message BaseStation {
-    string country = 1;
-    string operator = 2;
-    string region = 3;
-    int32 firstBs = 4; // 第一个基站的强度   TODO 类型
-    int32 secondBs = 5; // 第二个基站的信号强度
-    int32 thirdBs = 6;
-    int32 fourthBs = 7;
+    int32 country = 1;
+    int32 operator = 2;
+    int32 lac = 3;
+    int32 cid = 4;
+    int32 firstBs = 5; // 第一个基站的强度   TODO 类型
+    int32 secondBs = 6; // 第二个基站的信号强度
+    int32 thirdBs = 7;
+    int32 fourthBs = 8;
 }
 
 // TODO 待定

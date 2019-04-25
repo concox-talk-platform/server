@@ -134,36 +134,36 @@ func SetMsgStat(msgID int32, stat int, db *sql.DB) error {
 	return nil
 }
 
-func SetMultiMsgStat(msgID []int32, stat pb.MsgStat, db *sql.DB) error {
-	if db == nil {
-		return fmt.Errorf("db is nil")
-	}
-
-	sz := len(msgID)
-	if 0 == sz {
-		log.Printf("empty msg id list")
-		return nil
-	}
-
-	sql := fmt.Sprintf("UPDATE message SET stat=%d WHERE id in (", stat)
-	for i := 0; i < sz; i++ {
-		if 0 != i {
-			sql += ","
-		}
-
-		sql += strconv.FormatInt(int64(msgID[i]), 10)
-	}
-
-	//sql += ")"
-
-	_, err := db.Query(sql)
-	if err != nil {
-		log.Printf("query(%s), error(%s)\n", sql, err)
-		return err
-	}
-
-	return nil
-}
+//func SetMultiMsgStat(msgID []int32, stat pb.MsgStat, db *sql.DB) error {
+//	if db == nil {
+//		return fmt.Errorf("db is nil")
+//	}
+//
+//	sz := len(msgID)
+//	if 0 == sz {
+//		log.Printf("empty msg id list")
+//		return nil
+//	}
+//
+//	sql := fmt.Sprintf("UPDATE message SET stat=%d WHERE id in (", stat)
+//	for i := 0; i < sz; i++ {
+//		if 0 != i {
+//			sql += ","
+//		}
+//
+//		sql += strconv.FormatInt(int64(msgID[i]), 10)
+//	}
+//
+//	//sql += ")"
+//
+//	_, err := db.Query(sql)
+//	if err != nil {
+//		log.Printf("query(%s), error(%s)\n", sql, err)
+//		return err
+//	}
+//
+//	return nil
+//}
 
 func DeleteMsgByID(msgID int64, db *sql.DB) error {
 	if db == nil {

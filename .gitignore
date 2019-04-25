@@ -5,4 +5,10 @@
 *.exe
 
 # ignore .log
-# *.log
+*.log
+
+# ini
+*.ini
+
+web/backend/src/cmd/files/*
+

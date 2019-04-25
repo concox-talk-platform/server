@@ -42,7 +42,7 @@ func TestCreateGroup(t *testing.T) {
 }
 
 //func testGetGroupList(t *testing.T) {
-//	if res, err := GetGroupList(uint64(333),db.DBHandler); err != nil {
+//	if res, err := GetGroupListFromDB(uint64(333),db.DBHandler); err != nil {
 //		t.Log("Get GroupList Error : ", err )
 //	} else {
 //		t.Log(*res)
@@ -74,7 +74,7 @@ func testAddGroupCache(t *testing.T) {
 }
 
 func testGetGroupList(t *testing.T) {
-	//res, err := user.GetGroupList(uint64(1000), cache.GetRedisClient())
+	//res, err := user.GetGroupListFromDB(uint64(1000), cache.GetRedisClient())
 	//if err != nil && err != cache.NofindInCacheError {
 	//	t.Logf("Add GroupCache error: %v", err)
 	//} else if err == cache.NofindInCacheError {

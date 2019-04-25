@@ -17,13 +17,14 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"server/web/backend/src/configs"
 	"strings"
 	"time"
 )
 
 func main() {
 	engine := Prepare()
-	if err := engine.Run(":8888"); err != nil {
+	if err := engine.Run(":" + configs.WebPort); err != nil {
 		log.Println("listen is error", err)
 	}
 }
@@ -80,6 +81,9 @@ func Prepare() *gin.Engine {
 
 	// upload file
 	engine.POST("/upload", controllers.UploadFile)
+
+	// im server
+	engine.GET("/im-server/:accountId", controllers.ImPush)
 
 	return engine
 }

@@ -78,14 +78,23 @@ type DeviceReceiver struct {
 
 // device
 type Device struct {
-	Id         int    `json:"id"`
-	IMei       string `json:"imei"`
-	UserName   string `json:"user_name"`
-	PassWord   string `json:"password"`
-	AccountId  int    `json:"account_id"`
-	CreateTime string `json:"create_time"`
-	LLTime     string `json:"last_login_time"`
-	ChangeTime string `json:"change_time"`
+	Id         int     `json:"id"`
+	IMei       string  `json:"imei"`
+	UserName   string  `json:"user_name"`
+	PassWord   string  `json:"password"`
+	AccountId  int     `json:"account_id"`
+	CreateTime string  `json:"create_time"`
+	LLTime     string  `json:"last_login_time"`
+	ChangeTime string  `json:"change_time"`
+	LocalTime  uint64  `json:"local_time"`
+	GPSData    *GPS     `json:"gps_data"`
+	Speed      float32 `json:"speed"`
+	Course     float32 `json:"course"`
+}
+
+type GPS struct {
+	Lng float64 `json:"lng"`
+	Lat  float64 `json:"lat"`
 }
 
 // User
@@ -183,3 +192,10 @@ type UpLoadFileParmas struct {
 	ReceiverId   int `json:"receiver_id"`
 }
 
+type ImMsgData struct {
+	Id           int    `json:"id"`
+	ReceiverType int    `json:"ReceiverType"`
+	ReceiverId   int    `json:"ReceiverId"`
+	ResourcePath string `json:"ResourcePath"`
+	MsgType      int    `json:"MsgType"`
+}

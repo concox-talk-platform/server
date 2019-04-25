@@ -6,11 +6,13 @@
 package controllers
 
 import (
+	"cache"
 	"github.com/gin-gonic/gin"
 	"log"
 	"model"
 	"net/http"
 	tc "pkg/customer" // table customer
+	tlc "pkg/location"
 	td "pkg/device"
 	tg "pkg/group"         // table group
 	tgc "pkg/group_member" // table group_device
@@ -147,6 +149,7 @@ func GetAccountInfo(c *gin.Context) {
 		return
 	}
 
+
 	// 获取账户信息
 	ai, err := tc.GetAccount(aName)
 	if err != nil {
@@ -166,6 +169,22 @@ func GetAccountInfo(c *gin.Context) {
 			"error_code": "009",
 		})
 		return
+	}
+
+	for _, v := range deviceAll{
+		res, err := tlc.GetUserLocationInCache(int32(v.Id), cache.GetRedisClient())
+		if err != nil {
+			log.Printf("GetGpsData error: %+v", err)
+		}
+		if res != nil {
+			v.GPSData = &model.GPS{
+				Lng: res.GpsInfo.Longitude,
+				Lat:res.GpsInfo.Latitude,
+			}
+			v.Course = res.GpsInfo.Course
+			v.Speed = res.GpsInfo.Speed
+			v.LocalTime = res.GpsInfo.LocalTime
+		}
 	}
 
 	// 获取群组信息

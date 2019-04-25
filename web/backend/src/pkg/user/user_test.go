@@ -56,8 +56,33 @@ func testAddUserAddUserDataInCache(t *testing.T) {
 	}
 }
 
-func TestUpdateLockGroupIdInCache(t *testing.T) {
+func testUpdateLockGroupIdInCache(t *testing.T) {
 	if err := UpdateLockGroupIdInCache(&pb.SetLockGroupIdReq{UId: 333, GId: 9000}, cache.GetRedisClient()); err != nil {
 		t.Log("TestUpdateLockGroupIdInCache", err)
+	}
+}
+
+func testGetUserInfoFromCache(t *testing.T) {
+	if _, err := GetUserStatusFromCache(333, cache.GetRedisClient());err != nil {
+		t.Log("TestGetUserInfoFromCache error: ", err)
+	}
+}
+
+func TestGetGroupMemData(t *testing.T) {
+	res, err := GetGroupMemDataFromCache(240, cache.GetRedisClient())
+	if err != nil {
+		t.Logf("%v", err)
+	} else {
+		t.Logf("%v", res)
+	}
+}
+
+
+func testGetGroupList(t *testing.T) {
+	res, err := GetGroupList(int32(333), cache.GetRedisClient())
+	if err != nil {
+		t.Logf("Get grouplist has error: %v", err)
+	} else {
+		t.Logf("res:%v", res)
 	}
 }

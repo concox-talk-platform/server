@@ -8,18 +8,33 @@ package group
 
 import (
 	pb "api/talk_cloud"
+	"cache"
 	"database/sql"
 	"db"
 	"errors"
 	"fmt"
+	"github.com/gomodule/redigo/redis"
 	"github.com/smartwalle/dbs"
 	"log"
 	"model"
+	"pkg/user_friend"
+	tfd "pkg/user_friend"
+	"strconv"
+)
+
+const (
+	USER_OFFLINE = 1 // 用户离线
+	USER_ONLINE  = 2 // 用户在线
+
+	GROUP_MEMBER  = 1
+	GROUP_MANAGER = 2
+
+	USR_DATA_KEY_FMT = "usr:%d:data"
 )
 
 var dbConn = db.DBHandler
 
-func AddGroupMember(uid, gid int64, userType RoleType, db *sql.DB) error {
+func AddGroupMember(uid, gid int32, userType int, db *sql.DB) error {
 	if db == nil {
 		return fmt.Errorf("db is nil")
 	}
@@ -97,7 +112,7 @@ func ClearGroupMember(gid int32, db *sql.DB) error {
 }
 
 // 获取该用户在哪几个群组
-func GetGroupList(uid int32, db *sql.DB) (*pb.GroupListRsp, *map[int32]string, error) {
+func GetGroupListFromDB(uid int32, db *sql.DB) (*pb.GroupListRsp, *map[int32]string, error) {
 	if db == nil {
 		return nil, nil, errors.New("db is nil")
 	}
@@ -123,12 +138,65 @@ func GetGroupList(uid int32, db *sql.DB) (*pb.GroupListRsp, *map[int32]string, e
 		if err != nil {
 			return nil, nil, err
 		}
+
+		// 获取群组的管理员
+		group.GroupManager, _ = GetGroupManager(group.Gid, db)
+
+		// 当前用户是否在组
 		group.IsExist = true
+
+		// 获取群组中有哪些人
+		gMembers, err := GetGruopMembers(group.Gid, db)
+		if err != nil {
+			return nil, nil, err
+		}
+		// 查找当前用户好友，然后再群成员里面打标签
+		_, fMap, err := user_friend.GetFriendReqList(uid, db)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		for _, v := range gMembers {
+			if _, ok := (*fMap)[v.Uid]; ok {
+				v.IsFriend = true
+			}
+		}
+		group.UsrList = gMembers
 		gMap[group.Gid] = group.GroupName
+
 		groups.GroupList = append(groups.GroupList, group)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
 	return groups, &gMap, nil
+}
+
+// 去mysql数据库获取群组的群组id
+func GetGroupManager(gid int32, db *sql.DB) (int32, error) {
+	if db == nil {
+		return -1, fmt.Errorf("db is nil")
+	}
+
+	stmtOut, err := db.Prepare("SELECT uid FROM group_member WHERE role_type = ? AND  gid = ? LIMIT 1")
+	if err != nil {
+		log.Printf("DB error :%s", err)
+		return -1, err
+	}
+
+	var res int32
+	if err := stmtOut.QueryRow(GROUP_MANAGER, gid).Scan(&res); err != nil {
+		log.Printf("GetGroupManager err: %s", err)
+		return -1, nil
+	}
+
+	defer func() {
+		if err := stmtOut.Close(); err != nil {
+			log.Println("Statement close fail")
+		}
+	}()
+	return res, nil
 }
 
 func SearchGroup(target string, db *sql.DB) (*pb.GroupListRsp, error) {
@@ -151,21 +219,21 @@ func SearchGroup(target string, db *sql.DB) (*pb.GroupListRsp, error) {
 		if err != nil {
 			return nil, err
 		}
-    	group.IsExist = false
+		group.IsExist = false
 		groups.GroupList = append(groups.GroupList, group)
 	}
 
 	return groups, nil
 }
 
-// 查找当前管理员能管理的群组
-func GetGruopMembers(gid int32, db *sql.DB) (*pb.GrpMemberList, error) {
+// 查找当前群组所有的成员信息（在线信息去redis获取！！！）
+func GetGruopMembers(gid int32, db *sql.DB) ([]*pb.UserRecord, error) {
 	if db == nil {
 		return nil, fmt.Errorf("db is nil")
 	}
 
-	sql := fmt.Sprintf("SELECT u.id, u.name, u.user_type, gm.role_type "+
-		"FROM user AS u RIGHT JOIN group_member AS gm ON gm.uid=u.id WHERE gm.gid=%d AND gm.stat=1", gid)
+	sql := fmt.Sprintf("SELECT u.id, u.imei, u.name, u.user_type, u.lock_gid "+
+		"FROM user AS u INNER JOIN group_member AS gm ON gm.uid=u.id WHERE gm.gid=%d AND gm.stat=1", gid)
 
 	rows, err := db.Query(sql)
 	if err != nil {
@@ -175,20 +243,55 @@ func GetGruopMembers(gid int32, db *sql.DB) (*pb.GrpMemberList, error) {
 
 	defer rows.Close()
 
-	grpMems := new(pb.GrpMemberList)
-	grpMems.Gid = gid
+	grpMems := make([]*pb.UserRecord, 0)
 
 	for rows.Next() {
 		gm := new(pb.UserRecord)
-		err = rows.Scan(&gm.Uid, &gm.Name, &gm.UserType, &gm.GrpRole)
+		err = rows.Scan(&gm.Uid, &gm.Imei, &gm.Name, &gm.UserType, &gm.LockGroupId)
 		if err != nil {
 			return nil, err
 		}
-
-		grpMems.UsrList = append(grpMems.UsrList, gm)
+		gm.IsFriend = false
+		// 群成员的在线状态去redis取
+		_, err := getUserStatusFromCache(gm.Uid, cache.GetRedisClient())
+		if err != nil {
+			gm.Online = USER_OFFLINE
+		}
+		gm.Online = USER_ONLINE
+		grpMems = append(grpMems, gm)
 	}
 
 	return grpMems, nil
+}
+
+func MakeUserDataKey(uid int32) string {
+	return fmt.Sprintf(USR_DATA_KEY_FMT, uid)
+}
+
+// 获取用户状态
+func getUserStatusFromCache(uId int32, redisCli redis.Conn) (int32, error) {
+	if redisCli == nil {
+		return -1, errors.New("redis conn is nil")
+	}
+	defer redisCli.Close()
+
+	value, err := redisCli.Do("HGET", MakeUserDataKey(uId), "online")
+	if err != nil {
+		fmt.Println("hmget failed", err.Error())
+		return -1, err
+	}
+
+	log.Println("value :", value)
+	if value == nil {
+		return -1, errors.New("no find")
+	} else {
+		res, err := strconv.Atoi(string(value.([]byte)))
+		if err != nil {
+			fmt.Println("hmget failed", err.Error())
+			return -1, err
+		}
+		return int32(res), nil
+	}
 }
 
 // 查看
@@ -253,16 +356,16 @@ func CreateGroup(gl *model.GroupList, userType int) (int64, error) {
 	// 如果是1就是web用户 range 每个设备的id
 	if userType == 1 {
 		for _, v := range gl.DeviceInfo {
-			ib.Values(groupId, (v.(map[string]interface{}))["id"], 0)
+			ib.Values(groupId, (v.(map[string]interface{}))["id"], GROUP_MEMBER)
 		}
-		ib.Values(groupId, gl.GroupInfo.AccountId, 1)
+		ib.Values(groupId, gl.GroupInfo.AccountId, GROUP_MANAGER)
 	} else {
 		for _, v := range gl.DeviceIds {
-			if v !=  gl.GroupInfo.AccountId {
-				ib.Values(groupId, v, 0)
+			if v != gl.GroupInfo.AccountId {
+				ib.Values(groupId, v, GROUP_MEMBER)
 			}
 		}
-		ib.Values(groupId, gl.GroupInfo.AccountId, 1)  // 默认accountId属性作为group_member的群主，TODO 会有歧义，就是app用户创建的群组，调度员能否可见。
+		ib.Values(groupId, gl.GroupInfo.AccountId, GROUP_MANAGER) // 默认accountId属性作为group_member的群主，TODO 会有歧义，就是app用户创建的群组，调度员能否可见。
 	}
 
 	stmtInsGD, value, err := ib.ToSQL()
@@ -471,3 +574,44 @@ func UpdateGroupMember(gl *model.GroupList, userType int) (int64, error) {
 
 	return int64(gl.GroupInfo.Id), nil
 }
+
+// 获取单个群组信息
+func GetGroupInfoFromDB(gId, uId int32) (*pb.GroupInfo, error) {
+	log.Printf("have v")
+	// 说明是直接去数据库模糊搜索的，就去数据库获取这个群组的信息和成员 TODO
+	gInfo := &pb.GroupInfo{}
+	g, err := SelectGroupByKey(int(gId))
+	if err != nil {
+		log.Printf("selete group  error: %v", err)
+	}
+	gInfo.Gid, gInfo.GroupName = int32(g.Id), g.GroupName
+	if err != nil {
+		return nil, err
+	}
+
+	// 获取群组的管理员
+	gInfo.GroupManager, _ = GetGroupManager(gInfo.Gid, db.DBHandler)
+
+	// 当前用户是否在组
+	gInfo.IsExist = true
+
+	// 获取群组中有哪些人
+	gMembers, err := GetGruopMembers(gInfo.Gid, db.DBHandler)
+	if err != nil {
+		return nil, err
+	}
+	// 查找当前用户好友，然后再群成员里面打标签
+	_, fMap, err := tfd.GetFriendReqList(uId, db.DBHandler)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, v := range gMembers {
+		if _, ok := (*fMap)[v.Uid]; ok {
+			v.IsFriend = true
+		}
+	}
+	gInfo.UsrList = gMembers
+	return gInfo,nil
+}
+

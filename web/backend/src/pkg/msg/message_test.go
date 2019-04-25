@@ -39,7 +39,7 @@ func testAddMsg(t *testing.T) {
 func testAddMultiMsg(t *testing.T) {
 	if err := AddMultiMsg(&pb.ImMsgReqData{
 		Id:           333,
-		ReceiverType: 1, //group
+		ReceiverType: 2, //group
 		ReceiverId:   1,
 		ResourcePath: "http://www.baidu.com/1.jpg",
 		MsgType:      1,
@@ -48,8 +48,8 @@ func testAddMultiMsg(t *testing.T) {
 	}
 }
 
-func TestGetMsg(t *testing.T) {
-	if res, err := GetMsg(333, int32(0), db.DBHandler); err != nil {
+func testGetMsg(t *testing.T) {
+	if res, err := GetMsg(1503, int32(1), db.DBHandler); err != nil {
 		log.Println("Test Get offline msg error")
 	} else {
 		log.Printf("Offline msg: %v", res)

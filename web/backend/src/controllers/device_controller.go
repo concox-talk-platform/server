@@ -9,6 +9,7 @@ package controllers
 
 import (
 	pb "api/talk_cloud"
+	"configs"
 	"context"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -49,7 +50,7 @@ func ImportDeviceByRoot(c * gin.Context) {
 	}
 
 	log.Println("ImportDeviceByRoot start rpc")
-	conn, err := client_pool.GetConn(service.Addr)
+	conn, err := client_pool.GetConn(configs.GrpcAddr)
 	if err != nil {
 		log.Printf("grpc.Dial err : %v", err)
 	}

@@ -7,6 +7,7 @@ package controllers
 
 import (
 	pb "api/talk_cloud"
+	"configs"
 	"context"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -46,7 +47,7 @@ func UpdateGroupDevice(c *gin.Context) {
 
 	// 更新群组
 	log.Println("update group start rpc")
-	conn, err := client_pool.GetConn(service.Addr)
+	conn, err := client_pool.GetConn(configs.GrpcAddr)
 	if err != nil {
 		log.Printf("grpc.Dial err : %v", err)
 	}
@@ -136,7 +137,7 @@ func CreateGroup(c *gin.Context) {
 
 	// 创建群组
 	log.Println("start rpc")
-	conn, err := client_pool.GetConn(service.Addr)
+	conn, err := client_pool.GetConn(configs.GrpcAddr)
 	if err != nil {
 		log.Printf("grpc.Dial err : %v", err)
 	}
@@ -250,7 +251,7 @@ func DeleteGroup(c *gin.Context) {
 		return
 	}
 	log.Println("start rpc")
-	conn, err := client_pool.GetConn(service.Addr)
+	conn, err := client_pool.GetConn(configs.GrpcAddr)
 	if err != nil {
 		log.Printf("grpc.Dial err : %v", err)
 	}
