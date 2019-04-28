@@ -87,14 +87,14 @@ type Device struct {
 	LLTime     string  `json:"last_login_time"`
 	ChangeTime string  `json:"change_time"`
 	LocalTime  uint64  `json:"local_time"`
-	GPSData    *GPS     `json:"gps_data"`
+	GPSData    *GPS    `json:"gps_data"`
 	Speed      float32 `json:"speed"`
 	Course     float32 `json:"course"`
 }
 
 type GPS struct {
 	Lng float64 `json:"lng"`
-	Lat  float64 `json:"lat"`
+	Lat float64 `json:"lat"`
 }
 
 // User
@@ -186,16 +186,24 @@ type AccountUpdate struct {
 	Contact  string `json:"contact"`
 }
 
-type UpLoadFileParmas struct {
-	Id           int `json:"id"`
-	ReceiverType int `json:"receiver_type"` // 0代表发给单人， 1代表发给群组
-	ReceiverId   int `json:"receiver_id"`
-}
-
 type ImMsgData struct {
 	Id           int    `json:"id"`
 	ReceiverType int    `json:"ReceiverType"`
 	ReceiverId   int    `json:"ReceiverId"`
+	ReceiverName string `json:"ReceiverName"`
 	ResourcePath string `json:"ResourcePath"`
 	MsgType      int    `json:"MsgType"`
+	SendTime     string `json:"SendTime"`
+}
+
+type FileContext struct {
+	UserId         int
+	FilePath       string
+	FileType       int32
+	FileParams     *ImMsgData
+	FileName       string
+	FileSize       int
+	FileMD5        string
+	FileFastId     string
+	FileUploadTime string
 }

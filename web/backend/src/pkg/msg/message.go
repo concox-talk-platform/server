@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"github.com/smartwalle/dbs"
 	"log"
+	"server/web/backend/src/pkg/location"
 	"strconv"
 	"time"
 )
@@ -24,6 +25,9 @@ const (
 	AUDIO                     // 音频
 	VIDEO                     // 视频
 	LOCATION                  // 位置
+
+	IM_MSG_FROM_UPLOAD_RECEIVER_IS_USER  = 1 // APP和web通过httpClient上传的IM信息是发给个人
+	IM_MSG_FROM_UPLOAD_RECEIVER_IS_GROUP = 2 // APP和web通过httpClient上传的IM信息是发给群组
 )
 
 type MsgData struct {
@@ -52,9 +56,9 @@ func AddMsg(msg *pb.ImMsgReqData, db *sql.DB) error {
 		return fmt.Errorf("db is nil")
 	}
 
-	timeStr := time.Now().Format("2006-01-02 15:04:05")
-	sql := fmt.Sprintf("INSERT INTO message(sender_id, receiver_id, receiver_type, msg_type, content, create_time) "+
-		"VALUES(%d,%d,%d,'%d','%s','%s')", msg.Id, msg.ReceiverId, msg.ReceiverType, msg.MsgType, msg.ResourcePath, timeStr)
+	timeStr := time.Now().Format(configs.TimeLayout)
+	sql := fmt.Sprintf("INSERT INTO message(sender_id, send_time, recv_name, receiver_id, receiver_type, msg_type, content, create_time) "+
+		"VALUES(%d,'%s','%s',%d,%d,'%d','%s','%s')", msg.Id, msg.SendTime, msg.ReceiverName, msg.ReceiverId, msg.ReceiverType, msg.MsgType, msg.ResourcePath, timeStr)
 
 	_, err := db.Query(sql)
 	if err != nil {
@@ -71,10 +75,10 @@ func AddMultiMsg(msg *pb.ImMsgReqData, receiverId []int32, db *sql.DB) error {
 	}
 
 	ib := dbs.NewInsertBuilder()
-	ib.Table("message").Columns("sender_id", "receiver_id", "receiver_type", "gid", "msg_type", "content", "create_time")
+	ib.Table("message").Columns("sender_id", "send_time", "recv_name", "receiver_id", "receiver_type", "gid", "msg_type", "content", "create_time")
 	for _, v := range receiverId {
-		ib.Values(msg.Id, v, msg.ReceiverType, msg.ReceiverId, msg.MsgType, msg.ResourcePath,
-			time.Now().Format("2006-01-02 15:04:05"))
+		ib.Values(msg.Id, msg.SendTime, msg.ReceiverName, v, msg.ReceiverType, msg.ReceiverId, msg.MsgType, msg.ResourcePath,
+			time.Now().Format(configs.TimeLayout))
 	}
 	stmtIns, values, err := ib.ToSQL()
 	if err != nil {
@@ -93,7 +97,7 @@ func GetMsg(uid int32, stat int32, db *sql.DB) ([]*pb.ImMsgReqData, error) {
 		return nil, fmt.Errorf("db is nil")
 	}
 
-	sql := fmt.Sprintf(`SELECT sender_id, receiver_id, receiver_type, msg_type, content 
+	sql := fmt.Sprintf(`SELECT sender_id, send_time, recv_name, receiver_id, receiver_type, gid, msg_type, content
 		FROM message WHERE receiver_id=%d AND stat=%d`, uid, stat)
 	rows, err := db.Query(sql)
 	if err != nil {
@@ -105,9 +109,20 @@ func GetMsg(uid int32, stat int32, db *sql.DB) ([]*pb.ImMsgReqData, error) {
 
 	data := make([]*pb.ImMsgReqData, 0)
 
+	var (
+		receiverId int32
+		gid        int32
+	)
 	for rows.Next() {
 		msg := new(pb.ImMsgReqData)
-		err = rows.Scan(&msg.Id, &msg.ReceiverId, &msg.ReceiverType, &msg.MsgType, &msg.ResourcePath)
+		err = rows.Scan(&msg.Id, &msg.SendTime, &msg.ReceiverName, &receiverId, &msg.ReceiverType, &gid, &msg.MsgType, &msg.ResourcePath)
+		if msg.ReceiverType == IM_MSG_FROM_UPLOAD_RECEIVER_IS_GROUP {
+			msg.ReceiverId = gid
+		}
+		if msg.ReceiverType == IM_MSG_FROM_UPLOAD_RECEIVER_IS_USER {
+			msg.ReceiverId = receiverId
+		}
+
 		if err != nil {
 			log.Printf("Scan message error: %s\n", err)
 			continue

@@ -14,12 +14,12 @@ import (
 )
 
 var (
-	WebPort       string
-
-	GrpcAddr      string
-
-	FILE_BASE_DIR string
-	FILE_BASE_URL string
+	WebPort           string // web api的监听端口
+	GrpcAddr          string // grpc服务端的地址（包含端口）， 主要用于web模块调用grpc服务
+	FILE_BASE_URL     string // 保存文件到fastdfs服务器之后的访问前缀（ip、域名）
+	TrackerServerAddr string // fastdfs的tracker服务器的地址（包含ip）
+	MaxConn           int    // fastdfs上传文件的最大连接数
+	TimeLayout        string // 时间模板
 )
 
 func init() {
@@ -30,8 +30,13 @@ func init() {
 	}
 	WebPort = cfg.Section("web_api").Key("port").String()
 
-	FILE_BASE_DIR = cfg.Section("upload_file").Key("save_path").String()
 	FILE_BASE_URL = cfg.Section("upload_file").Key("save_path_url").String()
 
 	GrpcAddr = cfg.Section("grpc").Key("addr").String()
+
+	//fastdfs
+	TrackerServerAddr = cfg.Section("fastdfs").Key("tracker_server").String()
+	MaxConn, _ = cfg.Section("fastdfs").Key("maxConns").Int()
+
+	TimeLayout = cfg.Section("time").Key("layout").String()
 }

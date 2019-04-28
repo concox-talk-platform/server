@@ -2,6 +2,7 @@ package user
 
 import (
 	pb "api/talk_cloud"
+	"configs"
 	"database/sql"
 	"db"
 	"errors"
@@ -27,7 +28,7 @@ func AddUser(u *model.User, db ...interface{}) error {
 	stmtInsB.SET("nick_name", u.NickName) // 注册的时候默认把username当做昵称
 	stmtInsB.SET("user_type", 1)
 	t := time.Now()
-	ctime := t.Format("2006-1-2 15:04:05")
+	ctime := t.Format(configs.TimeLayout)
 	stmtInsB.SET("last_login_time", ctime)
 	stmtInsB.SET("create_time", ctime)
 

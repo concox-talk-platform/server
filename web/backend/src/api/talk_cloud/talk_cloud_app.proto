@@ -150,8 +150,14 @@ message ImMsgReqData {
     // 资源文件路径，app端发送文字信息，就把文字内容放在这里
     string ResourcePath = 4;
 
-    // 消息类型 	1 普通文本   2 图片  3  音频文件  4 视频文件  5 PDF文件
+    // im消息类型 	1 普通文本   2 图片  3  音频文件  4 视频文件  5 PDF文件
     int32 MsgType = 5;
+
+    // 接收者名字
+    string ReceiverName = 6;
+
+    // 消息发送时间
+    string SendTime = 7;
 }
 
 // 上传文件之后返回给web api的相应
@@ -244,7 +250,8 @@ message OfflineImMsgResp {
 }
 message OfflineImMsg {
     int32 SenderId = 1;
-    repeated ImMsgReqData imMsgData = 2;
+    repeated ImMsgReqData imMsgSingleData = 2;
+    repeated ImMsgReqData imMsgGroupData = 3;
 }
 
 message FirstLoginData {

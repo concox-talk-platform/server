@@ -9,24 +9,28 @@ package controllers
 
 import (
 	pb "api/talk_cloud"
+	"configs"
 	"context"
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"google.golang.org/grpc"
 	"io/ioutil"
 	"log"
+	"mime/multipart"
 	"model"
 	"net/http"
-	"os"
-	"server/web/backend/src/configs"
-	"service/client_pool"
+	tfi "pkg/file_info"
+	"service/fdfs_client"
+	"service/grpc_client_pool"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
-
-	//"sync"
 	"utils"
 )
 
@@ -41,11 +45,10 @@ var imFileMap sync.Map
 const (
 	MAX_UPLOAD_SIZE = 1024 * 1024 * 500 // 1024 byte * 1024 * 500 = 500mb
 
-	FIRST_LOGIN_DATA   = 1 // 初次登录返回的数据。比如用户列表，群组列表，该用户的个人信息
-	OFFLINE_IM_MSG     = 2 // 用户离线时的IM数据
+	FIRST_LOGIN_DATA                = 1 // 初次登录返回的数据。比如用户列表，群组列表，该用户的个人信息
+	OFFLINE_IM_MSG                  = 2 // 用户离线时的IM数据
 	IM_MSG_FROM_UPLOAD_OR_WS_OR_APP = 3 // APP和web通过httpClient上传的IM信息
-	IM_MSG_FROM_WS     = 4 // web端发过来的消息 // 调度员
-	KEEP_ALIVE_MSG     = 5 // 用户登录后，每隔interval秒向stream发送一个消息，测试能不能连通
+	KEEP_ALIVE_MSG                  = 4 // 用户登录后，每隔interval秒向stream发送一个消息，测试能不能连通
 
 	IM_MSG_WORKDONE  = 1
 	IM_MSG_WORKWRONG = -1
@@ -67,13 +70,6 @@ type worker struct {
 	WorkerDone chan int
 }
 
-type fileContext struct {
-	filePath   string
-	fileType   int32
-	fileParams *model.ImMsgData
-	fileName   string
-}
-
 func init() {
 	imFileMap.Store("jpg", IM_IMAGE_MSG) //JPEG (jpg)
 	imFileMap.Store("png", IM_IMAGE_MSG) //PNG (png)
@@ -84,6 +80,7 @@ func init() {
 	imFileMap.Store("rmvb", IM_VIDEO_MSG) //rmvb/rm相同
 	imFileMap.Store("flv", IM_VIDEO_MSG)  //flv与f4v相同
 	imFileMap.Store("mp4", IM_VIDEO_MSG)
+	imFileMap.Store("3gp", IM_VIDEO_MSG)
 	imFileMap.Store("mpg", IM_VIDEO_MSG) //
 	imFileMap.Store("wmv", IM_VIDEO_MSG) //wmv与asf相同
 
@@ -112,20 +109,22 @@ func UploadFile(c *gin.Context) {
 		return
 	}
 
-	log.Println("url: ", fContext.filePath, "fParams: ", fContext.fileParams)
+	log.Println("url: ", fContext.FilePath, "fParams: ", fContext.FileParams)
 	// 调用调用GRPC接口，转发数据
-	conn, err := client_pool.GetConn(configs.GrpcAddr)
+	conn, err := grpc_client_pool.GetConn(configs.GrpcAddr)
 	if err != nil {
 		log.Printf("grpc.Dial err : %v", err)
 	}
 	webCli := pb.NewTalkCloudClient(conn)
 
 	res, err := webCli.ImMessagePublish(context.Background(), &pb.ImMsgReqData{
-		Id:           int32(fContext.fileParams.Id),
-		ReceiverType: int32(fContext.fileParams.ReceiverType),
-		ReceiverId:   int32(fContext.fileParams.ReceiverId),
-		ResourcePath: fContext.filePath,
-		MsgType:      fContext.fileType,
+		Id:           int32(fContext.FileParams.Id),
+		ReceiverType: int32(fContext.FileParams.ReceiverType),
+		ReceiverId:   int32(fContext.FileParams.ReceiverId),
+		ResourcePath: fContext.FilePath,
+		MsgType:      fContext.FileType,
+		ReceiverName: fContext.FileParams.ReceiverName,
+		SendTime:     fContext.FileParams.SendTime,
 	})
 	if err != nil {
 		c.JSON(http.StatusCreated, gin.H{"msg": "Uploaded File, please try again later.", "code": 001})
@@ -135,8 +134,8 @@ func UploadFile(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{
 		"msg":          "Uploaded successfully",
 		"code":         res.Result.Code,
-		"resourcePath": fContext.filePath,
-		"resourceName": fContext.fileName,
+		"resourcePath": fContext.FilePath,
+		"resourceName": fContext.FileName,
 	})
 }
 
@@ -155,17 +154,20 @@ func uploadFilePre(c *gin.Context) error {
 }
 
 // 文件存储
-func fileStore(c *gin.Context) (*fileContext, error) {
+func fileStore(c *gin.Context) (*model.FileContext, error) {
 	file, header, err := c.Request.FormFile("file") // TODO 会报空针
 	if err != nil {
 		log.Println("fileStore err: ", err)
 		return nil, err
 	}
-
+	uploadT := time.Now().Format(configs.TimeLayout)
 	// 获取上传文件所带参数
 	id, _ := strconv.ParseInt(c.Request.FormValue("id"), 10, 32)
 	receiverType, _ := strconv.ParseInt(c.Request.FormValue("ReceiverType"), 10, 64)
 	receiverId, _ := strconv.ParseInt(c.Request.FormValue("ReceiverId"), 10, 64)
+	receiverName := c.Request.FormValue("ReceiverName")
+	sTime := c.Request.FormValue("SendTime")
+
 	//简单做一下数据判断
 	if id <= 0 || receiverId <= 0 || receiverType <= 0 {
 		return nil, errors.New("file param is cant be nil")
@@ -175,53 +177,72 @@ func fileStore(c *gin.Context) (*fileContext, error) {
 		Id:           int(id),
 		ReceiverType: int(receiverType),
 		ReceiverId:   int(receiverId),
+		ReceiverName: receiverName,
+		SendTime:     sTime,
 	}
 	log.Printf("file params: %+v", fParams)
-
-	// 创建多级目录
-	uIMDir := configs.FILE_BASE_DIR + strconv.Itoa(fParams.Id) + "/"
-	if err := os.MkdirAll(uIMDir, os.ModePerm); err != nil {
-		log.Println("upload file mkdir error: ", err)
-		return nil, err
-	}
 
 	//写入文件
 	fName := strconv.FormatInt(int64(fParams.Id), 10) + "_" +
 		strconv.FormatInt(time.Now().Unix(), 10) + "_" +
 		header.Filename
-	out, err := os.Create(uIMDir + fName)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		_ = out.Close()
-	}()
 
 	fSrc, err := ioutil.ReadAll(file)
 	if err != nil {
 		log.Println("read file error: ", err)
 		return nil, err
 	}
+	fileType, fExtName := getImFileType(&fSrc, header)
 
-	fileType, err := getImFileType(&fSrc)
-	if err := ioutil.WriteFile(uIMDir+fName, fSrc, 0777); err != nil {
+	// 先检验文件的hash值，避免重复上传
+	md5h := md5.New()
+	md5h.Write(fSrc)
+	fMd5 := hex.EncodeToString(md5h.Sum([]byte("")))
+	fmt.Printf("this file md5: %s", hex.EncodeToString(md5h.Sum([]byte("")))) //md5
+
+	// 存储文件到fastdfs
+	client, err := fdfs_client.NewClientWithConfig()
+	if err != nil {
+		log.Println("NewClientWithConfig fastdfs error: ", err)
+		return nil, err
+	}
+	defer client.Destory()
+	fileId, err := client.UploadByBuffer(fSrc, fExtName)
+	if err != nil {
+		log.Println("UploadByBuffer to fastdfs error: ", err)
+		return nil, err
+	}
+	log.Printf("file size: %d ", len(fSrc))
+
+	fContext := &model.FileContext{
+		UserId:         fParams.Id,
+		FilePath:       configs.FILE_BASE_URL + fileId,
+		FileParams:     fParams,
+		FileType:       fileType,
+		FileName:       fName,
+		FileSize:       len(fSrc),
+		FileMD5:        fMd5,
+		FileFastId:     fileId,
+		FileUploadTime: uploadT,
+	}
+
+	// 记录存储到mysql
+	if err := tfi.AddFileInfo(fContext); err != nil {
+		log.Printf("Add file info to mysql error: %s", err.Error())
 		return nil, err
 	}
 
-	return &fileContext{
-		// 判断文件类型
-		// 获取文件类型
-		filePath:   configs.FILE_BASE_URL + strconv.Itoa(fParams.Id) + "/" + fName,
-		fileParams: fParams,
-		fileType:   fileType,
-		fileName:   fName,
-	}, nil
+	return fContext, nil
 }
 
 // 获取Im上传文件类型
-func getImFileType(fSrc *[]byte) (int32, error) {
+func getImFileType(fSrc *[]byte, header *multipart.FileHeader) (int32, string) {
 	// 判断文件类型
-	fType := utils.GetFileType((*fSrc)[:10])
+	//fType := utils.GetFileType((*fSrc)[:10])
+
+	fNameStr := strings.Split(header.Filename, ".")
+	fType := fNameStr[len(fNameStr)-1]
+
 	log.Println("get file fType: ", fType)
 	var fileType int32 = IM_UNKNOWN_TYPE_MSG
 	imFileMap.Range(func(key, value interface{}) bool {
@@ -232,7 +253,7 @@ func getImFileType(fSrc *[]byte) (int32, error) {
 		}
 		return true
 	})
-	return fileType, nil
+	return fileType, fType
 }
 
 // websocket与grpc交换数据
@@ -336,10 +357,12 @@ func pushImMessage(imw *worker) {
 		// 发送给GRPC
 		if err := (*imw.cliStream).Send(&pb.StreamRequest{
 			Uid:      int32(imw.uId),
-			DataType: IM_MSG_FROM_WS,
+			DataType: IM_MSG_FROM_UPLOAD_OR_WS_OR_APP,
 			ImMsg: &pb.ImMsgReqData{
 				Id:           int32(wsImMsg.Id),
 				ReceiverId:   int32(wsImMsg.ReceiverId),
+				ReceiverName: wsImMsg.ReceiverName,
+				SendTime:     wsImMsg.SendTime,
 				ReceiverType: int32(wsImMsg.ReceiverType),
 				ResourcePath: wsImMsg.ResourcePath, // 文本消息直接放路劲这个字段
 				MsgType:      int32(wsImMsg.MsgType),
@@ -382,8 +405,16 @@ func sendImMessage(imw *worker) {
 		if resp.DataType == OFFLINE_IM_MSG {
 			// 把中文转换为utf-8
 			for _, msg := range resp.OfflineImMsgResp.OfflineImMsgs {
-				for _, userMsg := range msg.ImMsgData {
-					userMsg.ResourcePath = utils.ConvertOctonaryUtf8(userMsg.ResourcePath)
+				if msg.ImMsgGroupData != nil {
+					for _, userMsg := range msg.ImMsgGroupData {
+						userMsg.ResourcePath = utils.ConvertOctonaryUtf8(userMsg.ResourcePath)
+					}
+				}
+
+				if msg.ImMsgSingleData != nil {
+					for _, userMsg := range msg.ImMsgSingleData {
+						userMsg.ResourcePath = utils.ConvertOctonaryUtf8(userMsg.ResourcePath)
+					}
 				}
 			}
 
@@ -397,8 +428,6 @@ func sendImMessage(imw *worker) {
 				break
 			}
 		}
-
-
 
 		if resp.DataType == OFFLINE_IM_MSG {
 			log.Println(resp)

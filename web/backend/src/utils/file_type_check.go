@@ -20,6 +20,7 @@ var fileTypeMap sync.Map
 
 func init() {
 	fileTypeMap.Store("ffd8ffe000104a464946", "jpg")  //JPEG (jpg)
+	fileTypeMap.Store("ffd8ffe", "jpg")  //JPEG (jpg)
 	fileTypeMap.Store("89504e470d0a1a0a0000", "png")  //PNG (png)
 	fileTypeMap.Store("47494638396126026f01", "gif")  //GIF (gif)
 	fileTypeMap.Store("49492a00227105008037", "tif")  //TIFF (tif)
@@ -42,8 +43,11 @@ func init() {
 	fileTypeMap.Store("255044462d312e350d0a", "pdf")  //Adobe Acrobat (pdf)
 	fileTypeMap.Store("2e524d46000000120001", "rmvb") //rmvb/rm相同
 	fileTypeMap.Store("464c5601050000000900", "flv")  //flv与f4v相同
-	fileTypeMap.Store("00000020667479706d70", "mp4")
-	fileTypeMap.Store("0000001c667479706d70", "mp4")
+	fileTypeMap.Store("00000020667479706", "mp4")
+	fileTypeMap.Store("00000020667479706", "mp4")
+	fileTypeMap.Store("0000001c667479706", "mp4")
+	fileTypeMap.Store("00000018667479706d70", "mp4")
+	fileTypeMap.Store("00000018667479703367", "3gp")
 	fileTypeMap.Store("494433030000000", "mp3")
 	fileTypeMap.Store("000001ba210001000180", "mpg") //
 	fileTypeMap.Store("3026b2758e66cf11a6d9", "wmv") //wmv与asf相同

@@ -6,6 +6,7 @@
 package customer
 
 import (
+	"configs"
 	"database/sql"
 	"log"
 	"model"
@@ -22,8 +23,7 @@ func AddAccount(a *model.CreateAccount) (int, error) {
 		log.Println("事物开启失败")
 	}
 
-	t := time.Now()
-	ctime := t.Format("2006-1-2 15:04:05")
+	ctime := time.Now().Format(configs.TimeLayout)
 	u := &model.User{
 		IMei:       "1",
 		UserName:   a.Username,
@@ -238,7 +238,7 @@ func UpdateAccount(a *model.AccountUpdate) error {
 	cusUpdStmt := "UPDATE customer SET remark = ?, address = ?, email = ?, phone = ?, contact = ?, change_time = ? WHERE uid = ?"
 
 	t := time.Now()
-	ctime := t.Format("2006-1-2 15:04:05")
+	ctime := t.Format(configs.TimeLayout)
 
 	userRes, err := tx.Exec(userUpdStmt, a.NickName, ctime, a.Id)
 	if err != nil {

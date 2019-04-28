@@ -12,6 +12,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"log"
 	"model"
 	"net/http"
@@ -223,7 +225,7 @@ func pushDataDispatcher(dc *DataContent, ds DataSource) error {
 		if v, ok := dc.StreamMap.Load(data.Uid); ok && v != srv {
 			log.Printf("this here %+v, %+v", v, srv)
 			dc.ExceptionalLogin <- data.Uid
-			log.Println("this user is login already")
+			log.Printf("this user # %d is login already", data.Uid)
 			return errors.New("the user is login already")
 		}
 		// 更新stream和redis状态
@@ -327,17 +329,19 @@ func processErrorSendMsg(err error, dc *DataContent, receiverId int32, resp *pb.
 	log.Println("send msg fail with error: ", err)
 
 	// 判断错误类型
-	//if errSC, _ := status.FromError(err); errSC.Code() == codes.Unavailable {
+	if errSC, _ := status.FromError(err); errSC.Code() == codes.Unavailable  || errSC.Code() == codes.Canceled{
 		// 1. 只要是发送失败，就认为对方离线，如果是发送Im数据，就保存到数据库
 		dc.KeepAliveClose <- int(receiverId)
 
 		// 删除map中的stream
 		dc.StreamMap.Delete(receiverId)
+		log.Printf("# user %d is logout", receiverId)
 		// 更新redis状态
 		if err := tuc.UpdateOnlineInCache(&pb.Member{Id: receiverId, Online: USER_OFFLINE}, cache.GetRedisClient()); err != nil {
 			log.Println("Update user online state error:", err)
 		}
 
+		log.Printf("%=v ---- %+v start add offline msg: ", resp, dc)
 		if resp.DataType != OFFLINE_IM_MSG && dc.senderId != receiverId {
 			// 把发送数据保存进数据库, 如果是离线数据就忽略
 			// TODO 有个问题，如果发送的时候，还在线，函数走到这里，就掉线了， 但是发送方收到的回复仍然是已发送，发送方能看见的只有该用户已离线的状态
@@ -346,7 +350,7 @@ func processErrorSendMsg(err error, dc *DataContent, receiverId int32, resp *pb.
 				log.Println("Send fail and add offline msg with error: ", err)
 			}
 		}
-	//}
+	}
 }
 
 // 初次登录应该返回的数据
@@ -592,12 +596,22 @@ func GetOfflineImMsgFromDB(req *pb.StreamRequest) (*pb.StreamResponse, error) {
 	for _, msg := range offlineMsg {
 		if v, ok := idIndexMap[msg.Id]; ok {
 			// 已经发现了这个用户的一条消息，那么就把消息加到对应的切片下的
-			respPackage[v].ImMsgData = append(respPackage[v].ImMsgData, msg)
+			if msg.ReceiverType == IM_MSG_FROM_UPLOAD_RECEIVER_IS_USER {
+				respPackage[v].ImMsgSingleData = append(respPackage[v].ImMsgSingleData, msg)
+			}
+			if msg.ReceiverType == IM_MSG_FROM_UPLOAD_RECEIVER_IS_GROUP {
+				respPackage[v].ImMsgGroupData = append(respPackage[v].ImMsgGroupData, msg)
+			}
 		} else {
 			// 首次找到这个用户的第一条消息，就respPackage添加一个slice，并记录index
 			var userMsgs = &pb.OfflineImMsg{
 				SenderId:  msg.Id,
-				ImMsgData: append(make([]*pb.ImMsgReqData, 0), msg),
+			}
+			if msg.ReceiverType == IM_MSG_FROM_UPLOAD_RECEIVER_IS_USER {
+				userMsgs.ImMsgSingleData = append(make([]*pb.ImMsgReqData, 0), msg)
+			}
+			if msg.ReceiverType == IM_MSG_FROM_UPLOAD_RECEIVER_IS_GROUP {
+				userMsgs.ImMsgGroupData = append(make([]*pb.ImMsgReqData, 0), msg)
 			}
 			respPackage = append(respPackage, userMsgs)
 			idIndexMap[msg.Id] = index

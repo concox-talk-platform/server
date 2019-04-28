@@ -12,6 +12,7 @@ import (
 	"database/sql"
 	"github.com/smartwalle/dbs"
 	"log"
+	"server/web/backend/src/configs"
 	"strconv"
 	"strings"
 	"time"
@@ -34,7 +35,6 @@ bt_sth int(12) NULL蓝牙的信号强度
 create_time timestamp NOT NULL记录存入数据库的时间
 */
 // 插入GPS数据
-const TimeLayout = "2006-01-02 15:04:05"
 
 func InsertLocationData(req *pb.ReportDataReq, db *sql.DB) error {
 	log.Printf("receive gps data from app: %+v", req)
@@ -77,5 +77,5 @@ func ParseCourseSpeed(cseSpeed string) (int32, float32) {
 }
 
 func convertTimeUnix(t uint64) string {
-	return time.Unix(int64(t), 0).Format(TimeLayout)
+	return time.Unix(int64(t), 0).Format(configs.TimeLayout)
 }
