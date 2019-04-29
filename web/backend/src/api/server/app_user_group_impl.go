@@ -231,7 +231,6 @@ func (serv *TalkCloudServiceImpl) JoinGroup(ctx context.Context, req *pb.GrpUser
 }
 
 func (serv *TalkCloudServiceImpl) GetGroupList(ctx context.Context, req *pb.GrpListReq) (*pb.GroupListRsp, error) {
-	// 先去缓存取，取不出来再去mysql取
 	log.Println("Get GroupList start")
 	// 先去缓存取，取不出来再去mysql取
 	gl, err := tuc.GetGroupListFromRedis(int32(req.Uid), cache.GetRedisClient())
@@ -241,7 +240,7 @@ func (serv *TalkCloudServiceImpl) GetGroupList(ctx context.Context, req *pb.GrpL
 		return &pb.GroupListRsp{Res: &pb.Result{Code: 500, Msg: "process error, please try again"}}, err
 	}
 
-	// TODO 有一个隐藏问题，redis如果只有一部分数据
+
 	if err == sql.ErrNoRows {
 		log.Println("redis is not find， start to mysql query")
 		for {

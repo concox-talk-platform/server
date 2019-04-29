@@ -9,7 +9,8 @@ package controllers
 
 import (
 	pb "api/talk_cloud"
-	"configs"
+	cfgComm "configs/common"
+	cfgWs "configs/web_server"
 	"context"
 	"crypto/md5"
 	"encoding/hex"
@@ -111,7 +112,7 @@ func UploadFile(c *gin.Context) {
 
 	log.Println("url: ", fContext.FilePath, "fParams: ", fContext.FileParams)
 	// 调用调用GRPC接口，转发数据
-	conn, err := grpc_client_pool.GetConn(configs.GrpcAddr)
+	conn, err := grpc_client_pool.GetConn(cfgWs.GrpcAddr)
 	if err != nil {
 		log.Printf("grpc.Dial err : %v", err)
 	}
@@ -119,6 +120,7 @@ func UploadFile(c *gin.Context) {
 
 	res, err := webCli.ImMessagePublish(context.Background(), &pb.ImMsgReqData{
 		Id:           int32(fContext.FileParams.Id),
+		SenderName:   fContext.FileParams.SenderName,
 		ReceiverType: int32(fContext.FileParams.ReceiverType),
 		ReceiverId:   int32(fContext.FileParams.ReceiverId),
 		ResourcePath: fContext.FilePath,
@@ -160,9 +162,10 @@ func fileStore(c *gin.Context) (*model.FileContext, error) {
 		log.Println("fileStore err: ", err)
 		return nil, err
 	}
-	uploadT := time.Now().Format(configs.TimeLayout)
+	uploadT := time.Now().Format(cfgComm.TimeLayout)
 	// 获取上传文件所带参数
 	id, _ := strconv.ParseInt(c.Request.FormValue("id"), 10, 32)
+	senderName := c.Request.FormValue("SenderName")
 	receiverType, _ := strconv.ParseInt(c.Request.FormValue("ReceiverType"), 10, 64)
 	receiverId, _ := strconv.ParseInt(c.Request.FormValue("ReceiverId"), 10, 64)
 	receiverName := c.Request.FormValue("ReceiverName")
@@ -175,6 +178,7 @@ func fileStore(c *gin.Context) (*model.FileContext, error) {
 
 	fParams := &model.ImMsgData{
 		Id:           int(id),
+		SenderName:   senderName,
 		ReceiverType: int(receiverType),
 		ReceiverId:   int(receiverId),
 		ReceiverName: receiverName,
@@ -216,7 +220,7 @@ func fileStore(c *gin.Context) (*model.FileContext, error) {
 
 	fContext := &model.FileContext{
 		UserId:         fParams.Id,
-		FilePath:       configs.FILE_BASE_URL + fileId,
+		FilePath:       cfgWs.FILE_BASE_URL + fileId,
 		FileParams:     fParams,
 		FileType:       fileType,
 		FileName:       fName,
@@ -264,7 +268,7 @@ func ImPush(c *gin.Context) {
 	log.Println("im push uid :", uid)
 
 	// 调用调用GRPC接口，转发数据
-	conn, err := grpc.Dial(configs.GrpcAddr, grpc.WithInsecure())
+	conn, err := grpc.Dial(cfgWs.GrpcAddr, grpc.WithInsecure())
 	if err != nil {
 		log.Printf("grpc.Dial err : %v", err)
 	}
@@ -360,6 +364,7 @@ func pushImMessage(imw *worker) {
 			DataType: IM_MSG_FROM_UPLOAD_OR_WS_OR_APP,
 			ImMsg: &pb.ImMsgReqData{
 				Id:           int32(wsImMsg.Id),
+				SenderName:   wsImMsg.SenderName,
 				ReceiverId:   int32(wsImMsg.ReceiverId),
 				ReceiverName: wsImMsg.ReceiverName,
 				SendTime:     wsImMsg.SendTime,

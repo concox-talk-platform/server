@@ -12,7 +12,7 @@ import (
 	"database/sql"
 	"github.com/smartwalle/dbs"
 	"log"
-	"server/web/backend/src/configs"
+	cfgComm "configs/common"
 	"strconv"
 	"strings"
 	"time"
@@ -77,5 +77,5 @@ func ParseCourseSpeed(cseSpeed string) (int32, float32) {
 }
 
 func convertTimeUnix(t uint64) string {
-	return time.Unix(int64(t), 0).Format(configs.TimeLayout)
+	return time.Unix(int64(t), 0).Format(cfgComm.TimeLayout)
 }

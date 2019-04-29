@@ -188,6 +188,7 @@ type AccountUpdate struct {
 
 type ImMsgData struct {
 	Id           int    `json:"id"`
+	SenderName   string `json:"SenderName"`
 	ReceiverType int    `json:"ReceiverType"`
 	ReceiverId   int    `json:"ReceiverId"`
 	ReceiverName string `json:"ReceiverName"`

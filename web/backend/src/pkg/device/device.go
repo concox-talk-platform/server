@@ -6,7 +6,7 @@
 package device
 
 import (
-	"configs"
+	cfgComm "configs/common"
 	"db"
 	"github.com/smartwalle/dbs"
 	"log"
@@ -24,7 +24,7 @@ func ImportDevice(u []*model.User) error {
 	ib.Columns("imei", "name", "passwd", "cid", "pid", "nick_name", "user_type", "last_login_time", "create_time")
 	for _, v := range u {
 		t := time.Now()
-		ctime := t.Format(configs.TimeLayout)
+		ctime := t.Format(cfgComm.TimeLayout)
 		ib.Values(v.IMei, v.UserName, v.PassWord, v.AccountId, v.ParentId, v.UserName, 1, ctime, ctime)
 	}
 

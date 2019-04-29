@@ -1,6 +1,6 @@
 package fdfs_client
 
-import "configs"
+import cfgWs "configs/web_server"
 
 type config struct {
 	trackerAddr []string
@@ -9,8 +9,8 @@ type config struct {
 
 func newConfig() (*config, error) {
 	config := &config{}
-	config.trackerAddr = append(config.trackerAddr, configs.TrackerServerAddr)
-	config.maxConns = configs.MaxConn
+	config.trackerAddr = append(config.trackerAddr, cfgWs.TrackerServerAddr)
+	config.maxConns = cfgWs.MaxConn
 
 	return config, nil
 }

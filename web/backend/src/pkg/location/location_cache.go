@@ -9,7 +9,7 @@ package location
 
 import (
 	pb "api/talk_cloud"
-	"configs"
+	cfgComm "configs/common"
 	"errors"
 	"fmt"
 	"github.com/gomodule/redigo/redis"
@@ -90,7 +90,7 @@ func GetUserLocationInCache(uId int32, rd redis.Conn) (*pb.GPSHttpResp, error) {
 			log.Printf("convent course error:%v", err)
 		}
 
-		lTimeT, err := time.Parse(configs.TimeLayout, resStr[4])
+		lTimeT, err := time.Parse(cfgComm.TimeLayout, resStr[4])
 		if err != nil {
 			log.Printf("convent lTime error:%v", err)
 		}
