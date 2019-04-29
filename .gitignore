@@ -8,7 +8,10 @@
 *.log
 
 # ini
-*.ini
 
+*/redis.ini
+redis.ini
+db.ini
+*/db.ini
 web/backend/src/cmd/files/*
 
