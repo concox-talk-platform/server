@@ -13,7 +13,6 @@ import (
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
 	"github.com/unrolled/secure"
-	"io"
 	"log"
 	"net/http"
 	"os"
@@ -34,8 +33,8 @@ func Prepare() *gin.Engine {
 	// 禁用控制台颜色
 	gin.DisableConsoleColor()
 	// 创建记录日志的文件
-	f, _ := os.Create("backend-web.log")
-	gin.DefaultWriter = io.MultiWriter(f)
+	//f, _ := os.Create("backend-web.log")
+	//gin.DefaultWriter = io.MultiWriter(f)
 
 	engine := gin.Default()
 
@@ -133,7 +132,7 @@ func Logger() gin.HandlerFunc {
 	}
 	logClient.Out = src
 	logClient.SetLevel(logrus.DebugLevel)
-	apiLogPath := "api.log"
+	apiLogPath := "web_server.log"
 	logWriter, err := rotatelogs.New(
 		apiLogPath+".%Y-%m-%d-%H-%M.log",
 		rotatelogs.WithLinkName(apiLogPath),       // 生成软链，指向最新日志文件
