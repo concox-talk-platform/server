@@ -18,7 +18,7 @@ func main() {
 	}
 
 	s := grpc.NewServer()
-	pb.RegisterTalkCloudServer(s, &api.TalkCloudService{})
+	pb.RegisterTalkCloudServer(s, &api.TalkCloudServiceImpl{})
 
 	if err := s.Serve(lis); err != nil {
 		log.Printf("failed to serve: %v", err)

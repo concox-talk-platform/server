@@ -12,14 +12,14 @@ import (
 	"model"
 	s "pkg/session"
 	tu "pkg/user"
+	tuc "pkg/user_cache"
 	"strconv"
 	"time"
 	"utils"
 )
 
-
 // 注册App
-func (tcs *TalkCloudService) AppRegister(ctx context.Context, req *pb.AppRegReq) (*pb.AppRegRsp, error) {
+func (tcs *TalkCloudServiceImpl) AppRegister(ctx context.Context, req *pb.AppRegReq) (*pb.AppRegRsp, error) {
 	iMei := strconv.FormatInt(int64(rand.New(rand.NewSource(time.Now().UnixNano())).Int63n(1000000000000000)), 10)
 	appRegResp := &pb.AppRegRsp{}
 
@@ -73,7 +73,7 @@ func (tcs *TalkCloudService) AppRegister(ctx context.Context, req *pb.AppRegReq)
 }
 
 // 设备注册
-func (tcs *TalkCloudService) DeviceRegister(ctx context.Context, req *pb.DeviceRegReq) (*pb.DeviceRegRsp, error) {
+func (tcs *TalkCloudServiceImpl) DeviceRegister(ctx context.Context, req *pb.DeviceRegReq) (*pb.DeviceRegRsp, error) {
 	// TODO 设备串号和账户id进行校验
 	name := string([]byte(req.DeviceList)[9:len(req.DeviceList)])
 	user := &model.User{
@@ -92,22 +92,22 @@ func (tcs *TalkCloudService) DeviceRegister(ctx context.Context, req *pb.DeviceR
 }
 
 // 用户注销
-func (tcs *TalkCloudService) Logout(ctx context.Context, req *pb.LogoutReq) (*pb.LogoutRsp, error) {
+func (tcs *TalkCloudServiceImpl) Logout(ctx context.Context, req *pb.LogoutReq) (*pb.LogoutRsp, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		log.Panicf("sessionid metadata set  error%s")
+		log.Println("session id metadata set  error")
 		return &pb.LogoutRsp{Res: &pb.Result{Code: 403, Msg: "server internal error"}}, nil
 	}
 	// TODO 考虑要不要验证sessionInfo中的name和password
 	if err := s.DeleteSession(md.Get("sessionId")[1], nil); err != nil {
-		log.Panicf("sessionid metadata delete  error%s", err)
+		log.Printf("sessionid metadata delete  error%s", err)
 		return &pb.LogoutRsp{Res: &pb.Result{Code: 500, Msg: "server internal error"}}, err
 	}
 	return &pb.LogoutRsp{Res: &pb.Result{Code: 200, Msg: req.Name + "logout successful"}}, nil
 }
 
 // 设置用户所在默认锁定组 TODO 对每一个用户设置操作都做鉴权
-func (tcs *TalkCloudService) SetLockGroupId(ctx context.Context, req *pb.SetLockGroupIdReq) (*pb.SetLockGroupIdResp, error) {
+func (tcs *TalkCloudServiceImpl) SetLockGroupId(ctx context.Context, req *pb.SetLockGroupIdReq) (*pb.SetLockGroupIdResp, error) {
 	if !utils.CheckId(int(req.UId)) || !utils.CheckId(int(req.GId)) {
 		err := errors.New("uid or gid is not valid")
 		log.Println("service SetLockGroupId error :", err)
@@ -122,7 +122,7 @@ func (tcs *TalkCloudService) SetLockGroupId(ctx context.Context, req *pb.SetLock
 	}
 
 	// 更新缓存
-	if err := tu.UpdateLockGroupIdInCache(req, cache.GetRedisClient()); err != nil {
+	if err := tuc.UpdateLockGroupIdInCache(req, cache.GetRedisClient()); err != nil {
 		log.Println("service SetLockGroupId error :", err)
 		// TODO 去把数据库里的群组恢复？
 		return &pb.SetLockGroupIdResp{Res: &pb.Result{Msg: "Set lock default group error, please try again later.", Code: 500}}, nil

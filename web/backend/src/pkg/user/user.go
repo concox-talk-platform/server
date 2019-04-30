@@ -2,6 +2,7 @@ package user
 
 import (
 	pb "api/talk_cloud"
+	cfgComm "configs/common"
 	"database/sql"
 	"db"
 	"errors"
@@ -27,7 +28,7 @@ func AddUser(u *model.User, db ...interface{}) error {
 	stmtInsB.SET("nick_name", u.NickName) // 注册的时候默认把username当做昵称
 	stmtInsB.SET("user_type", 1)
 	t := time.Now()
-	ctime := t.Format("2006-1-2 15:04:05")
+	ctime := t.Format(cfgComm.TimeLayout)
 	stmtInsB.SET("last_login_time", ctime)
 	stmtInsB.SET("create_time", ctime)
 
@@ -111,14 +112,14 @@ func SelectUserByKey(key interface{}) (*model.User, error) {
 }
 
 // 查找设备
-func SelectUserByAccountId(aid int) (interface{}, error) {
+func SelectUserByAccountId(aid int) ([]*model.Device, error) {
 	var stmtOut *sql.Stmt
 	var err error
 	stmtOut, err = dbConn.Prepare("SELECT id, imei, name, passwd, cid, create_time, last_login_time, change_time FROM user WHERE cid = ?")
 
 	if err != nil {
 		log.Printf("%s", err)
-		return "", err
+		return nil, err
 	}
 	var res []*model.Device
 
@@ -138,10 +139,10 @@ func SelectUserByAccountId(aid int) (interface{}, error) {
 		}
 
 		d := &model.Device{
-			Id: id,
-			IMei: iMei,
-			UserName:  userName, //PassWord: pwd,
-			AccountId: accountId,
+			Id:         id,
+			IMei:       iMei,
+			UserName:   userName, //PassWord: pwd,
+			AccountId:  accountId,
 			CreateTime: cTime,
 		}
 		res = append(res, d)

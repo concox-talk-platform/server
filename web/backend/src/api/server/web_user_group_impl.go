@@ -14,6 +14,7 @@ import (
 	"log"
 	"model"
 	tg "pkg/group"
+	tgc "pkg/group_cache"
 	"strconv"
 )
 
@@ -66,7 +67,7 @@ func (wssu *WebServiceServerImpl) UpdateGroup(ctx context.Context, req *pb.Updat
 	}
 
 	// TODO 增加到缓存
-	if err := tg.AddGroupAndUserInCache(gl, cache.GetRedisClient()); err != nil {
+	if err := tgc.AddGroupAndUserInCache(gl, cache.GetRedisClient()); err != nil {
 		log.Println("insert cache error")
 		return &pb.UpdateGroupResp{ResultMsg: &pb.Result{Msg: "Update group unsuccessful, please try again later", Code: 422}}, err
 	}

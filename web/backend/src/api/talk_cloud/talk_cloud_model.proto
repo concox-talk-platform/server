@@ -22,6 +22,7 @@ message Member {
     string parentId = 8;
     int32 online = 9;   // 0  离线 , 1 在线
     int32 lockGroupId = 10;
+    int32 GRoleType = 11;
 }
 
 // 结果信息

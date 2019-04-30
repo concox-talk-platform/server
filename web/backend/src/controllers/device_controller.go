@@ -9,17 +9,18 @@ package controllers
 
 import (
 	pb "api/talk_cloud"
+	cfgWs "configs/web_server"
 	"context"
 	"github.com/gin-gonic/gin"
 	"log"
 	"model"
 	"net/http"
-	"service/client_pool"
 	"service"
+	"service/grpc_client_pool"
 )
 
 // 导入设备
-func ImportDeviceByRoot(c * gin.Context) {
+func ImportDeviceByRoot(c *gin.Context) {
 	aName := c.Param("account_name")
 	if aName == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -49,20 +50,20 @@ func ImportDeviceByRoot(c * gin.Context) {
 	}
 
 	log.Println("ImportDeviceByRoot start rpc")
-	conn, err := client_pool.GetConn(service.Addr)
+	conn, err := grpc_client_pool.GetConn(cfgWs.GrpcAddr)
 	if err != nil {
 		log.Printf("grpc.Dial err : %v", err)
 	}
 	webCli := pb.NewWebServiceClient(conn)
 	res, err := webCli.ImportDeviceByRoot(context.Background(), &pb.ImportDeviceReq{
-		DeviceImei:aiDReq.DeviceIMei,
-		AccountId: 1,
+		DeviceImei: aiDReq.DeviceIMei,
+		AccountId:  1,
 	})
 	if err != nil {
 		log.Println("Import device error : ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":"Import device error, Please try again later.",
-			"error_code":"500",
+			"error":      "Import device error, Please try again later.",
+			"error_code": "500",
 		})
 		return
 	}

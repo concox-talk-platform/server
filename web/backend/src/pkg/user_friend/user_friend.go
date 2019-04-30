@@ -19,7 +19,7 @@ func CheckFriendExist(uid, fuid int32, db *sql.DB) (bool, error) {
 		return false, fmt.Errorf("db is nil")
 	}
 
-	sql := fmt.Sprintf("SELECT COUNT(*) FROM user_friend WHERE (uid=%[1]d AND friend_uid=%[2]d AND stat!=1) OR (uid=%[2]d AND friend_uid=%[1]d AND stat!=1)", uid, fuid)
+	sql := fmt.Sprintf("SELECT COUNT(*) FROM user_friend WHERE (uid=%[1]d AND friend_uid=%[2]d AND stat!=1) AND (uid=%[2]d AND friend_uid=%[1]d AND stat!=1)", uid, fuid)
 
 	rows, err := db.Query(sql)
 	if err != nil {
@@ -45,17 +45,17 @@ func CheckFriendExist(uid, fuid int32, db *sql.DB) (bool, error) {
 
 // 添加好友
 func AddFriend(uid, fuid int32, db *sql.DB) (bool, error) {
-	ret, err := CheckFriendExist(uid, fuid, db)
-	if err != nil {
-		return false, err
-	}
-
-	if ret {
-		return false, fmt.Errorf("user friend exists")
-	}
+	//ret, err := CheckFriendExist(uid, fuid, db)
+	//if err != nil {
+	//	return false, err
+	//}
+	//
+	//if ret {
+	//	return false, fmt.Errorf("user friend exists")
+	//}
 
 	sql := fmt.Sprintf("INSERT INTO user_friend(uid, friend_uid) VALUES(%d, %d)", uid, fuid)
-	_, err = db.Query(sql)
+	_, err := db.Query(sql)
 	if err != nil {
 		return false, fmt.Errorf("query(%s), error(%s)", sql, err)
 	}
