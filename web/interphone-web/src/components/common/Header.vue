@@ -158,13 +158,7 @@ import vSidebar from './Sidebar.vue';
 
         },
         methods:{
-            // 用户名下拉菜单选择事件
-            // handleCommand(command) {
-            //     if(command == 'loginout'){
-            //         localStorage.removeItem('ms_username')
-            //         this.$router.push('/login');
-            //     }
-            // },
+    
             // 切换语言
             change_lang(){
                  if ( this.lang === 'zh-CN' ) {
@@ -189,26 +183,9 @@ import vSidebar from './Sidebar.vue';
             session_language(){
                 this.$i18n.locale = sessionStorage.getItem('lang');
             },
-            // FormVisible(){
-            //    this.dialogFormVisible=true;
-            //     // window.console.log(this.$store.state.User.information)
-            //     // let personal_details = this.$store.state.User.information
-            //     let personal_details = JSON.parse(sessionStorage.getItem('account_info'))
-            //     // let personal_details = this.$store.state.User.information
-            //     this.accountInfo.name = personal_details.nike_name;
-            //     this.accountInfo.phone = personal_details.phone;
-            //     this.accountInfo.email = personal_details.email;
-            //     this.accountInfo.adress = personal_details.address;
-            //     this.accountInfo.remark = personal_details.remark;
-            // },
             changePassword(){
                 this.pwdVisible=true;
             },
-            // 关闭表单
-            // formCancle(){
-            //     this.dialogFormVisible = false;
-            //     this.accountInfo={}
-            // },
             pwdCancle(){
                 this.pwdVisible = false;
                 
@@ -245,29 +222,16 @@ import vSidebar from './Sidebar.vue';
             }); 
     
             },
-            // updateInfor(){
-            //     let newInfor={}
-            //     // newInfor.id=this.$store.state.id
-            //     newInfor.inick_name=this.accountInfo.name;
-            //     newInfor.phone=this.accountInfo.phone;
-            //     newInfor.email=this.accountInfo.email;
-            //     newInfor.address=this.accountInfo.adress;
-            //     newInfor.remark=this.accountInfo.remark;
-            //     window.console.log(newInfor)
-            //     // this.$axios.post('/account/info/update',newInfor)
-            //     // .then(function (response) {
-            //     // window.console.log(response)
-            //     // this.$router.push('/');
-            //     // }.bind(this))
-            //     // .catch( () => {
-            //     // });  
-            // },
+
             outlogin(){
-             this.$router.push('/login'); 
-            //    this.$router.go('/login');   
-             localStorage.clear();       
+            //  this.$router.push('/homePage'); 
+             this.$router.push('/login');
+             this.clearinfor()
+            },
+            // 清除数据
+            clearinfor(){
+            localStorage.clear();       
              sessionStorage.clear();
-            //  this.$router.go(0);        
             },
             // 全屏事件
             handleFullScreen(){
@@ -301,61 +265,12 @@ import vSidebar from './Sidebar.vue';
                 this.$router.go(0);
             }
         },
-        // 获取用户信息
-        // beforeCreate(){
-        //     // this.$axios.get('/account/'+localStorage.getItem('loginName'),
-        //     this.$axios.get('/account/'+sessionStorage.getItem('loginName'),
-        //     { headers: 
-        //     {
-        //     "Authorization" : sessionStorage.getItem('setSession_id')
-        //      }
-        //      })
-        //     .then((response) =>{
-        //      sessionStorage.setItem('id', response.data.account_info.id);
-        //      localStorage.setItem('account_info', response.data.account_info);
-        //      localStorage.setItem('device_info', response.data.account_info);
-        //      this.$store.commit("groupList",response.data.group_list);
-        //      window.console.log(response);
-        //      this.$store.commit("deviceList",response.data.device_list);
-        //      this.$store.commit("information",response.data.account_info);
-        //         // this.$axios.get('/account_class/'+response.data.account_info.id,
-        //         // { headers: 
-        //         // {
-        //         // // "Authorization" : localStorage.getItem('setSession_id')
-        //         // "Authorization" : sessionStorage.getItem('setSession_id')
-        //         // }
-        //         // })
-        //         // .then((response) =>{
-        //         // //  localStorage.setItem('id', response.data.account_info.id);    
-        //         // window.console.log(response);
-        //         // this.$store.commit("subordinate",response.data.tree_data);
-        
-        //         // })
-        //         // .catch(function (error) {
-        //         // window.console.log(error);
-        //         // });
 
-        //     })
-        //     .catch(function (error) {
-        //     window.console.log(error);
-        //     });
-        // },
-        // beforeMount(){
-        // // this.lang =localStorage.getItem('lang');
-        // this.lang =sessionStorage.getItem('lang');
-        // this.$i18n.locale = this.lang;
-
-        // // this.accountInfo.name=
-        // },
         beforeMount(){
             this.session_language()
         },
         mounted(){
-            //  this.accountInfo.name=this.$store.state.User.information.nike_name;
-            //     this.accountInfo.phone=this.$store.state.User.information.phone;
-            //     this.accountInfo.email=this.$store.state.User.information.email;
-            //     this.accountInfo.adress=this.$store.state.User.information.address;
-            //     this.accountInfo.remark=this.$store.state.User.information.remark;
+ 
         }
     }
 </script>

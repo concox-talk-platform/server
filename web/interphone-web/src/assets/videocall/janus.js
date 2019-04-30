@@ -404,7 +404,7 @@ function Janus(gatewayCallbacks) {
 		gatewayCallbacks.error("Library not initialized");
 		return {};
 	}
-	if(!Janus.isWebrtcSupported()) {
+	if(!Janus.isWebrtcSupported()) { 
 		gatewayCallbacks.error("WebRTC not supported by this browser");
 		return {};
 	}
@@ -413,6 +413,8 @@ function Janus(gatewayCallbacks) {
 	gatewayCallbacks.success = (typeof gatewayCallbacks.success == "function") ? gatewayCallbacks.success : Janus.noop;
 	gatewayCallbacks.error = (typeof gatewayCallbacks.error == "function") ? gatewayCallbacks.error : Janus.noop;
 	gatewayCallbacks.destroyed = (typeof gatewayCallbacks.destroyed == "function") ? gatewayCallbacks.destroyed : Janus.noop;
+	gatewayCallbacks.mycallmessage = (typeof gatewayCallbacks.mycallmessage == "function") ? gatewayCallbacks.mycallmessage : Janus.noop;
+	gatewayCallbacks.youcallmessage = (typeof gatewayCallbacks.youcallmessage == "function") ? gatewayCallbacks.youcallmessage : Janus.noop;
 	if(gatewayCallbacks.server === null || gatewayCallbacks.server === undefined) {
 		gatewayCallbacks.error("Invalid server url");
 		return {};
@@ -579,7 +581,21 @@ function Janus(gatewayCallbacks) {
 				delete transactions[transaction];
 			}
 			return;
-		} else if(json["janus"] === "trickle") {
+		}
+		else if(json["janus"] === "user_call") {
+			console.log(8888888)
+			Janus.debug(8888888888);
+			gatewayCallbacks.youcallmessage(json);
+
+		}else if(json["janus"] === "user_called"){
+			console.log(999999)
+			console.log(json);
+			var asds =212
+			gatewayCallbacks.mycallmessage(json);
+			Janus.debug(data);
+		}
+		
+		else if(json["janus"] === "trickle") {
 			// We got a trickle candidate from Janus
 			var sender = json["sender"];
 			if(sender === undefined || sender === null) {
@@ -629,7 +645,8 @@ function Janus(gatewayCallbacks) {
 			}
 			pluginHandle.webrtcState(true);
 			return;
-		} else if(json["janus"] === "hangup") {
+		}
+		else if(json["janus"] === "hangup") {
 			// A plugin asked the core to hangup a PeerConnection on one of our handles
 			Janus.debug("Got a hangup event on session " + sessionId);
 			Janus.debug(json);
@@ -769,7 +786,8 @@ function Janus(gatewayCallbacks) {
 	// Private method to create a session
 	function createSession(callbacks) {
 		var transaction = Janus.randomString(12);
-		var request = { "janus": "create", "transaction": transaction };
+		// var request = { "janus": "create", "transaction": transaction };
+		var request = { "janus": "create", "transaction": transaction ,"uid":parseInt(sessionStorage.getItem('id'))};
 		if(callbacks["reconnect"]) {
 			// We're reconnecting, claim the session
 			connected = false;
@@ -849,6 +867,9 @@ function Janus(gatewayCallbacks) {
 				'message': function(event) {
 					handleEvent(JSON.parse(event.data));
 				},
+				// 'user_call': function(event) {
+				// 	handleEvent(JSON.parse(event.data));
+				// },
 
 				'close': function() {
 					if (server === null || !connected) {
@@ -1229,10 +1250,22 @@ function Janus(gatewayCallbacks) {
 			callbacks.error("Invalid handle");
 			return;
 		}
-		var message = callbacks.message;
-		var jsep = callbacks.jsep;
-		var transaction = Janus.randomString(12);
-		var request = { "janus": "message", "body": message, "transaction": transaction };
+		// var message = callbacks.message;
+		if(callbacks.message ==null){
+			var user_call = callbacks.user_call;
+			console.log(11111111111111)
+			var jsep = callbacks.jsep;
+			var transaction = Janus.randomString(12);
+			var request = { "janus": "user_call", "uid": user_call.uid,"myId":user_call.myId,"type":user_call.type,"name":user_call.name,"isVideo":user_call.isVideo, "isAccept":user_call.isAccept, "transaction": transaction, };
+			// var request = { "janus": "user_call", "body": user_call, "transaction": transaction };
+		}else{
+			var message = callbacks.message;
+			console.log(2222222)
+			var jsep = callbacks.jsep;
+			var transaction = Janus.randomString(12);
+			var request = { "janus": "message", "body": message, "transaction": transaction };
+		}
+
 		if(pluginHandle.token !== null && pluginHandle.token !== undefined)
 			request["token"] = pluginHandle.token;
 		if(apisecret !== null && apisecret !== undefined)
@@ -1266,8 +1299,8 @@ function Janus(gatewayCallbacks) {
 						Janus.error("Ooops: " + json["error"].code + " " + json["error"].reason);	// FIXME
 						callbacks.error(json["error"].code + " " + json["error"].reason);
 					} else {
-						Janus.error("Unknown error");	// FIXME
-						callbacks.error("Unknown error");
+						Janus.error("Unknown error ");	// FIXME
+						callbacks.error("Unknown error ");
 					}
 					return;
 				}
@@ -1297,7 +1330,8 @@ function Janus(gatewayCallbacks) {
 					Janus.debug(data);
 					callbacks.success(data);
 					return;
-				} else if(json["janus"] !== "ack") {
+				}
+				else if(json["janus"] !== "ack") {
 					// Not a success and not an ack, must be an error
 					if(json["error"] !== undefined && json["error"] !== null) {
 						Janus.error("Ooops: " + json["error"].code + " " + json["error"].reason);	// FIXME
@@ -1664,7 +1698,7 @@ function Janus(gatewayCallbacks) {
 				pc_constraints.optional.push({"googIPv6":true});
 			}
 			// Any custom constraint to add?
-			if(callbacks.rtcConstraints && typeof callbacks.rtcConstraints === 'object') {
+			if(callbacks.rtcConstraints && typeof callbacks.rtcConstraints === 'object') { 
 				Janus.debug("Adding custom PeerConnection constraints:", callbacks.rtcConstraints);
 				for(var i in callbacks.rtcConstraints) {
 					pc_constraints.optional.push(callbacks.rtcConstraints[i]);
