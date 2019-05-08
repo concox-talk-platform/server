@@ -7,6 +7,7 @@ package main
 
 import (
 	cfgWs "configs/web_server"
+	"controllers"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/lestrrat/go-file-rotatelogs"
@@ -16,7 +17,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"server/web/backend/src/controllers"
 	"strings"
 	"time"
 )
