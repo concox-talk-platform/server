@@ -1,9 +1,7 @@
 package user
 
 import (
-	pb "api/talk_cloud"
 	"model"
-	"server/common/src/cache"
 	"strconv"
 	"testing"
 )
@@ -28,7 +26,7 @@ func testAddDevice(t *testing.T) {
 	}
 }
 
-func testSelectUserByKey(t *testing.T) {
+func TestSelectUserByKey(t *testing.T) {
 	if res, err := SelectUserByKey(1); err != nil {
 		t.Logf("Test select user by key error: %v", err)
 	} else {
@@ -36,53 +34,53 @@ func testSelectUserByKey(t *testing.T) {
 	}
 }
 
-func testAddUserCache(t *testing.T) {
-	if err := AddUserForSingleGroupCache(1000, 101, cache.GetRedisClient()); err != nil {
-		t.Logf("Add user error: %v", err)
-	} else {
-	}
-}
-
-func testAddUserAddUserDataInCache(t *testing.T) {
-	if err := AddUserDataInCache(&pb.Member{
-		Id:          333,
-		IMei:        "123456789111111",
-		UserName:    "margie",
-		Online:      1,
-		LockGroupId: 9999,
-	}, cache.GetRedisClient()); err != nil {
-		t.Logf("testAddUserAddUserDataInCache error: %v", err)
-	} else {
-	}
-}
-
-func testUpdateLockGroupIdInCache(t *testing.T) {
-	if err := UpdateLockGroupIdInCache(&pb.SetLockGroupIdReq{UId: 333, GId: 9000}, cache.GetRedisClient()); err != nil {
-		t.Log("TestUpdateLockGroupIdInCache", err)
-	}
-}
-
-func testGetUserInfoFromCache(t *testing.T) {
-	if _, err := GetUserStatusFromCache(333, cache.GetRedisClient());err != nil {
-		t.Log("TestGetUserInfoFromCache error: ", err)
-	}
-}
-
-func TestGetGroupMemData(t *testing.T) {
-	res, err := GetGroupMemDataFromCache(240, cache.GetRedisClient())
-	if err != nil {
-		t.Logf("%v", err)
-	} else {
-		t.Logf("%v", res)
-	}
-}
-
-
-func testGetGroupList(t *testing.T) {
-	res, err := GetGroupList(int32(333), cache.GetRedisClient())
-	if err != nil {
-		t.Logf("Get grouplist has error: %v", err)
-	} else {
-		t.Logf("res:%v", res)
-	}
-}
+//func testAddUserCache(t *testing.T) {
+//	if err := AddUserForSingleGroupCache(1000, 101, cache.GetRedisClient()); err != nil {
+//		t.Logf("Add user error: %v", err)
+//	} else {
+//	}
+//}
+//
+//func testAddUserAddUserDataInCache(t *testing.T) {
+//	if err := AddUserDataInCache(&pb.Member{
+//		Id:          333,
+//		IMei:        "123456789111111",
+//		UserName:    "margie",
+//		Online:      1,
+//		LockGroupId: 9999,
+//	}, cache.GetRedisClient()); err != nil {
+//		t.Logf("testAddUserAddUserDataInCache error: %v", err)
+//	} else {
+//	}
+//}
+//
+//func testUpdateLockGroupIdInCache(t *testing.T) {
+//	if err := UpdateLockGroupIdInCache(&pb.SetLockGroupIdReq{UId: 333, GId: 9000}, cache.GetRedisClient()); err != nil {
+//		t.Log("TestUpdateLockGroupIdInCache", err)
+//	}
+//}
+//
+//func testGetUserInfoFromCache(t *testing.T) {
+//	if _, err := GetUserStatusFromCache(333, cache.GetRedisClient());err != nil {
+//		t.Log("TestGetUserInfoFromCache error: ", err)
+//	}
+//}
+//
+//func TestGetGroupMemData(t *testing.T) {
+//	res, err := GetGroupMemDataFromCache(240, cache.GetRedisClient())
+//	if err != nil {
+//		t.Logf("%v", err)
+//	} else {
+//		t.Logf("%v", res)
+//	}
+//}
+//
+//
+//func testGetGroupList(t *testing.T) {
+//	res, err := GetGroupList(int32(333), cache.GetRedisClient())
+//	if err != nil {
+//		t.Logf("Get grouplist has error: %v", err)
+//	} else {
+//		t.Logf("res:%v", res)
+//	}
+//}

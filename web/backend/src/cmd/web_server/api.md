@@ -68,7 +68,7 @@
 请求参数：请求body中：username和pwd，请求头中添加返回的session_id
 ``` json
 {
-	"username" : "account_name",
+	"username" : "account_name"
 }
 ```
 
@@ -241,7 +241,7 @@
 ``` json
 {
   "device_ids": [ -1 ],
-  "device_infos": [设备对象]
+  "device_infos": [设备对象],
   "group_info": {
     "group_name": "重庆组",    // 必须的
     "account_id": 6,         // 必须的

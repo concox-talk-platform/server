@@ -9,6 +9,11 @@ import (
 	"net"
 )
 
+func init()  {
+	// 获取数据里所有的数据
+	//server.DataInit()
+}
+
 func main() {
 	talkCloudServer := grpc.NewServer()
 	talk_cloud.RegisterTalkCloudServer(talkCloudServer, &gServer.TalkCloudServiceImpl{})
@@ -26,28 +31,3 @@ func main() {
 		log.Println("listing")
 	}
 }
-
-/*
-func doWorker(req string, w *worker){
-	log.Println(req, "working...")
-	time.Sleep(time.Second*10)
-	log.Println(req, "working done")
-	w.done <- 1
-}
-
-type worker struct {
-	done chan int
-}
-
-func createWorker(req string) *worker {
-	w := worker{done:make(chan int)}
-	go doWorker(req, &w)
-	return &w
-}
-
-func main(){
-	w := createWorker("papi")
-	log.Println("create done")
-	_ = <- w.done
-	log.Println("w.done")
-}*/

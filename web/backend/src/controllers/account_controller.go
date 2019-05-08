@@ -12,11 +12,12 @@ import (
 	"model"
 	"net/http"
 	tc "pkg/customer" // table customer
-	tlc "pkg/location"
 	td "pkg/device"
 	tg "pkg/group"         // table group
 	tgc "pkg/group_member" // table group_device
+	tlc "pkg/location"
 	tu "pkg/user"
+	tuc "pkg/user_cache"
 	"server/web/backend/src/utils"
 
 	"service"
@@ -149,7 +150,6 @@ func GetAccountInfo(c *gin.Context) {
 		return
 	}
 
-
 	// 获取账户信息
 	ai, err := tc.GetAccount(aName)
 	if err != nil {
@@ -171,7 +171,7 @@ func GetAccountInfo(c *gin.Context) {
 		return
 	}
 
-	for _, v := range deviceAll{
+	for _, v := range deviceAll {
 		res, err := tlc.GetUserLocationInCache(int32(v.Id), cache.GetRedisClient())
 		if err != nil {
 			log.Printf("GetGpsData error: %+v", err)
@@ -179,7 +179,7 @@ func GetAccountInfo(c *gin.Context) {
 		if res != nil {
 			v.GPSData = &model.GPS{
 				Lng: res.GpsInfo.Longitude,
-				Lat:res.GpsInfo.Latitude,
+				Lat: res.GpsInfo.Latitude,
 			}
 			v.Course = res.GpsInfo.Course
 			v.Speed = res.GpsInfo.Speed
@@ -196,8 +196,15 @@ func GetAccountInfo(c *gin.Context) {
 			log.Printf("Error in Get Group devices: %s", err)
 		}
 		groupMember := make([]interface{}, 0)
+		groupOfflineMember := make([]interface{}, 0)
 		groupMember = append(groupMember, ai)
+
 		for _, u := range us {
+			// 获取该设备在线状态
+			online, err := tuc.GetUserStatusFromCache(int32(u.Id), cache.GetRedisClient())
+			if err != nil || online != tuc.USER_ONLINE{
+				continue
+			}
 			groupMember = append(groupMember, &model.User{
 				Id:         u.Id,
 				IMei:       u.IMei,
@@ -208,8 +215,32 @@ func GetAccountInfo(c *gin.Context) {
 				CreateTime: u.CreateTime,
 				LLTime:     u.LLTime,
 				ChangeTime: u.ChangeTime,
+				Online:     int(online),
 			})
 		}
+		for _, u := range us {
+			// 获取离线的设备
+			online, err := tuc.GetUserStatusFromCache(int32(u.Id), cache.GetRedisClient())
+			if err != nil {
+				online = tuc.USER_OFFLINE
+			}
+			if online == tuc.USER_OFFLINE {
+				groupOfflineMember = append(groupOfflineMember, &model.User{
+					Id:         u.Id,
+					IMei:       u.IMei,
+					UserName:   u.UserName,
+					PassWord:   u.PassWord,
+					UserType:   u.UserType,
+					AccountId:  u.AccountId,
+					CreateTime: u.CreateTime,
+					LLTime:     u.LLTime,
+					ChangeTime: u.ChangeTime,
+					Online:     int(online),
+				})
+			}
+		}
+		groupMember = append(groupMember, groupOfflineMember...)
+
 		// 群里的用户id
 		ids, err := tgc.SelectDeviceIdsByGroupId((*groups[i]).Id)
 		if err != nil {
@@ -254,7 +285,7 @@ func GetAccountInfo(c *gin.Context) {
 		Children:        cList,
 	}
 
-	ai.Pwd = ""  // 不把密码暴露出去
+	ai.Pwd = "" // 不把密码暴露出去
 	c.JSON(http.StatusOK, gin.H{
 		"message":      "User information obtained successfully",
 		"account_info": ai,
@@ -406,7 +437,6 @@ func GetAccountClass(c *gin.Context) {
 	aid, _ := strconv.Atoi(accountId)
 	sid, _ := strconv.Atoi(searchId)
 
-
 	if !service.ValidateAccountSession(c.Request, aid) {
 		c.JSON(http.StatusUnauthorized, model.ErrorNotAuthSession)
 		return
@@ -516,7 +546,7 @@ func TransAccountDevice(c *gin.Context) {
 		return
 	}
 	for _, v := range accountDevices.Devices {
-		if v.IMei == ""{
+		if v.IMei == "" {
 			c.JSON(http.StatusUnprocessableEntity, gin.H{
 				"error":      "Imei is not correct.",
 				"error_code": "001",

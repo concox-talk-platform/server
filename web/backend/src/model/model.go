@@ -111,6 +111,7 @@ type User struct {
 	CreateTime  string `json:"create_time"`
 	LLTime      string `json:"last_login_time"`
 	ChangeTime  string `json:"change_time"`
+	Online      int    `json:"online"`
 }
 
 type Customer struct {

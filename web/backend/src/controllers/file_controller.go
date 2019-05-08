@@ -50,6 +50,7 @@ const (
 	OFFLINE_IM_MSG                  = 2 // 用户离线时的IM数据
 	IM_MSG_FROM_UPLOAD_OR_WS_OR_APP = 3 // APP和web通过httpClient上传的IM信息
 	KEEP_ALIVE_MSG                  = 4 // 用户登录后，每隔interval秒向stream发送一个消息，测试能不能连通
+	LOGOUT_NOTIFY_MSG               = 5 // 用户掉线之后，通知和他在一个组的其他成员
 
 	IM_MSG_WORKDONE  = 1
 	IM_MSG_WORKWRONG = -1
@@ -72,11 +73,13 @@ type worker struct {
 }
 
 func init() {
-	imFileMap.Store("jpg", IM_IMAGE_MSG) //JPEG (jpg)
-	imFileMap.Store("png", IM_IMAGE_MSG) //PNG (png)
-	imFileMap.Store("gif", IM_IMAGE_MSG) //GIF (gif)
-	imFileMap.Store("tif", IM_IMAGE_MSG) //TIFF (tif)
-	imFileMap.Store("bmp", IM_IMAGE_MSG) // (bmp)
+	imFileMap.Store("jpg", IM_IMAGE_MSG)  // (jpg)
+	imFileMap.Store("JPEG", IM_IMAGE_MSG) //JPEG (jpeg)
+	imFileMap.Store("jpeg", IM_IMAGE_MSG) //JPEG (jpeg)
+	imFileMap.Store("png", IM_IMAGE_MSG)  //PNG (png)
+	imFileMap.Store("gif", IM_IMAGE_MSG)  //GIF (gif)
+	imFileMap.Store("tif", IM_IMAGE_MSG)  //TIFF (tif)
+	imFileMap.Store("bmp", IM_IMAGE_MSG)  // (bmp)
 
 	imFileMap.Store("rmvb", IM_VIDEO_MSG) //rmvb/rm相同
 	imFileMap.Store("flv", IM_VIDEO_MSG)  //flv与f4v相同
@@ -127,15 +130,18 @@ func UploadFile(c *gin.Context) {
 		MsgType:      fContext.FileType,
 		ReceiverName: fContext.FileParams.ReceiverName,
 		SendTime:     fContext.FileParams.SendTime,
+		MsgCode:      strconv.FormatInt(time.Now().Unix(), 10),
 	})
 	if err != nil {
 		c.JSON(http.StatusCreated, gin.H{"msg": "Uploaded File, please try again later.", "code": 001})
 		return
 	}
+	log.Printf("upload file success by grpc: %+v", res)
 
 	c.JSON(http.StatusCreated, gin.H{
 		"msg":          "Uploaded successfully",
 		"code":         res.Result.Code,
+		"MsgCode":      res.MsgCode,
 		"resourcePath": fContext.FilePath,
 		"resourceName": fContext.FileName,
 	})
@@ -202,15 +208,16 @@ func fileStore(c *gin.Context) (*model.FileContext, error) {
 	md5h := md5.New()
 	md5h.Write(fSrc)
 	fMd5 := hex.EncodeToString(md5h.Sum([]byte("")))
-	fmt.Printf("this file md5: %s", hex.EncodeToString(md5h.Sum([]byte("")))) //md5
+	fmt.Printf("this file md5: %s\n", hex.EncodeToString(md5h.Sum([]byte("")))) //md5
 
 	// 存储文件到fastdfs
 	client, err := fdfs_client.NewClientWithConfig()
 	if err != nil {
-		log.Println("NewClientWithConfig fastdfs error: ", err)
+		log.Printf("Client: %+v NewClientWithConfig fastdfs error: %+v", client, err)
 		return nil, err
 	}
 	defer client.Destory()
+
 	fileId, err := client.UploadByBuffer(fSrc, fExtName)
 	if err != nil {
 		log.Println("UploadByBuffer to fastdfs error: ", err)
@@ -389,7 +396,7 @@ func sendImMessage(imw *worker) {
 			log.Printf("%d grpc recv message error: %s", imw.uId, err.Error())
 			break
 		}
-		log.Printf("web grpc client receive : %+v", resp)
+		log.Printf("%d web grpc client receive : %+v", imw.uId, resp)
 
 		// 写入ws数据 二进制返回
 		if resp.DataType == IM_MSG_FROM_UPLOAD_OR_WS_OR_APP {
@@ -403,21 +410,22 @@ func sendImMessage(imw *worker) {
 			if err != nil {
 				imw.WorkerDone <- IM_MSG_WORKWRONG
 				log.Println("WS message send error:", err)
-				break
+				//break
 			}
 		}
 
 		if resp.DataType == OFFLINE_IM_MSG {
 			// 把中文转换为utf-8
-			for _, msg := range resp.OfflineImMsgResp.OfflineImMsgs {
-				if msg.ImMsgGroupData != nil {
-					for _, userMsg := range msg.ImMsgGroupData {
+			for _, msg := range resp.OfflineImMsgResp.OfflineGroupImMsgs {
+				if msg.ImMsgData != nil {
+					for _, userMsg := range msg.ImMsgData {
 						userMsg.ResourcePath = utils.ConvertOctonaryUtf8(userMsg.ResourcePath)
 					}
 				}
-
-				if msg.ImMsgSingleData != nil {
-					for _, userMsg := range msg.ImMsgSingleData {
+			}
+			for _, msg := range resp.OfflineImMsgResp.OfflineSingleImMsgs {
+				if msg.ImMsgData != nil {
+					for _, userMsg := range msg.ImMsgData {
 						userMsg.ResourcePath = utils.ConvertOctonaryUtf8(userMsg.ResourcePath)
 					}
 				}
@@ -430,12 +438,19 @@ func sendImMessage(imw *worker) {
 			if err != nil {
 				imw.WorkerDone <- IM_MSG_WORKWRONG
 				log.Println("WS message send error:", err)
-				break
+				//break
 			}
 		}
 
-		if resp.DataType == OFFLINE_IM_MSG {
-			log.Println(resp)
+		// 掉线通知
+		if resp.DataType == LOGOUT_NOTIFY_MSG {
+			err = imw.ws.WriteJSON(resp)
+			if err != nil {
+				imw.WorkerDone <- IM_MSG_WORKWRONG
+				log.Println("WS message send error:", err)
+				//break
+			}
 		}
+
 	}
 }

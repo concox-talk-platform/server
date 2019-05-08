@@ -55,7 +55,7 @@ func AddMsg(msg *pb.ImMsgReqData, db *sql.DB) error {
 	if db == nil {
 		return fmt.Errorf("db is nil")
 	}
-
+	log.Printf("msg: %+v", msg)
 	timeStr := time.Now().Format(cfgComm.TimeLayout)
 	sql := fmt.Sprintf("INSERT INTO message(sender_id, s_name, send_time, recv_name, receiver_id, receiver_type, msg_type, content, create_time) "+
 		"VALUES(%d,'%s','%s','%s',%d,%d,'%d','%s','%s')", msg.Id, msg.SenderName, msg.SendTime, msg.ReceiverName, msg.ReceiverId, msg.ReceiverType, msg.MsgType, msg.ResourcePath, timeStr)

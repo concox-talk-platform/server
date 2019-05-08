@@ -174,3 +174,36 @@ func SetLockGroupId(req *pb.SetLockGroupIdReq, db *sql.DB) error {
 
 	return nil
 }
+
+// 找出所有的用户ID
+func SelectAllUserId() ([]int32, error){
+	var stmtOut *sql.Stmt
+	var err error
+	stmtOut, err = dbConn.Prepare("SELECT id FROM `user`")
+
+	if err != nil {
+		log.Printf("%s", err)
+		return nil, err
+	}
+	var res []int32
+
+	rows, err := stmtOut.Query()
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var id int32
+		if err := rows.Scan(&id); err != nil {
+			return res, err
+		}
+		res = append(res, id)
+	}
+
+	defer func() {
+		if err := stmtOut.Close(); err != nil {
+			log.Println("Statement close fail")
+		}
+	}()
+	return res, nil
+}

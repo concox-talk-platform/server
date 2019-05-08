@@ -6,7 +6,7 @@
 package main
 
 import (
-	pb "server/web/backend/src/api/talk_cloud"
+	pb "api/talk_cloud"
 	"context"
 	"google.golang.org/grpc"
 	"log"
@@ -98,7 +98,7 @@ func main() {
 	//	AccountId: 1,
 	//})
 
-	//userClient := pb.NewTalkCloudClient(conn)
+	userClient := pb.NewTalkCloudClient(conn)
 	//streamCli := pb.NewStreamServiceClient(conn)
 	/*res, err := userClient.AppRegister(context.Background(), &pb.AppRegReq{
 		Name:     "姚明6666",
@@ -197,7 +197,7 @@ func main() {
 	})*/
 
 	// GPS 数据
-	deviceCli := pb.NewTalkCloudLocationClient(conn)
+	/*deviceCli := pb.NewTalkCloudLocationClient(conn)
 	res, err := deviceCli.ReportGPSData(context.Background(), &pb.ReportDataReq{
 		DeviceInfo:&pb.Device{
 			Id:1500,
@@ -213,7 +213,7 @@ func main() {
 			},
 		},
 	})
-	log.Printf("%+v", res)
+	log.Printf("%+v", res)*/
 
 	//if err != nil {
 	//	log.Println(err)
@@ -221,45 +221,9 @@ func main() {
 	//	log.Printf("%+v", len(res.GroupList))
 	//}
 
-	/*streamdemoCli, _ :=  streamCli.Route(context.Background())
-	go func() {
-		i := 1
-		for {
-			if err := streamdemoCli.Send(&pb.StreamReq{
-				Pt:&pb.StreamPoint{
-					Name:"bobo",
-					Value:100,
-				},
-			}); err != nil {
-			}
-			if i == 1 {
-				go func() {
-					time.Sleep(time.Second*5)
-					_ = streamdemoCli.Send(&pb.StreamReq{
-						Pt:&pb.StreamPoint{
-							Name:"break",
-							Value:200,
-						},
-					})
-				}()
-			}
-			i =2
-
-		}
-	}()
-
-	go func() {
-		//for {
-			_, _ = streamdemoCli.Recv()
-			time.Sleep(time.Second*10)
-			_ = streamdemoCli.CloseSend()
-		//}
-		conn.Close()
-		log.Println("beak")
-	}()*/
 
 	// TODO 服务端 客户端 双向流
-	//allStr, _ := userClient.DataPublish(context.Background())
+	allStr, _ := userClient.DataPublish(context.Background())
 	/*go func(allStr *pb.TalkCloud_DataPublishClient ) {
 		if err := (*allStr).Send(&pb.StreamRequest{
 			Uid:      333,
@@ -288,8 +252,8 @@ func main() {
 			}
 		}()*/
 
-	/*go func() {
-		for {
+	go func() {
+		//for {
 			log.Println("start send get offline msg")
 			if err := allStr.Send(&pb.StreamRequest{
 				Uid:      335,
@@ -298,9 +262,9 @@ func main() {
 			}
 
 			time.Sleep(time.Second * 6)
-		}
-	}()*/
-	/*
+		//}
+	}()
+
 		go func(allStr *pb.TalkCloud_DataPublishClient ) {
 			for {
 				data, _ := (*allStr).Recv()
@@ -308,6 +272,8 @@ func main() {
 					log.Println("client receive :", data.LoginResp.GroupList)
 				} else if data.DataType == 5 {
 					log.Println("client receive: ", data.KeepAlive)
+				} else if data.DataType == 2 {
+					log.Println("client receive: ", data.OfflineImMsgResp)
 				}
 				//if data != nil && data.Res.Code == http.StatusUnauthorized {
 				//	log.Println("client receive :", data)
@@ -315,14 +281,13 @@ func main() {
 				//	time.Sleep(time.Hour)
 				//}
 			}
-		}(&allStr)*/
+		}(&allStr)
 
-	//select {}
-	/*
-		ress, err := userClient.GetGroupList(context.Background(), &pb.GrpListReq{
-			Uid:int32(333),
-		})
 
-		log.Println("ress:", ress)
-	*/
+		//
+		//res, err := userClient.GetGroupList(context.Background(), &pb.GrpListReq{
+		//	Uid:int32(333),
+		//})
+
+	select {}
 }

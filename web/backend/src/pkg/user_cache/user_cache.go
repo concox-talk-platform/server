@@ -82,7 +82,7 @@ func GetGroupListFromRedis(uId int32, rd redis.Conn) (*pb.GroupListRsp, error) {
 		gInfo := &pb.GroupInfo{}
 		log.Printf("find group name %+v", v)
 		if v == "" {
-			// TODO 会报空针喔
+			// TODO 会报空针
 			continue
 		}
 		err = json.Unmarshal([]byte(v), gInfo)
@@ -112,6 +112,7 @@ func GetGroupMemDataFromCache(gid int32, rd redis.Conn) ([]*pb.UserRecord, error
 	defer rd.Close()
 
 	res := make([]*pb.UserRecord, 0)
+	resOffline := make([]*pb.UserRecord, 0)
 	key := MakeGroupMemKey(gid)
 	uids, err := redis.Int64s(rd.Do("SMEMBERS", key))
 	if err != nil {
@@ -151,7 +152,7 @@ func GetGroupMemDataFromCache(gid int32, rd redis.Conn) ([]*pb.UserRecord, error
 				break // redis找不到，去数据库加载
 			}
 		}
-		log.Printf("Get group %d user info : %v from cache", gid,  resStr)
+		log.Printf("Get group %d user info : %v from cache", gid, resStr)
 		if value[0] != nil { // 只要任意一个字段为空就是没有这个数据
 			uid, _ := strconv.Atoi(resStr[0])
 			online, _ := strconv.Atoi(resStr[3])
@@ -168,16 +169,22 @@ func GetGroupMemDataFromCache(gid int32, rd redis.Conn) ([]*pb.UserRecord, error
 			UpdateUserFromDBToRedis(user, int(v))
 		}
 
-		res = append(res, user)
+		// 在线离线顺序
+		if user.Online == USER_ONLINE {
+			res = append(res, user)
+		} else  {
+			resOffline = append(resOffline, user)
+		}
 	}
-
+	res = append(res, resOffline...)
 	return res, nil
 }
 
-func UpdateUserFromDBToRedis(user *pb.UserRecord, v int)  {
+func UpdateUserFromDBToRedis(user *pb.UserRecord, v int) {
 	res, err := selectUserByKey(v)
 	if err != nil {
 		log.Printf("GetGroupMemDataFromCache UpdateUserFromDBToRedis selectUserByKey has error: %v", err)
+		return
 	}
 	user.Uid = int32(res.Id)
 	user.Imei = res.IMei
@@ -354,24 +361,69 @@ func UpdateOnlineInCache(m *pb.Member, redisCli redis.Conn) error {
 // 获取用户状态
 func GetUserStatusFromCache(uId int32, redisCli redis.Conn) (int32, error) {
 	if redisCli == nil {
-		return -1, errors.New("redis conn is nil")
+		return USER_OFFLINE, errors.New("redis conn is nil")
 	}
+	defer redisCli.Close()
 
 	value, err := redisCli.Do("HGET", MakeUserDataKey(uId), "online")
 	if err != nil {
 		fmt.Println("hmget failed", err.Error())
-		return -1, err
+		return USER_OFFLINE, err
 	}
 
 	log.Println("value :", value)
 	if value == nil {
-		return -1, errors.New("no find")
+		return USER_OFFLINE, errors.New("no find")
 	} else {
 		res, err := strconv.Atoi(string(value.([]byte)))
 		if err != nil {
 			fmt.Println("hmget failed", err.Error())
-			return -1, err
+			return USER_OFFLINE, err
 		}
 		return int32(res), nil
 	}
+}
+
+
+// 获取单个成员信息
+func GetUserFromCache(uId int32) (*pb.UserRecord, error) {
+	rd := cache.GetRedisClient()
+	defer rd.Close()
+
+	user := &pb.UserRecord{}
+	value, err := redis.Values(rd.Do("HMGET", MakeUserDataKey(uId),
+		"id", "imei", "username", "online", "lock_gid"))
+	if err != nil {
+		fmt.Println("hmget failed", err.Error())
+	}
+	//log.Printf("Get group %d user info value string  : %s from cache ", gid, value)
+
+	var valueStr string
+	resStr := make([]string, 0)
+	for _, v := range value {
+		if v != nil {
+			valueStr = string(v.([]byte))
+			resStr = append(resStr, valueStr)
+		} else {
+			break // redis找不到，去数据库加载
+		}
+	}
+	log.Printf("Get %d user info : %v from cache", uId, resStr)
+	if value[0] != nil { // 只要任意一个字段为空就是没有这个数据
+		uid, _ := strconv.Atoi(resStr[0])
+		online, _ := strconv.Atoi(resStr[3])
+		lockGId, _ := strconv.Atoi(resStr[4])
+
+		user.Uid = int32(uid)
+		user.Imei = resStr[1]
+		user.Name = resStr[2]
+		user.Online = int32(online)
+		user.LockGroupId = int32(lockGId)
+
+	} else {
+		log.Printf("can't find user %d from redis", int(uId))
+		UpdateUserFromDBToRedis(user, int(uId))
+	}
+
+	return user, nil
 }
