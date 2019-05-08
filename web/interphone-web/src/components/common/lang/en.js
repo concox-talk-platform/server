@@ -167,7 +167,34 @@ module.exports = {
             video_text:'Video Call',
             loding:'Connecting......',
             call_message:'Incoming call from'
-        }
+        },
+        im:{
+            group_list:'Group List',
+            member_list:'Member List',
+            chat_list:'Chat List',
+            chat_history:'Chat Record',
+            text:'Text',
+            file:'File',
+            send:'Send',
+            close:'Close',
+            media:'Send pictures, videos, files',
+            tip:"Notification",
+            from:"You have received a message from",
+            news:" ",
+            answer:"Reply",
+
+        },
+        apply:{
+            request:'requests to initiate a',
+            connection:'connection',
+            accept:'Accept',
+            refuse:'Refuse',
+            agree:'The other party agreed to your request',
+            call:'Initiate a call',
+            reject:'The other party rejected your request',
+            offline:' The other party is not online',
+            exist:'The other party does not exist',
+         }
     
 
         

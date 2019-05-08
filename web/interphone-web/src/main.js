@@ -29,7 +29,7 @@ const i18n =new VueI18n({
     },
     silentTranslationWarn: true,
   })
-// axios.defaults.baseURL = 'http://172.16.1.18:8888'
+// axios.defaults.baseURL = 'http://10.0.18.132:10000'
 axios.defaults.baseURL = 'http://113.105.153.240:8888'
 Vue.prototype.$axios = axios;
 

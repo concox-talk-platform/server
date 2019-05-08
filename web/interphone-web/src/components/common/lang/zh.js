@@ -170,6 +170,32 @@ module.exports = {
         video_text:'视频通话',
         loding:'连接中......',
         call_message:'有视频呼叫来自'
-    }
+    },
+    im:{
+        group_list:'群组列表',
+        member_list:'成员列表',
+        chat_list:'聊天列表',
+        chat_history:'聊天记录',
+        text:'文本',
+        file:'文件',
+        send:'发送',
+        close:'关闭',
+        media:'发送图片、视频、文件',
+        tip:"消息提示",
+        from:"收到来自",
+        news:"的消息",
+        answer:"回复",
+    },
+    apply:{
+        request:'请求发起',
+        connection:'连接',
+        accept:'接受',
+        refuse:'拒绝',
+        agree:'对方同意了您的请求',
+        call:'发起通话',
+        reject:'对方拒绝了您的请求',
+        offline:'对方不在线',
+        exist:'对方不存在',
+     }
 
 }

@@ -117,8 +117,8 @@
                             })
                             .then((response) =>{
                              window.console.log(response);
-                             
                             sessionStorage.setItem('id', response.data.account_info.id);
+                            sessionStorage.setItem('username', response.data.account_info.username);
                             sessionStorage.setItem('lang', this.lang);
                             sessionStorage.setItem('account_info', JSON.stringify(response.data.account_info));
                             localStorage.setItem('device_list', JSON.stringify(response.data.device_list));
