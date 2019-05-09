@@ -76,7 +76,7 @@ func (serv *TalkCloudServiceImpl) CreateGroup(ctx context.Context, req *pb.Creat
 		gl.GroupInfo.Id = int(gid)
 	}
 
-	// 增加到缓存  TODO 出错就清空缓存算了
+	// 增加到缓存
 	if err := tgc.AddGroupAndUserInCache(gl, cache.GetRedisClient()); err != nil {
 		log.Printf("CreateGroup AddGroupAndUserInCache error: %v", err)
 	}
@@ -265,7 +265,7 @@ func (serv *TalkCloudServiceImpl) GetGroupList(ctx context.Context, req *pb.GrpL
 				log.Printf("get GroupList %+v", err)
 				return &pb.GroupListRsp{Res: &pb.Result{Code: 500, Msg: "process error, please try again"}}, err
 			}
-			log.Println("start update redis")
+			log.Println("start update redis GetGroupListFromDB")
 			// 新增到缓存 更新两个地方，首先，每个组的信息要更新，就是group data，记录了群组的id和名字
 			if err := tgc.AddGroupInCache(gl, cache.GetRedisClient()); err != nil {
 				log.Printf("get GroupList %+v", err)

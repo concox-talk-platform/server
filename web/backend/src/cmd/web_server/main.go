@@ -7,7 +7,7 @@ package main
 
 import (
 	cfgWs "configs/web_server"
-	"controllers"
+	"flag"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/lestrrat/go-file-rotatelogs"
@@ -17,12 +17,18 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"server/web/backend/src/controllers"
 	"strings"
 	"time"
 )
 
+
 func main() {
 	engine := Prepare()
+	//engine.Use(TlsHandler())
+	//if err := engine.RunTLS(":"+cfgWs.WebPort, cfgWs.CertFile, cfgWs.KeyFile); err != nil {
+	//	log.Printf("Read pem key file error: %+v", err)
+	//}
 	if err := engine.Run(":" + cfgWs.WebPort); err != nil {
 		log.Println("listen is error", err)
 	}
@@ -40,11 +46,6 @@ func Prepare() *gin.Engine {
 
 	// 日志， 解决跨域问题
 	engine.Use(Logger(), Cors())
-
-	// runTls error
-	/*if err := engine.RunTLS(":8888", "fullchain.pem", "privkey.pem");err != nil {
-		log.Println("")
-	}*/
 
 	// 注册路由
 	// account
@@ -171,10 +172,12 @@ func Logger() gin.HandlerFunc {
 }
 
 func TlsHandler() gin.HandlerFunc {
+	addr := flag.String("a", "localhost", "ssl 默认主机" )
+	flag.Parse()
 	return func(c *gin.Context) {
 		secureMiddleware := secure.New(secure.Options{
 			SSLRedirect: true,
-			SSLHost:     "localhost:8080",
+			SSLHost:     *addr + ":"+ cfgWs.WebPort,
 		})
 		err := secureMiddleware.Process(c.Writer, c.Request)
 

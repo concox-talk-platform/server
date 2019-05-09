@@ -59,6 +59,7 @@ func (tcs *TalkCloudServiceImpl) AppRegister(ctx context.Context, req *pb.AppReg
 		return appRegResp, nil
 	}
 
+
 	res, err := tu.SelectUserByKey(req.Name)
 	if err != nil {
 		log.Printf("app register error : %s", err)
@@ -75,7 +76,7 @@ func (tcs *TalkCloudServiceImpl) AppRegister(ctx context.Context, req *pb.AppReg
 // 设备注册
 func (tcs *TalkCloudServiceImpl) DeviceRegister(ctx context.Context, req *pb.DeviceRegReq) (*pb.DeviceRegRsp, error) {
 	// TODO 设备串号和账户id进行校验
-	name := string([]byte(req.DeviceList)[9:len(req.DeviceList)])
+	name := string([]byte(req.DeviceList)/*[9:len(req.DeviceList)]*/)
 	user := &model.User{
 		UserName:  name,
 		PassWord:  "123456",

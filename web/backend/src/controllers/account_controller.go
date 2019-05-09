@@ -18,7 +18,7 @@ import (
 	tlc "pkg/location"
 	tu "pkg/user"
 	tuc "pkg/user_cache"
-	"utils"
+	"server/web/backend/src/utils"
 
 	"service"
 	"strconv"
@@ -172,7 +172,7 @@ func GetAccountInfo(c *gin.Context) {
 	}
 
 	for _, v := range deviceAll {
-		res, err := tlc.GetUserLocationInCache(int32(v.Id), cache.GetRedisClient())
+		res, _, err := tlc.GetUserLocationInCache(int32(v.Id), cache.GetRedisClient())
 		if err != nil {
 			log.Printf("GetGpsData error: %+v", err)
 		}

@@ -104,7 +104,7 @@ func GetGroupListFromRedis(uId int32, rd redis.Conn) (*pb.GroupListRsp, error) {
 	return &pb.GroupListRsp{Uid: uId, GroupList: gList, Res: &pb.Result{Msg: "get group in cache success", Code: 200}}, nil
 }
 
-// 获取单个群组中的用户信息
+// 获取单个群组中的用户列表信息
 func GetGroupMemDataFromCache(gid int32, rd redis.Conn) ([]*pb.UserRecord, error) {
 	if rd == nil {
 		return nil, fmt.Errorf("rd is nil")
@@ -153,27 +153,29 @@ func GetGroupMemDataFromCache(gid int32, rd redis.Conn) ([]*pb.UserRecord, error
 			}
 		}
 		log.Printf("Get group %d user info : %v from cache", gid, resStr)
-		if value[0] != nil { // 只要任意一个字段为空就是没有这个数据
-			uid, _ := strconv.Atoi(resStr[0])
-			online, _ := strconv.Atoi(resStr[3])
-			lockGId, _ := strconv.Atoi(resStr[4])
+		if value != nil {
+			if value[0] != nil { // 只要任意一个字段为空就是没有这个数据
+				uid, _ := strconv.Atoi(resStr[0])
+				online, _ := strconv.Atoi(resStr[3])
+				lockGId, _ := strconv.Atoi(resStr[4])
 
-			user.Uid = int32(uid)
-			user.Imei = resStr[1]
-			user.Name = resStr[2]
-			user.Online = int32(online)
-			user.LockGroupId = int32(lockGId)
+				user.Uid = int32(uid)
+				user.Imei = resStr[1]
+				user.Name = resStr[2]
+				user.Online = int32(online)
+				user.LockGroupId = int32(lockGId)
 
-		} else {
-			log.Printf("can't find user %d from redis", int(v))
-			UpdateUserFromDBToRedis(user, int(v))
-		}
+			} else {
+				log.Printf("can't find user %d from redis", int(v))
+				UpdateUserFromDBToRedis(user, int(v))
+			}
 
-		// 在线离线顺序
-		if user.Online == USER_ONLINE {
-			res = append(res, user)
-		} else  {
-			resOffline = append(resOffline, user)
+			// 在线离线顺序
+			if user.Online == USER_ONLINE {
+				res = append(res, user)
+			} else  {
+				resOffline = append(resOffline, user)
+			}
 		}
 	}
 	res = append(res, resOffline...)
@@ -371,7 +373,7 @@ func GetUserStatusFromCache(uId int32, redisCli redis.Conn) (int32, error) {
 		return USER_OFFLINE, err
 	}
 
-	log.Println("value :", value)
+	log.Printf("online value :%s", value)
 	if value == nil {
 		return USER_OFFLINE, errors.New("no find")
 	} else {
@@ -409,7 +411,7 @@ func GetUserFromCache(uId int32) (*pb.UserRecord, error) {
 		}
 	}
 	log.Printf("Get %d user info : %v from cache", uId, resStr)
-	if value[0] != nil { // 只要任意一个字段为空就是没有这个数据
+	if value != nil && value[0] != nil { // 只要任意一个字段为空就是没有这个数据
 		uid, _ := strconv.Atoi(resStr[0])
 		online, _ := strconv.Atoi(resStr[3])
 		lockGId, _ := strconv.Atoi(resStr[4])

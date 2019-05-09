@@ -26,3 +26,19 @@ func AddFileInfo(fc *model.FileContext) error {
 	defer stmtIns.Close()
 	return nil
 }
+
+// 获取文件信息
+func GetFileInfo(uId int32) (*model.FileContext, error) {
+	stmtOut, err := db.DBHandler.Prepare("SELECT f_name, f_size, f_upload_t, f_mdf, fdfs_id FROM file_info WHERE uid = ? ")
+	if err != nil {
+		return nil, err
+	}
+
+	fc := &model.FileContext{}
+	if err = stmtOut.QueryRow(uId).Scan(&fc.FileName, &fc.FileSize, &fc.FileUploadTime, &fc.FileMD5, &fc.FileFastId); err != nil {
+		return nil, err
+	}
+
+	defer stmtOut.Close()
+	return fc, nil
+}

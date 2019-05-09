@@ -267,17 +267,17 @@ func getUserStatusFromCache(uId int32, redisCli redis.Conn) (int32, error) {
 
 	value, err := redisCli.Do("HGET", MakeUserDataKey(uId), "online")
 	if err != nil {
-		fmt.Println("hmget failed", err.Error())
+		log.Println("hmget failed", err.Error())
 		return USER_OFFLINE, err
 	}
 
-	log.Println("value :", value)
+	log.Printf("online value :%s", value)
 	if value == nil {
 		return USER_OFFLINE, errors.New("no find")
 	} else {
 		res, err := strconv.Atoi(string(value.([]byte)))
 		if err != nil {
-			fmt.Println("hmget failed", err.Error())
+			log.Println("hmget failed", err.Error())
 			return USER_OFFLINE, err
 		}
 		return int32(res), nil

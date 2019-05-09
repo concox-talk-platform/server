@@ -22,15 +22,12 @@ import (
 	"google.golang.org/grpc"
 	"io/ioutil"
 	"log"
-	"mime/multipart"
 	"model"
 	"net/http"
 	tfi "pkg/file_info"
 	"service/fdfs_client"
 	"service/grpc_client_pool"
 	"strconv"
-	"strings"
-	"sync"
 	"time"
 	"utils"
 )
@@ -41,7 +38,6 @@ var upGrader = websocket.Upgrader{
 	},
 }
 
-var imFileMap sync.Map
 
 const (
 	MAX_UPLOAD_SIZE = 1024 * 1024 * 500 // 1024 byte * 1024 * 500 = 500mb
@@ -51,6 +47,8 @@ const (
 	IM_MSG_FROM_UPLOAD_OR_WS_OR_APP = 3 // APP和web通过httpClient上传的IM信息
 	KEEP_ALIVE_MSG                  = 4 // 用户登录后，每隔interval秒向stream发送一个消息，测试能不能连通
 	LOGOUT_NOTIFY_MSG               = 5 // 用户掉线之后，通知和他在一个组的其他成员
+	LOGIN_NOTIFY_MSG                = 6 // 用户上线之后，通知和他在一个组的其他成员
+	IM_SOS_MSG                      = 7
 
 	IM_MSG_WORKDONE  = 1
 	IM_MSG_WORKWRONG = -1
@@ -70,30 +68,6 @@ type worker struct {
 	Data       chan interface{}
 	mt         int
 	WorkerDone chan int
-}
-
-func init() {
-	imFileMap.Store("jpg", IM_IMAGE_MSG)  // (jpg)
-	imFileMap.Store("JPEG", IM_IMAGE_MSG) //JPEG (jpeg)
-	imFileMap.Store("jpeg", IM_IMAGE_MSG) //JPEG (jpeg)
-	imFileMap.Store("png", IM_IMAGE_MSG)  //PNG (png)
-	imFileMap.Store("gif", IM_IMAGE_MSG)  //GIF (gif)
-	imFileMap.Store("tif", IM_IMAGE_MSG)  //TIFF (tif)
-	imFileMap.Store("bmp", IM_IMAGE_MSG)  // (bmp)
-
-	imFileMap.Store("rmvb", IM_VIDEO_MSG) //rmvb/rm相同
-	imFileMap.Store("flv", IM_VIDEO_MSG)  //flv与f4v相同
-	imFileMap.Store("mp4", IM_VIDEO_MSG)
-	imFileMap.Store("3gp", IM_VIDEO_MSG)
-	imFileMap.Store("mpg", IM_VIDEO_MSG) //
-	imFileMap.Store("wmv", IM_VIDEO_MSG) //wmv与asf相同
-
-	imFileMap.Store("mp3", IM_VOICE_MSG)
-	imFileMap.Store("wav", IM_VOICE_MSG) //Wave (wav)
-	imFileMap.Store("avi", IM_VOICE_MSG)
-	imFileMap.Store("mid", IM_VOICE_MSG) //MIDI (mid)
-
-	imFileMap.Store("pdf", IM_PDF_MSG) //Adobe Acrobat (pdf)
 }
 
 func UploadFile(c *gin.Context) {
@@ -202,7 +176,7 @@ func fileStore(c *gin.Context) (*model.FileContext, error) {
 		log.Println("read file error: ", err)
 		return nil, err
 	}
-	fileType, fExtName := getImFileType(&fSrc, header)
+	fileType, fExtName := utils.GetImFileType(header.Filename)
 
 	// 先检验文件的hash值，避免重复上传
 	md5h := md5.New()
@@ -244,27 +218,6 @@ func fileStore(c *gin.Context) (*model.FileContext, error) {
 	}
 
 	return fContext, nil
-}
-
-// 获取Im上传文件类型
-func getImFileType(fSrc *[]byte, header *multipart.FileHeader) (int32, string) {
-	// 判断文件类型
-	//fType := utils.GetFileType((*fSrc)[:10])
-
-	fNameStr := strings.Split(header.Filename, ".")
-	fType := fNameStr[len(fNameStr)-1]
-
-	log.Println("get file fType: ", fType)
-	var fileType int32 = IM_UNKNOWN_TYPE_MSG
-	imFileMap.Range(func(key, value interface{}) bool {
-		if key.(string) == fType {
-			log.Println("find file type:", value)
-			fileType = int32(value.(int))
-			return false
-		}
-		return true
-	})
-	return fileType, fType
 }
 
 // websocket与grpc交换数据
@@ -443,7 +396,7 @@ func sendImMessage(imw *worker) {
 		}
 
 		// 掉线通知
-		if resp.DataType == LOGOUT_NOTIFY_MSG {
+		if resp.DataType == LOGOUT_NOTIFY_MSG || resp.DataType == LOGIN_NOTIFY_MSG || resp.DataType == IM_SOS_MSG {
 			err = imw.ws.WriteJSON(resp)
 			if err != nil {
 				imw.WorkerDone <- IM_MSG_WORKWRONG

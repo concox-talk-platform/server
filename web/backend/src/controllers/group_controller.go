@@ -186,6 +186,7 @@ func CreateGroup(c *gin.Context) {
 	log.Println(resCreate)
 	c.JSON(http.StatusOK, gin.H{
 		"result": "success",
+		"group_info":resCreate.GroupInfo,
 		"msg":    resCreate.Res.Msg,
 	})
 }

@@ -32,11 +32,11 @@ message GPSHttpResp {
 }
 // GPS 数据上报
 message ReportDataReq {
-    int32 uid = 1;
-    string iMei = 2;
-    int32 dataType = 3;
-    Device deviceInfo = 4;
-    Location locationInfo = 5;
+//    int32 uid = 1;
+    string iMei = 1;
+    int32 dataType = 2;   // 1 是GPS... 2 是sos
+    Device deviceInfo = 3;
+    Location locationInfo = 4;
 }
 
 message Device {

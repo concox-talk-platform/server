@@ -30,7 +30,7 @@ type Scheduler interface {
 	ConfigureMasterWorkerChan(chan int32)
 }
 
-func (e *ConcurrentEngine) Run() {
+func (e ConcurrentEngine) Run() {
 	in := make(chan int32)
 	var wg sync.WaitGroup
 	e.Scheduler.ConfigureMasterWorkerChan(in)
@@ -46,6 +46,8 @@ func (e *ConcurrentEngine) Run() {
 		wg.Add(1)
 		go func() {e.Scheduler.Submit(v)}()
 	}
+	wg.Wait()
+	log.Printf("**********************redis data sync done*****************************")
 }
 
 func createWorker(in chan int32, wg *sync.WaitGroup)  {
@@ -66,11 +68,6 @@ func createWorker(in chan int32, wg *sync.WaitGroup)  {
 }
 
 func DataInit() {
-	//e := &ConcurrentEngine{
-	//	Scheduler: &SimpleScheduler{},
-	//	WorkerCount: 50,
-	//}
-	//e.Run()
 	uIds, _ := tu.SelectAllUserId()
 	for _, v := range uIds {
 		_ = UserData(v)
@@ -94,7 +91,7 @@ func UserData(uId int32) error {
 		NickName:    res.NickName,
 		UserType:    int32(res.UserType),
 		LockGroupId: int32(res.LockGroupId),
-		Online:      tuc.USER_OFFLINE, // 登录就在线
+		Online:      tuc.USER_OFFLINE, // 加载数据默认全部离线
 	}
 	log.Println("Add User Info into cache start")
 
@@ -110,7 +107,7 @@ func GroupData(uid int32) error {
 	if err != nil {
 		return err
 	}
-	log.Println("start update redis")
+	log.Println("GroupData GetGroupListFromDB start update redis")
 	// 新增到缓存 更新两个地方，首先，每个组的信息要更新，就是group data，记录了群组的id和名字
 	if err := tgc.AddGroupInCache(gl, cache.GetRedisClient()); err != nil {
 		return err

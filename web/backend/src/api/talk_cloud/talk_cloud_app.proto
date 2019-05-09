@@ -86,6 +86,13 @@ service TalkCloud {
     rpc GetGroupInfo (GetGroupInfoReq) returns (GetGroupInfoResp) {
     };
 
+    // 暂时借用im简单调用去推送sos报警
+    rpc ImSosPublish (ReportDataReq) returns (ImMsgRespData) {
+    }
+
+    // app获取apk
+    rpc GetApkInfo (apkInfoReq) returns (apkInfoResp) {
+    }
 }
 
 /*************** Register ***************/
@@ -247,8 +254,8 @@ message StreamResponse {
     // 登录建立这个stream流之后，会每隔interval秒（目前暂定5s）收到这样一条消息，可以忽略
     KeepAlive keepAlive = 6;
 
-    // 用户离线，推送给其他在一个组的在线用户更新状态
-    LogoutNotify logoutNotify = 7;
+    // 用户离线，推送给其他在一个组的在线用户更新状态 // SOS
+    LoginOrLogoutNotify Notify = 7;
 
     // 通知的人数
     int32 notifyTotal = 8;
@@ -257,7 +264,7 @@ message StreamResponse {
     Result res = 9;
 }
 
-message LogoutNotify {
+message LoginOrLogoutNotify {
     UserRecord userInfo = 1;
     GPS userLocation = 2;
     repeated GroupInfo group_list = 3;
@@ -441,4 +448,16 @@ message GetGroupInfoReq {
 message GetGroupInfoResp {
     GroupInfo groupInfo = 1;
     Result res = 2;
+}
+
+// apk信息获取req
+message apkInfoReq {
+    int32 uid = 2;
+}
+
+// apk信息获取返回
+message apkInfoResp {
+    string apkVersion = 1;
+    string apkPath = 2;
+    Result res = 3;
 }
