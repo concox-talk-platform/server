@@ -66,21 +66,6 @@ func RemoveGroupMember(uid, gid int32, db *sql.DB) error {
 	return nil
 }
 
-func RemoveGroupUser(uid, gid uint64, db *sql.DB) error {
-	if db == nil {
-		return fmt.Errorf("db is nil")
-	}
-
-	sql := fmt.Sprintf("DELETE FROM group_member WHERE uid=%d AND gid=%d", uid, gid)
-	_, err := db.Query(sql)
-	if err != nil {
-		log.Printf("query(%s), error(%s)", sql, err)
-		return err
-	}
-
-	return nil
-}
-
 func RemoveGroup(gid int32, db *sql.DB) error {
 	if db == nil {
 		return fmt.Errorf("db is nil")
@@ -232,7 +217,7 @@ func GetGruopMembers(gid int32, db *sql.DB) ([]*pb.UserRecord, error) {
 		return nil, fmt.Errorf("db is nil")
 	}
 
-	sql := fmt.Sprintf("SELECT u.id, u.imei, u.name, u.user_type, u.lock_gid "+
+	sql := fmt.Sprintf("SELECT u.id, u.imei, u.nick_name, u.user_type, u.lock_gid "+
 		"FROM user AS u INNER JOIN group_member AS gm ON gm.uid=u.id WHERE gm.gid=%d AND gm.stat=1", gid)
 
 	rows, err := db.Query(sql)
@@ -244,6 +229,7 @@ func GetGruopMembers(gid int32, db *sql.DB) ([]*pb.UserRecord, error) {
 	defer rows.Close()
 
 	grpMems := make([]*pb.UserRecord, 0)
+	grpMemsOffline := make([]*pb.UserRecord, 0)
 
 	for rows.Next() {
 		gm := new(pb.UserRecord)
@@ -253,14 +239,18 @@ func GetGruopMembers(gid int32, db *sql.DB) ([]*pb.UserRecord, error) {
 		}
 		gm.IsFriend = false
 		// 群成员的在线状态去redis取
-		_, err := getUserStatusFromCache(gm.Uid, cache.GetRedisClient())
+		res, err := getUserStatusFromCache(gm.Uid, cache.GetRedisClient())
 		if err != nil {
 			gm.Online = USER_OFFLINE
 		}
-		gm.Online = USER_ONLINE
-		grpMems = append(grpMems, gm)
+		gm.Online = res
+		if gm.Online == USER_ONLINE {
+			grpMems = append(grpMems, gm)
+		}  else {
+			grpMemsOffline = append(grpMemsOffline, gm)
+		}
 	}
-
+	grpMems = append(grpMems, grpMemsOffline...)
 	return grpMems, nil
 }
 
@@ -271,24 +261,24 @@ func MakeUserDataKey(uid int32) string {
 // 获取用户状态
 func getUserStatusFromCache(uId int32, redisCli redis.Conn) (int32, error) {
 	if redisCli == nil {
-		return -1, errors.New("redis conn is nil")
+		return USER_OFFLINE, errors.New("redis conn is nil")
 	}
 	defer redisCli.Close()
 
 	value, err := redisCli.Do("HGET", MakeUserDataKey(uId), "online")
 	if err != nil {
-		fmt.Println("hmget failed", err.Error())
-		return -1, err
+		log.Println("hmget failed", err.Error())
+		return USER_OFFLINE, err
 	}
 
-	log.Println("value :", value)
+	log.Printf("online value :%s", value)
 	if value == nil {
-		return -1, errors.New("no find")
+		return USER_OFFLINE, errors.New("no find")
 	} else {
 		res, err := strconv.Atoi(string(value.([]byte)))
 		if err != nil {
-			fmt.Println("hmget failed", err.Error())
-			return -1, err
+			log.Println("hmget failed", err.Error())
+			return USER_OFFLINE, err
 		}
 		return int32(res), nil
 	}

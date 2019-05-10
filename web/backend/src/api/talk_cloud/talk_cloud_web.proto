@@ -7,13 +7,20 @@ import "talk_cloud_model.proto";
 service WebService {
     rpc UpdateGroup (UpdateGroupReq) returns (UpdateGroupResp) {
     };
-    rpc DeleteGroup (Group) returns (DeleteGroupResp) {  // 返回的消息暂定
+    rpc DeleteGroup (Group) returns (DeleteGroupResp) { // 返回的消息暂定
     };
     rpc ImportDeviceByRoot (ImportDeviceReq) returns (ImportDeviceResp) {
     };
+    rpc UpdateDeviceInfo (UpdDInfoReq) returns (UpdDInfoResp) {
+    };
+}
+message UpdDInfoReq {
+    DeviceUpdate deviceInfo = 1;
 }
 
-
+message UpdDInfoResp {
+    Result res = 1;
+}
 message UpdateGroupReq {
     repeated int64 deviceIds = 2;
     repeated Member deviceInfos = 3;
@@ -30,10 +37,40 @@ message DeleteGroupResp {
 
 message ImportDeviceReq {
     int32 accountId = 1;
-    repeated string deviceImei = 2;
+    repeated DeviceInfo Devices = 2;
 }
 
 message ImportDeviceResp {
     Result result = 1;
 }
 
+message DeviceInfo {
+    int32 Id = 1;
+    string IMei = 2;
+    string UserName = 3;
+    string PassWord = 4;
+    int32 AccountId = 5;
+    string CreateTime = 6;
+    string LLTime = 7;
+    string ChangeTime = 8;
+    uint64 LocalTime = 9;
+    float Speed = 10;
+    float Course = 11;
+    string DeviceType = 12;
+    string ActiveTime = 13;
+    string SaleTime = 14;
+}
+
+message DeviceUpdate {
+    int32 Id = 1;
+    string IMei = 2;
+    string NickName = 3;
+    int32 LoginId = 4;
+    string CreateTime = 6;
+    string LLTime = 7;
+    string ChangeTime = 8;
+    uint64 LocalTime = 9;
+    string DeviceType = 12;
+    string ActiveTime = 13;
+    string SaleTime = 14;
+}

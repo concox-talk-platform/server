@@ -8,6 +8,7 @@ package controllers
 import (
 	"database/sql"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"log"
 	"model"
 	"net/http"
@@ -19,6 +20,7 @@ import (
 // 登录
 func SignIn(c *gin.Context) {
 	// 1. 取出Post请求中的body内容
+	logrus.Info("logrous info")
 	signINBody := &model.Account{}
 	if err := c.BindJSON(signINBody); err != nil {
 		log.Printf("%s", err)

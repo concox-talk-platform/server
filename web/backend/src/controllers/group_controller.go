@@ -142,6 +142,7 @@ func CreateGroup(c *gin.Context) {
 		log.Printf("grpc.Dial err : %v", err)
 	}
 	webCli := pb.NewTalkCloudClient(conn)
+	log.Printf("++++++++++++++webCli: %+v", webCli)
 	var deviceIds string
 	for _, v := range gList.DeviceIds {
 		if v == -1 {
@@ -185,6 +186,7 @@ func CreateGroup(c *gin.Context) {
 	log.Println(resCreate)
 	c.JSON(http.StatusOK, gin.H{
 		"result": "success",
+		"group_info":resCreate.GroupInfo,
 		"msg":    resCreate.Res.Msg,
 	})
 }

@@ -17,6 +17,7 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+	"utils"
 )
 
 const (
@@ -35,7 +36,7 @@ func UpdateUserLocationInCache(req *pb.ReportDataReq, redisCli redis.Conn) error
 	defer redisCli.Close()
 
 	if _, err := redisCli.Do("HMSET", MakeUserDataKey(req.DeviceInfo.Id),
-		"local_time", convertTimeUnix(req.LocationInfo.GpsInfo.LocalTime),
+		"local_time", utils.ConvertTimeUnix(req.LocationInfo.GpsInfo.LocalTime),
 		"lon", req.LocationInfo.GpsInfo.Longitude,
 		"lat", req.LocationInfo.GpsInfo.Latitude,
 		"speed", req.LocationInfo.GpsInfo.Speed,
@@ -48,7 +49,7 @@ func UpdateUserLocationInCache(req *pb.ReportDataReq, redisCli redis.Conn) error
 }
 
 // TODO 给web端推送数据
-func GetUserLocationInCache(uId int32, rd redis.Conn) (*pb.GPSHttpResp, error) {
+func GetUserLocationInCache(uId int32, rd redis.Conn) (*pb.GPSHttpResp, *pb.GPS, error) {
 	defer rd.Close()
 
 	value, err := redis.Values(rd.Do("HMGET", MakeUserDataKey(uId),
@@ -59,7 +60,8 @@ func GetUserLocationInCache(uId int32, rd redis.Conn) (*pb.GPSHttpResp, error) {
 	//log.Printf("Get group %d user info value string  : %s from cache ", gid, value)
 
 	var valueStr string
-	var gpsData *pb.GPSHttpResp
+	var gpsDataResp *pb.GPSHttpResp
+	var gpsData *pb.GPS
 	resStr := make([]string, 0)
 	for _, v := range value {
 		if v != nil {
@@ -94,20 +96,20 @@ func GetUserLocationInCache(uId int32, rd redis.Conn) (*pb.GPSHttpResp, error) {
 		if err != nil {
 			log.Printf("convent lTime error:%v", err)
 		}
-
-		gpsData = &pb.GPSHttpResp{
-			Uid: uId,
-			Res: &pb.Result{Msg: "", Code: http.StatusOK},
-			GpsInfo: &pb.GPS{
-				LocalTime: uint64(lTimeT.Unix()),
-				Longitude: lon,
-				Latitude:  lat,
-				Speed:     float32(speed),
-				Course:    float32(course),
-			},
+		gpsData = &pb.GPS{
+			LocalTime: uint64(lTimeT.Unix()),
+			Longitude: lon,
+			Latitude:  lat,
+			Speed:     float32(speed),
+			Course:    float32(course),
+		}
+		gpsDataResp = &pb.GPSHttpResp{
+			Uid:     uId,
+			Res:     &pb.Result{Msg: "", Code: http.StatusOK},
+			GpsInfo: gpsData,
 		}
 	} else {
 		// 去数据库查找，返回空
 	}
-	return gpsData, nil
+	return gpsDataResp, gpsData, nil
 }

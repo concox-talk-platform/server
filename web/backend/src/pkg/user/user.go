@@ -9,6 +9,7 @@ import (
 	"github.com/smartwalle/dbs"
 	"log"
 	"model"
+	"server/web/backend/src/utils"
 	"time"
 )
 
@@ -115,7 +116,7 @@ func SelectUserByKey(key interface{}) (*model.User, error) {
 func SelectUserByAccountId(aid int) ([]*model.Device, error) {
 	var stmtOut *sql.Stmt
 	var err error
-	stmtOut, err = dbConn.Prepare("SELECT id, imei, name, passwd, cid, create_time, last_login_time, change_time FROM user WHERE cid = ?")
+	stmtOut, err = dbConn.Prepare("SELECT id, imei, name, nick_name, passwd, cid, create_time, last_login_time, change_time, d_type, active_time, sale_time FROM user WHERE cid = ?")
 
 	if err != nil {
 		log.Printf("%s", err)
@@ -130,20 +131,25 @@ func SelectUserByAccountId(aid int) ([]*model.Device, error) {
 
 	for rows.Next() {
 		var (
-			id, accountId             int
-			userName, pwd, iMei       string
-			cTime, llTime, changeTime string
+			id, accountId                  int
+			userName, nickName, pwd, iMei            string
+			cTime, llTime, changeTime      string
+			d_type, active_time, sale_time string
 		)
-		if err := rows.Scan(&id, &iMei, &userName, &pwd, &accountId, &cTime, &llTime, &changeTime); err != nil {
+		if err := rows.Scan(&id, &iMei, &userName, &nickName, &pwd, &accountId, &cTime, &llTime, &changeTime, &d_type, &active_time, &sale_time); err != nil {
 			return res, err
 		}
 
 		d := &model.Device{
 			Id:         id,
 			IMei:       iMei,
+			NickName:   nickName,
 			UserName:   userName, //PassWord: pwd,
 			AccountId:  accountId,
 			CreateTime: cTime,
+			DeviceType: d_type,
+			SaleTime:   utils.UnixStrToTimeFormat(sale_time),
+			ActiveTime: utils.UnixStrToTimeFormat(active_time),
 		}
 		res = append(res, d)
 	}
@@ -173,4 +179,37 @@ func SetLockGroupId(req *pb.SetLockGroupIdReq, db *sql.DB) error {
 	}
 
 	return nil
+}
+
+// 找出所有的用户ID
+func SelectAllUserId() ([]int32, error) {
+	var stmtOut *sql.Stmt
+	var err error
+	stmtOut, err = dbConn.Prepare("SELECT id FROM `user`")
+
+	if err != nil {
+		log.Printf("%s", err)
+		return nil, err
+	}
+	var res []int32
+
+	rows, err := stmtOut.Query()
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var id int32
+		if err := rows.Scan(&id); err != nil {
+			return res, err
+		}
+		res = append(res, id)
+	}
+
+	defer func() {
+		if err := stmtOut.Close(); err != nil {
+			log.Println("Statement close fail")
+		}
+	}()
+	return res, nil
 }

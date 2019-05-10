@@ -16,9 +16,14 @@ import (
 	tl "pkg/location"
 	"server/common/src/cache"
 	"server/common/src/db"
+	"configs/grpc_server"
+	"service/grpc_client_pool"
 )
 
 const (
+	GSP_DATA_REPORT = 1
+	SOS_DATA_REPORT = 2
+
 	MYSQL_STORE_SUCCESS = 1
 	MYSQL_STORE_FAIL    = 0
 
@@ -31,7 +36,7 @@ type TalkCloudLocationServiceImpl struct {
 
 func (tcs *TalkCloudLocationServiceImpl) GetGpsData(ctx context.Context, req *pb.GPSHttpReq) (*pb.GPSHttpResp, error) {
 	log.Printf("GetGpsData req : %v", req.Uid)
-	res, err := tl.GetUserLocationInCache(req.Uid, cache.GetRedisClient())
+	res, _, err := tl.GetUserLocationInCache(req.Uid, cache.GetRedisClient())
 	if err != nil {
 		log.Printf("GetGpsData error: %+v", err)
 	}
@@ -39,17 +44,14 @@ func (tcs *TalkCloudLocationServiceImpl) GetGpsData(ctx context.Context, req *pb
 }
 
 type worker struct {
-	dataStoreState   chan int
-	updateRedisState chan int
+	dataStoreState   int
+	updateRedisState int
 }
 
 // 处理上报数据
 func (tcs *TalkCloudLocationServiceImpl) ReportGPSData(ctx context.Context, req *pb.ReportDataReq) (*pb.ReportDataResp, error) {
 	// TODO 暂时认为存储到mysql之后，GPS数据一定更新成功, 更新不成，就去mysql查询最新一条数据出来
-	gpsWorker := &worker{
-		dataStoreState:   make(chan int, 1),
-		updateRedisState: make(chan int, 1),
-	}
+	gpsWorker := &worker{}
 
 	// 1. 首先对数据进行参数校验
 	match, err := preCheckData(req)
@@ -57,17 +59,21 @@ func (tcs *TalkCloudLocationServiceImpl) ReportGPSData(ctx context.Context, req 
 		return &pb.ReportDataResp{Res: &pb.Result{Msg: "parmas is not correct", Code: http.StatusUnprocessableEntity}}, err
 	}
 
-	log.Printf("receiver data: %+v", req)
+	log.Printf("receiver type: %+d data: %+v", req.DataType, req)
+
 	// 2. 存储到mysql中
-	go storeReportData(req, gpsWorker)
+	storeReportData(req, gpsWorker)
 
 	// 3. 更新缓存中GPS数据
-	go updateGPSDataByReq(req, gpsWorker)
+	updateGPSDataByReq(req, gpsWorker)
 
-	updateRedisState := <-gpsWorker.updateRedisState
-	if updateRedisState == REDIS_UPDATE_FAIL {
+	if gpsWorker.updateRedisState == REDIS_UPDATE_FAIL {
 		// 保证redis数据库里的数据一定是mysql中最新的那条记录
 		updateGPSDataByMysql(req)
+	}
+
+	if req.DataType == SOS_DATA_REPORT {
+		reportSosMsg(req)
 	}
 
 	return &pb.ReportDataResp{Res: &pb.Result{Msg: "Receive data success", Code: 200}}, nil
@@ -77,23 +83,23 @@ func (tcs *TalkCloudLocationServiceImpl) ReportGPSData(ctx context.Context, req 
 func storeReportData(req *pb.ReportDataReq, gw *worker) {
 	if err := tl.InsertLocationData(req, db.DBHandler); err != nil {
 		log.Printf("store data to mysql fail with error: %v", err)
-		gw.dataStoreState <- MYSQL_STORE_FAIL
+		gw.dataStoreState = MYSQL_STORE_FAIL
 	} else {
-		gw.dataStoreState <- MYSQL_STORE_SUCCESS
+		gw.dataStoreState = MYSQL_STORE_SUCCESS
 	}
 
 }
 
 // 更新缓存中的gps数据
 func updateGPSDataByReq(req *pb.ReportDataReq, gw *worker) {
-	mysqlState := <-gw.dataStoreState
+	mysqlState := gw.dataStoreState
 	if mysqlState == MYSQL_STORE_SUCCESS {
 		// 更新数据
 		if err := tl.UpdateUserLocationInCache(req, cache.GetRedisClient()); err != nil {
 			log.Printf("redis update data fail with error: %v", err)
-			gw.updateRedisState <- REDIS_UPDATE_FAIL
+			gw.updateRedisState = REDIS_UPDATE_FAIL
 		} else {
-			gw.updateRedisState <- REDIS_UPDATE_SUCCESS
+			gw.updateRedisState = REDIS_UPDATE_SUCCESS
 		}
 	}
 
@@ -114,4 +120,17 @@ func updateGPSDataByMysql(req *pb.ReportDataReq) {
 func preCheckData(req *pb.ReportDataReq) (bool, error) {
 
 	return true, nil
+}
+
+// 正常是要把这个消息写进rabbitMQ，暂时直接调用
+func reportSosMsg(req *pb.ReportDataReq) {
+	// 调用调用GRPC接口，转发数据
+	conn, err := grpc_client_pool.GetConn("127.0.0.1:" + grpc_server.GrpcSPort)
+	if err != nil {
+		log.Printf("grpc.Dial err : %v", err)
+	}
+	webCli := pb.NewTalkCloudClient(conn)
+
+	res, err := webCli.ImSosPublish(context.Background(), req)
+	log.Printf("sos!!! res: %+v", res)
 }

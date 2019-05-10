@@ -8,39 +8,41 @@
 package utils
 
 import (
-	"io/ioutil"
-	"os"
 	"testing"
 )
+//
+//func testCheckPwd(t *testing.T) {
+//	t.Log(CheckPwd("gagdfh"))
+//}
+//
+//func testCheckNickName(t *testing.T) {
+//	t.Log(CheckNickName("中"))
+//}
+//
+//func testCheckUserName(t *testing.T) {
+//	t.Log(CheckUserName("safs"))
+//}
+//
+//func testCheckId(t *testing.T) {
+//	t.Log(CheckId(-1))
+//}
+//// 获取文件大小的接口
+//type Size interface {
+//	Size() int64
+//}
+//func testGetFileType(t *testing.T) {
+//	//f, err := os.Open("C:\\Users\\Administrator\\Desktop\\api.html")
+//	f, err := os.Open("C:\\Users\\Administrator\\Desktop\\335_1556418847_1556418846861_voice_1556417943423.mp3")
+//	//f, err := os.Open("C:\\Users\\Public\\Music\\Sample Music\\Kalimba.mp3")
+//	if err != nil {
+//		t.Logf("open error: %v", err)
+//	}
+//
+//	fSrc, err := ioutil.ReadAll(f)
+//	t.Log(GetFileType(fSrc[:10]))
+//	t.Logf("file len:")
+//}
 
-func testCheckPwd(t *testing.T) {
-	t.Log(CheckPwd("gagdfh"))
-}
-
-func testCheckNickName(t *testing.T) {
-	t.Log(CheckNickName("中"))
-}
-
-func testCheckUserName(t *testing.T) {
-	t.Log(CheckUserName("safs"))
-}
-
-func testCheckId(t *testing.T) {
-	t.Log(CheckId(-1))
-}
-// 获取文件大小的接口
-type Size interface {
-	Size() int64
-}
-func testGetFileType(t *testing.T) {
-	//f, err := os.Open("C:\\Users\\Administrator\\Desktop\\api.html")
-	f, err := os.Open("C:\\Users\\Administrator\\Desktop\\335_1556418847_1556418846861_voice_1556417943423.mp3")
-	//f, err := os.Open("C:\\Users\\Public\\Music\\Sample Music\\Kalimba.mp3")
-	if err != nil {
-		t.Logf("open error: %v", err)
-	}
-
-	fSrc, err := ioutil.ReadAll(f)
-	t.Log(GetFileType(fSrc[:10]))
-	t.Logf("file len:")
+func TestGettime(t *testing.T) {
+	t.Log(UnixStrToTimeFormat("1557475724"))
 }

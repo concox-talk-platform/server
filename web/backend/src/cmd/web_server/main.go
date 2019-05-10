@@ -7,6 +7,7 @@ package main
 
 import (
 	cfgWs "configs/web_server"
+	"flag"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/lestrrat/go-file-rotatelogs"
@@ -16,13 +17,18 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"server/web/backend/src/controllers"
+	"controllers"
 	"strings"
 	"time"
 )
 
+
 func main() {
 	engine := Prepare()
+	//engine.Use(TlsHandler())
+	//if err := engine.RunTLS(":"+cfgWs.WebPort, cfgWs.CertFile, cfgWs.KeyFile); err != nil {
+	//	log.Printf("Read pem key file error: %+v", err)
+	//}
 	if err := engine.Run(":" + cfgWs.WebPort); err != nil {
 		log.Println("listen is error", err)
 	}
@@ -40,11 +46,6 @@ func Prepare() *gin.Engine {
 
 	// 日志， 解决跨域问题
 	engine.Use(Logger(), Cors())
-
-	// runTls error
-	/*if err := engine.RunTLS(":8888", "fullchain.pem", "privkey.pem");err != nil {
-		log.Println("")
-	}*/
 
 	// 注册路由
 	// account
@@ -78,6 +79,8 @@ func Prepare() *gin.Engine {
 	// device
 	engine.POST("/device/import/:account_name", controllers.ImportDeviceByRoot)
 
+	engine.POST("/device/update", controllers.UpdateDeviceInfo)
+
 	// upload file
 	engine.POST("/upload", controllers.UploadFile)
 
@@ -103,7 +106,7 @@ func Cors() gin.HandlerFunc {
 		}
 		if origin != "" {
 			c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-			c.Header("Access-Control-Allow-Origin", "*")                                       // 这是允许访问所有域
+			c.Header("Access-Control-Allow-Origin", "*")                                       // 允许访问所有域
 			c.Header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE,UPDATE") //服务器支持的所有跨域请求的方法,为了避免浏览次请求的多次'预检'请求
 			//  header的类型
 			c.Header("Access-Control-Allow-Headers", "Authorization, Content-Length, X-CSRF-Token, Token,session,X_Requested_With,Accept, Origin, Host, Connection, Accept-Encoding, Accept-Language,DNT, X-CustomHeader, Keep-Alive, User-Agent, X-Requested-With, If-Modified-Since, Cache-Control, Content-Type, Pragma")
@@ -171,10 +174,12 @@ func Logger() gin.HandlerFunc {
 }
 
 func TlsHandler() gin.HandlerFunc {
+	addr := flag.String("a", "localhost", "ssl 默认主机" )
+	flag.Parse()
 	return func(c *gin.Context) {
 		secureMiddleware := secure.New(secure.Options{
 			SSLRedirect: true,
-			SSLHost:     "localhost:8080",
+			SSLHost:     *addr + ":"+ cfgWs.WebPort,
 		})
 		err := secureMiddleware.Process(c.Writer, c.Request)
 

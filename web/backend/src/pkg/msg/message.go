@@ -55,7 +55,7 @@ func AddMsg(msg *pb.ImMsgReqData, db *sql.DB) error {
 	if db == nil {
 		return fmt.Errorf("db is nil")
 	}
-
+	log.Printf("msg: %+v", msg)
 	timeStr := time.Now().Format(cfgComm.TimeLayout)
 	sql := fmt.Sprintf("INSERT INTO message(sender_id, s_name, send_time, recv_name, receiver_id, receiver_type, msg_type, content, create_time) "+
 		"VALUES(%d,'%s','%s','%s',%d,%d,'%d','%s','%s')", msg.Id, msg.SenderName, msg.SendTime, msg.ReceiverName, msg.ReceiverId, msg.ReceiverType, msg.MsgType, msg.ResourcePath, timeStr)
@@ -92,13 +92,24 @@ func AddMultiMsg(msg *pb.ImMsgReqData, receiverId []int32, db *sql.DB) error {
 	return nil
 }
 
+const (
+	IM_TEXT_MSG         = 1 // 普通文本
+	IM_IMAGE_MSG        = 2 // 图片
+	IM_VOICE_MSG        = 3 // 音频文件
+	IM_VIDEO_MSG        = 4 // 视频文件
+	IM_PDF_MSG          = 5 // PDF文件
+	IM_SOS              = 6 // SOS消息
+	IM_UNKNOWN_TYPE_MSG = 10000
+)
+
 func GetMsg(uid int32, stat int32, db *sql.DB) ([]*pb.ImMsgReqData, error) {
 	if db == nil {
 		return nil, fmt.Errorf("db is nil")
 	}
 
-	sql := fmt.Sprintf(`SELECT sender_id, s_name, send_time, recv_name, receiver_id, receiver_type, gid, msg_type, content
-		FROM message WHERE receiver_id=%d AND stat=%d`, uid, stat)
+
+	sql := fmt.Sprintf(`SELECT sender_id, s_name, send_time, recv_name, receiver_id, receiver_type, gid, msg_type, content 
+FROM message WHERE receiver_id=%d AND stat=%d AND msg_type BETWEEN %d AND %d ORDER BY create_time DESC`, uid, stat, IM_TEXT_MSG, IM_PDF_MSG)
 	rows, err := db.Query(sql)
 	if err != nil {
 		log.Printf("query(%s), error(%s)\n", sql, err)

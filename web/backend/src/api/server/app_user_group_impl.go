@@ -76,23 +76,43 @@ func (serv *TalkCloudServiceImpl) CreateGroup(ctx context.Context, req *pb.Creat
 		gl.GroupInfo.Id = int(gid)
 	}
 
-	// 增加到缓存  TODO 出错就清空缓存算了
+	// 群组信息和群组成员id增加到缓存
 	if err := tgc.AddGroupAndUserInCache(gl, cache.GetRedisClient()); err != nil {
 		log.Printf("CreateGroup AddGroupAndUserInCache error: %v", err)
 	}
 
 	// 增加所创建群所含成员也要加进缓存,因为每个成员都新加了一个群组,还要把每个人的信息也加入缓存
-	for _, v := range gl.DeviceIds {
-		if err := tgc.AddGroupSingleMemCache(int32(gl.GroupInfo.Id), int32(v), cache.GetRedisClient()); err != nil {
-			log.Printf("CreateGroup AddGroupAndUserInCache error: %v", err)
-		}
+	if userType == CREATE_GROUP_BY_DISPATCHER {
+		for _, v := range gl.DeviceInfo {
+			uId :=  ((v.(map[string]interface{}))["id"]).(int)
+			if err := tgc.AddGroupSingleMemCache(int32(gl.GroupInfo.Id), int32(uId), cache.GetRedisClient()); err != nil {
+				log.Printf("CreateGroup AddGroupAndUserInCache error: %v", err)
+			}
 
-		if err := tuc.AddUserForSingleGroupCache(int32(v), int32(gl.GroupInfo.Id), cache.GetRedisClient()); err != nil {
-			log.Println("CreateGroup add group member into single group into cache error:", err)
-		}
+			if err := tuc.AddUserForSingleGroupCache(int32(uId), int32(gl.GroupInfo.Id), cache.GetRedisClient()); err != nil {
+				log.Println("CreateGroup add group member into single group into cache error:", err)
+			}
 
-		u := &pb.UserRecord{}
-		tuc.UpdateUserFromDBToRedis(u, v)
+			u := &pb.UserRecord{}
+			if uId != gl.GroupInfo.AccountId {  // TODO 有问题， 为什么要写这一步，暂时放着
+				tuc.UpdateUserFromDBToRedis(u, uId)
+			}
+		}
+	} else {
+		for _, v := range gl.DeviceIds {
+			if err := tgc.AddGroupSingleMemCache(int32(gl.GroupInfo.Id), int32(v), cache.GetRedisClient()); err != nil {
+				log.Printf("CreateGroup AddGroupAndUserInCache error: %v", err)
+			}
+
+			if err := tuc.AddUserForSingleGroupCache(int32(v), int32(gl.GroupInfo.Id), cache.GetRedisClient()); err != nil {
+				log.Println("CreateGroup add group member into single group into cache error:", err)
+			}
+
+			u := &pb.UserRecord{}
+			if v != gl.GroupInfo.AccountId {  // TODO 有问题， 为什么要写这一步，暂时放着
+				tuc.UpdateUserFromDBToRedis(u, v)
+			}
+		}
 	}
 
 	return &pb.CreateGroupResp{
@@ -213,7 +233,7 @@ func (serv *TalkCloudServiceImpl) JoinGroup(ctx context.Context, req *pb.GrpUser
 		if err := tuc.AddUserDataInCache(&pb.Member{
 			Id:          u.Uid,
 			IMei:        u.Imei,
-			UserName:    u.Name,
+			NickName:    u.Name,
 			Online:      u.Online,
 			LockGroupId: u.LockGroupId,
 		}, cache.GetRedisClient()); err != nil {
@@ -249,7 +269,7 @@ func (serv *TalkCloudServiceImpl) GetGroupList(ctx context.Context, req *pb.GrpL
 				log.Printf("get GroupList %+v", err)
 				return &pb.GroupListRsp{Res: &pb.Result{Code: 500, Msg: "process error, please try again"}}, err
 			}
-			log.Println("start update redis")
+			log.Println("start update redis GetGroupListFromDB")
 			// 新增到缓存 更新两个地方，首先，每个组的信息要更新，就是group data，记录了群组的id和名字
 			if err := tgc.AddGroupInCache(gl, cache.GetRedisClient()); err != nil {
 				log.Printf("get GroupList %+v", err)
@@ -268,7 +288,7 @@ func (serv *TalkCloudServiceImpl) GetGroupList(ctx context.Context, req *pb.GrpL
 					if err := tuc.AddUserDataInCache(&pb.Member{
 						Id:          u.Uid,
 						IMei:        u.Imei,
-						UserName:    u.Name,
+						NickName:    u.Name,
 						Online:      u.Online,
 						LockGroupId: u.LockGroupId,
 					}, cache.GetRedisClient()); err != nil {
@@ -323,6 +343,7 @@ func (serv *TalkCloudServiceImpl) SearchGroup(ctx context.Context, req *pb.GrpSe
 }
 
 func (serv *TalkCloudServiceImpl) RemoveGrpUser(ctx context.Context, req *pb.GrpUserDelReq) (*pb.GrpUserDelRsp, error) {
+	log.Printf("uid: %d, gid:%d", req.Uid, req.Gid)
 	err := group.RemoveGroupMember(req.Uid, req.Gid, db.DBHandler)
 	resp := &pb.GrpUserDelRsp{
 		Res: &pb.Result{
@@ -341,9 +362,11 @@ func (serv *TalkCloudServiceImpl) RemoveGrpUser(ctx context.Context, req *pb.Grp
 		log.Println("JoinGroup AddUserForSingleGroupCache error: ", err)
 	}
 	// 2. 更新群组里有哪些用户那个set AddGroupSingleMemCache
-	if err := tgc.RemoveGroupSingleMemCache(req.Uid, req.Gid, cache.GetRedisClient()); err != nil {
+	if err := tgc.RemoveGroupSingleMemCache(req.Gid, req.Uid, cache.GetRedisClient()); err != nil {
 		log.Println("JoinGroup AddUserForSingleGroupCache error: ", err)
 	}
+	resp.Res.Code = http.StatusOK
+	resp.Res.Msg = "remove Group User success."
 	return resp, err
 }
 

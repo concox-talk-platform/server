@@ -8,6 +8,7 @@
 package web_server
 
 import (
+	"flag"
 	"github.com/go-ini/ini"
 	"log"
 	"os"
@@ -19,10 +20,14 @@ var (
 	FILE_BASE_URL     string // 保存文件到fastdfs服务器之后的访问前缀（ip、域名）
 	TrackerServerAddr string // fastdfs的tracker服务器的地址（包含ip）
 	MaxConn           int    // fastdfs上传文件的最大连接数
+	CertFile          string // https pem文件名
+	KeyFile           string // https key文件
 )
 
 func init() {
-	cfg, err := ini.Load("web_conf.ini") // 编译之后的执行文件所在位置的相对位置
+	cfgFilePath := flag.String("d", "web_conf.ini", "web api configuration file path")
+	flag.Parse()
+	cfg, err := ini.Load(*cfgFilePath) // 编译之后的执行文件所在位置的相对位置
 	if err != nil {
 		log.Printf("Fail to read file: %v", err)
 		os.Exit(1)
@@ -36,4 +41,8 @@ func init() {
 	//fastdfs
 	TrackerServerAddr = cfg.Section("fastdfs").Key("tracker_server").String()
 	MaxConn, _ = cfg.Section("fastdfs").Key("maxConns").Int()
+
+	// https
+	CertFile = cfg.Section("https").Key("cert_file").String()
+	KeyFile = cfg.Section("https").Key("key_file").String()
 }

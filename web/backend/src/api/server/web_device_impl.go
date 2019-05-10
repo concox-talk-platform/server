@@ -21,8 +21,8 @@ import (
 func (wssu *WebServiceServerImpl) ImportDeviceByRoot(ctx context.Context, req *pb.ImportDeviceReq) (*pb.ImportDeviceResp, error) {
 	// 设备串号和账户id进行校验
 	log.Println("start Import DeviceByRoot")
-	for _, v := range req.DeviceImei {
-		if v == "" {
+	for _, v := range req.Devices {
+		if v == nil || v.IMei == "" {
 			return &pb.ImportDeviceResp{
 				Result: &pb.Result{
 					Msg:  "Import device Imei can't be empty! please try again later.",
@@ -43,13 +43,17 @@ func (wssu *WebServiceServerImpl) ImportDeviceByRoot(ctx context.Context, req *p
 	}
 
 	devices := make([]*model.User, 0)
-	for _, v := range req.DeviceImei {
+	for _, v := range req.Devices {
 		devices = append(devices, &model.User{
-			IMei:      v,
-			UserName:  string([]byte(v)[7:len(v)]),
-			PassWord:  string([]byte(v)[7:len(v)]),
-			AccountId: int(req.GetAccountId()),
-			ParentId: "1",
+			IMei:       v.IMei,
+			UserName:   v.IMei,
+			NickName:   string([]byte(v.IMei)[12:len(v.IMei)]),
+			PassWord:   string([]byte(v.IMei)[9:len(v.IMei)]),
+			AccountId:  int(req.GetAccountId()),
+			ParentId:   "1",
+			DeviceType: v.DeviceType,
+			ActiveTime: v.ActiveTime,
+			SaleTime:   v.SaleTime,
 		})
 	}
 
@@ -65,6 +69,23 @@ func (wssu *WebServiceServerImpl) ImportDeviceByRoot(ctx context.Context, req *p
 	return &pb.ImportDeviceResp{
 		Result: &pb.Result{
 			Msg:  "import device successful.",
+			Code: http.StatusOK,
+		},
+	}, nil
+}
+
+func (wssu *WebServiceServerImpl) UpdateDeviceInfo(ctx context.Context, req *pb.UpdDInfoReq) (*pb.UpdDInfoResp, error) {
+	if err := td.UpdateDeviceInfo(&model.User{IMei: req.DeviceInfo.IMei, NickName: req.DeviceInfo.NickName,}); err != nil {
+		return &pb.UpdDInfoResp{
+			Res: &pb.Result{
+				Msg:  "Update DeviceInfo device error, please try again later.",
+				Code: http.StatusInternalServerError,
+			},
+		}, err
+	}
+	return &pb.UpdDInfoResp{
+		Res: &pb.Result{
+			Msg:  "Update DeviceInfo device successful!!!!!",
 			Code: http.StatusOK,
 		},
 	}, nil
