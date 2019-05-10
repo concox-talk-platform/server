@@ -10,11 +10,12 @@ import (
 	"net"
 	"net/http"
 	_ "net/http/pprof"
+	"server/web/backend/src/api/server"
 )
 
 func init() {
 	// 加载数据库中所有的数据到缓存
-	//server.DataInit()
+	server.DataInit()
 	//server.ConcurrentEngine{
 	//	Scheduler: &server.SimpleScheduler{},
 	//	WorkerCount: 10,   // 加载redis数据的协程数
@@ -28,7 +29,7 @@ func main() {
 	go func() {
 		_ = http.ListenAndServe(cfgGs.PprofAddr, nil)
 	}()
-	
+
 
 	talkCloudServer := grpc.NewServer()
 	talk_cloud.RegisterTalkCloudServer(talkCloudServer, &gServer.TalkCloudServiceImpl{})

@@ -165,7 +165,7 @@ func pttMsgDispatcher(dc *DataContext, pttMsg *interphoneMsg) {
 			SenderName:   imU.Name,
 			ReceiverType: IM_MSG_FROM_UPLOAD_RECEIVER_IS_GROUP,
 			ReceiverId:   imG.Gid,
-			ResourcePath: pttMsg.FilePath,
+			ResourcePath: cfgGs.FILE_BASE_URL + pttMsg.FilePath,
 			MsgType:      fType,
 			ReceiverName: imG.GroupName,
 			SendTime:     pttMsg.Timestamp, // TODO 时间戳转换
