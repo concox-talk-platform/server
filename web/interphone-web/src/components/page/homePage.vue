@@ -82,9 +82,11 @@
                             <el-table-column type="selection" width="55" ></el-table-column>
                             <el-table-column  type="index" width="80" :label="$t('table.number')"></el-table-column>
                             <el-table-column prop="imei" label="IMEI" width="240"> </el-table-column>
-                            <el-table-column prop="bind_status.String" :label="$t('table.model')" width="80" > </el-table-column>
+                            <el-table-column prop="device_type" :label="$t('table.model')" width="80" > </el-table-column>
                             <el-table-column prop="user_name" :label="$t('table.name')" width="240" > </el-table-column>
-                            <el-table-column prop="create_time" :label="$t('table.time')" width="140"> </el-table-column>
+                            <el-table-column prop="create_time" :label="$t('table.time')" width="150"> </el-table-column>
+                            <el-table-column prop="sale_time" :label="$t('table.sell')" width="150"> </el-table-column>
+                            <el-table-column prop="nick_name" :label="$t('table.nickname')" width="150"> </el-table-column>
                             <el-table-column :label="$t('table.operation')" >
                             <!-- <el-table-column type="selection" style="width: 10%" ></el-table-column>
                             <el-table-column  type="index" style="width: 30%" :label="$t('table.number')"></el-table-column>
@@ -95,6 +97,7 @@
                             <el-table-column :label="$t('table.operation')" style="width: 5%" >  -->
                                 <template slot-scope="scope">
                                             <el-button size="mini" @click="device_export(scope.$index, scope.row)">{{$t('table.export')}}</el-button>
+                                            <el-button size="mini" @click="device_amend(scope.$index, scope.row)">{{$t('table.amend')}}</el-button>
                                     </template>
                             </el-table-column>
                         </el-table>
@@ -220,6 +223,18 @@
                     <el-input v-model.number="imei_data[scope.$index].iemi"   ref="iemi_rule"></el-input>
                     </template>
                     </el-table-column>
+                    <el-table-column prop="leixing" label="versions ">
+                        <template  slot-scope="scope">
+                        <el-select v-model="imei_data[scope.$index].version_value" :placeholder="$t('table.select')">
+                            <el-option
+                              v-for="item in version_type"
+                              :key="item.value"
+                              :label="item.label"
+                              :value="item.value">
+                            </el-option>
+                          </el-select>
+                        </template>
+                        </el-table-column>
                     <el-table-column prop="command" :label="$t('table.operation')">
                     <template  slot-scope="scope">
                     <el-button @click="delete_imei(scope.$index)">{{$t('group.remove')}}</el-button>
@@ -234,6 +249,31 @@
             <el-button type="primary" @click="import_submit">{{$t('button_message.confirm')}}</el-button>
         </span>
         </el-dialog>
+
+        <!-- 修改设备信息 -->
+        <el-dialog :title="$t('device.title')" :visible.sync="deviceVisible" :show-close="false" width="33%">
+            <el-form ref="deviceForm" :model="deviceForm"  label-width="136px" @submit.native.prevent>
+                <el-form-item :label="$t('device.imei')">
+                  <el-input v-model="deviceForm.imei" autocomplete="off" disabled="disabled" ></el-input>
+                </el-form-item>
+                <el-form-item :label="$t('device.user_name')" >
+                  <el-input v-model="deviceForm.user_name" autocomplete="off" disabled="disabled" ></el-input>
+                </el-form-item>
+                <el-form-item :label="$t('device.import_time')">
+                  <el-input v-model="deviceForm.import_time" autocomplete="off" disabled="disabled" ></el-input>
+                </el-form-item>                
+                 <el-form-item :label="$t('device.type')" >
+                  <el-input v-model="deviceForm.type" autocomplete="off" disabled="disabled" ></el-input>
+                </el-form-item>
+                <el-form-item :label="$t('device.nick_name')" >
+                    <el-input v-model="deviceForm.nick_name" autocomplete="off" ></el-input>
+                  </el-form-item>
+            </el-form>
+            <div slot="footer" class="dialog-footer">
+                <el-button @click="amend_Cancle">{{$t('button_message.cancel')}}</el-button>
+                <el-button type="primary" @click="amend_subimt">{{$t('device.submit')}}</el-button>
+            </div>
+        </el-dialog> 
         
 </el-main>
 
@@ -269,6 +309,7 @@ export default {
             
             // lang:sessionStorage.getItem('lang'/),
             registerVisible:false,
+            deviceVisible:false,
             registerForm: {
                     register_name:'',
                     register_Account: '',
@@ -282,6 +323,14 @@ export default {
                     remark:''
                     
                 }, 
+                deviceForm:{
+                    imei:'',
+                    user_name:'',
+                    import_time:'',
+                    type:'',
+                    nick_name:'',
+
+                },
             register_rules: {
                 register_name: [
                     { required: true, message: this.$t('prompt_message.name'), trigger: 'blur' }
@@ -377,8 +426,13 @@ export default {
         import_show:false,
         // 导入imei号
         imei_data:[],  
-        updata_list:[]
+        updata_list:[],
+        version_type:[
+            {value:'JW10',lable:'JW10'},{value:'T28',lable:'T28'}],
+            // version_value:[],
         }
+
+
     },
     methods: {
             register(){
@@ -662,6 +716,48 @@ export default {
                 this.gridData=[];
                 this.gridData.push(row)
             },
+            device_amend(index, row){
+               window.console.log(index)
+               window.console.log(row)
+               this.deviceVisible=true;
+               this.deviceForm.imei = row.imei;
+               this.deviceForm.user_name=row.user_name;
+               this.deviceForm.import_time=row.create_time;
+               this.deviceForm.type=row.device_type;
+               this.deviceForm.nick_name=row.nick_name
+            },
+            amend_Cancle(){
+                this.$refs['deviceForm'].clearValidate();
+                this.$refs['deviceForm'].resetFields();
+                this.deviceVisible=false;
+            },
+            // 修改设备信息
+            amend_subimt(){
+      
+            var updata_device={};
+            updata_device.IMei = this.deviceForm.imei;
+            updata_device.NickName = this.deviceForm.nick_name;
+            updata_device.LoginId =parseInt(sessionStorage.getItem('id'));
+            window.console.log(updata_device)
+            this.$axios.post('/device/update',updata_device,
+                    { headers: 
+                    {"Authorization" : sessionStorage.getItem('setSession_id')}
+                    })
+                    .then((response) =>{
+                        window.console.log(response)
+                        this.deviceVisible=false;
+                    this.$message({
+                        message: this.$t('device.success'),
+                        type: 'success'
+                    });  
+                    this.update_data();
+                    this.reload();                
+                    })
+                    .catch((error)=>{
+                     window.console.log(error)
+                    });
+            },
+
             // 完整分页
             handleSizeChange(val) {
                 // this.currentPage = currentPage;
@@ -758,30 +854,48 @@ export default {
                     cancelButtonText: this.$t("button_message.cancel")
                 })
                 .then(_ => {
-                    this.device_imei = this.imei_data.map(e =>{
-                        if(e.hasOwnProperty('iemi')){
-                            return e.iemi.toString()
-                        }
-                    })
+                    window.console.log(this.imei_data);
+
+                    var import_device =this.imei_data
+                    var device =[]
+                    if(import_device.length !=0){
+                        window.console.log(import_device)
+                         for(var i =0;i<import_device.length;i++){
+                             var import_data ={}
+                             import_data.IMei= import_device[i].iemi.toString();
+                             import_data.DeviceType= import_device[i].version_value;
+                             import_data.ActiveTime=(new Date()).getTime().toString();
+                             import_data.SaleTime=(new Date()).getTime().toString();
+                             device.push(import_data)
+                         }
+                    }
+                    window.console.log(device)
+                    // this.device_imei = this.imei_data.map(e =>{
+                    //     if(e.hasOwnProperty('iemi')){
+                    //         return e.iemi.toString()
+                    //     }
+                    // })
                     let imei_length=[];
-                    for(var i=0;i<this.device_imei.length;i++){
-                           if(this.device_imei[i].length !== 15){
-                                imei_length.push(this.device_imei[i]); 
+                    for(var j=0;j<device.length;j++){
+                           if(device[j].IMei.length !== 15){
+                                imei_length.push(device[j]); 
                            }
                     }
                     if(imei_length.length == 0){
-                       let decive_data = {};
-                            decive_data.device_imei =this.device_imei;
                             this.imei_data=[];
-                            this.import_show=false;
-                            this.$axios.post('/device/import/SuperRoot',decive_data,
+                            // this.import_show=false;
+                            var import_object={}
+                            import_object.devices=device
+                            window.console.log(import_object)
+                            this.$axios.post('/device/import/SuperRoot',import_object,
                             { headers: 
                             {
                             "Authorization" : sessionStorage.getItem('setSession_id')
                             }
                             })
                             .then(() =>{
-                                this.transfer_dialog=false; 
+                                this.import_show=false; 
+                                
                                 this.customer='';
                                 this.update_data();
                                 this.reload();
@@ -1023,7 +1137,9 @@ export default {
             if(JSON.parse(localStorage.getItem('device_list')) == null){
               return
             }else{
-              return this.device_info;
+                var device_reverse = this.device_info;
+                 device_reverse = device_reverse.reverse();
+              return device_reverse;
             }
            
         },
@@ -1054,6 +1170,7 @@ export default {
     created(){
         this.apply_info();
         this.get_total_mumber();
+        window.console.log(JSON.parse(localStorage.getItem('device_list')) )
 
     },
     beforeMount(){

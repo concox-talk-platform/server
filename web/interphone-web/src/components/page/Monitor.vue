@@ -6,9 +6,55 @@
             <span style="display: none" id="other_name">{{other_name}}</span>
             <div class="other_answer" @click="look_other">{{$t('im.answer')}}</div>
         </div>
-    <!-- <div id="map">
-    </div> -->
-    <intermap></intermap>
+        <!-- SOS呼叫 -->
+        <div class="sos_div" v-if="sos_show"  @click="look_sos">
+            <span class="sos_title">SOS</span>
+            <div class="sos_body">
+                <span>{{sos_name}}</span>&nbsp;
+                <span>{{$t('sos.alert')}}</span>
+            </div>
+            <div class="sos_place">{{$t('sos.place')}}</div>
+            
+        </div>
+        <!-- 下线提醒 -->
+        <div  class="off_line_div"  v-show="off_line_show">
+            <div class="off_title">{{$t('im.off_line')}}</div>
+            <div class="off_body">
+                <span>{{off_line_name}}</span> &nbsp; &nbsp;
+                <span>{{$t('im.off_span')}}</span>
+            </div>
+           <div class="off_foot">
+                <el-button type="primary" @click="off_line_button">{{$t('button_message.confirm')}}</el-button>
+           </div>
+        </div>
+        <!-- 上线提醒 -->
+        <div  class="off_line_div"  v-show="online_show">
+                <div class="off_title">{{$t('im.on_line')}}</div>
+                <div class="off_body">
+                    <span>{{online_name}}</span> &nbsp; &nbsp;
+                    <span>{{$t('im.on_span')}}</span>
+                </div>
+               <div class="off_foot">
+                    <el-button type="primary" @click="online_button">{{$t('button_message.confirm')}}</el-button>
+               </div>
+        </div>
+        <!-- websocket断开提醒 -->
+        <div  class="chat_div"  v-if="refresh_show">
+                <div class="chat_title">{{$t('im.chat')}}</div>
+               <div class="off_foot">
+                    <el-button type="primary" @click="chat_refresh">{{$t('button_message.refresh')}}</el-button>
+               </div>
+        </div>
+        <!-- 地图切换 -->
+        <div class="map_select">
+            <div class="baidumap" :class="{map_active:mapshow}" @click="baidu_selected">{{$t('map.baidu')}}</div>
+            <div class="googlemap" :class="{map_active:!mapshow}" @click="google_selected">{{$t('map.google')}}</div>
+        </div>
+
+
+    <!-- <intermap :postSOS='this.sosGps' ref="soschild" v-if="mapshow"></intermap> -->
+    <intermap  ref="soschild" v-if="mapshow"></intermap>
+    <intergooglemap v-if="!mapshow" ref="googlechild"></intergooglemap>
         <div id="monotor_content">
                 <el-aside>
                 <div style="height:100%"  @click="hide">
@@ -38,8 +84,9 @@
                                         <span class="interphonefamily groupicon">&#xe71b;</span>
                                         <div class="members_num" >
                                             <span class="members_name">{{item.group_info.group_name}}</span>
-                                            <!-- <span class="members_on">  ({{online}} </span>
-                                            <span class="members_totalnum">  /{{totalnum}}) </span> -->
+                                            <!-- <span class="members_on">  3 </span>
+                                            <span >  / </span>
+                                            <span class="members_totalnum">{{item.device_infos.length}}</span> -->
                                         </div>  
                                         <div class="editorial_group" v-show="editorial_show === index">
                                             <div class="ungroup" @click.stop="dissolve" >{{$t('group.dissolve')}}</div>
@@ -204,8 +251,8 @@
                         <div class="im_media">
                             <label for="im_resource"><span class="interphonefamily im_media_icon" :title="$t('im.media')">&#xe7d8;</span></label>
                             <span class="interphonefamily im_media_icon" @click="map_show" >&#xe643;</span>
-                            <span class="interphonefamily im_media_icon" @click="im_audio" :title="$t('video.audio_text')" >&#xe621;</span>
-                            <span class="interphonefamily im_media_icon" @click="im_video" :title="$t('video.video_text')">&#xe616;</span>
+                            <span class="interphonefamily im_media_icon" @click="im_audio" :title="$t('video.audio_text')"   v-show="im_self_show">&#xe621;</span>
+                            <span class="interphonefamily im_media_icon" @click="im_video" :title="$t('video.video_text')" v-show="im_self_show">&#xe616;</span>
                             <div class="im_record"  @click="im_unfold_history">
                             <span class="interphonefamily im_record_icon" >&#xe60d;</span>
                             <span>{{ $t("im.chat_history") }}</span>
@@ -240,8 +287,9 @@
                                 <i class="interphonefamily" @click="im_collapse_history" style="float:right;cursor:pointer;"> &#xe60e;</i>
                             </div>
                             <div class="clearfix">
-                                <div class="im_history_text" @click="select_im_text" v-bind:class="{active_history:im_select_hisrory}">{{ $t("im.text") }}</div>
-                                <div class="im_history_file" @click="select_im_file" v-bind:class="{active_history:!im_select_hisrory}">{{ $t("im.file") }}</div>
+                                <div class="im_history_text" @click="select_im_text" v-bind:class="{active_history:im_select_text}">{{ $t("im.text") }}</div>
+                                <div class="im_history_file" @click="select_im_file" v-bind:class="{active_history:im_select_file}">{{ $t("im.file") }}</div>
+                                <div class="im_history_talk" @click="select_im_talk" v-if="im_record_show"  v-bind:class="{active_history:im_select_talk}">{{ $t("im.talk") }}</div>
                             </div>
 
                         </div>
@@ -277,6 +325,55 @@
                                    </div>
                                 </div>
                            </div>
+                           <div  v-if="select_talk">
+                                <!-- <div v-for="(item) in im_total_history" :key="item.time_id"> -->
+                                        <!-- <div class="im_history_info"  v-if='item.MsgType ==1'> -->
+                                            <!-- <div class="im_history_name clearfix">
+                                                <div class="im_record_name">{{item.SenderName}}</div>
+                                                <div class="im_record_time">{{item.SendTime}}</div>
+                                            </div>
+                                            <div class="im_history_comtent">{{item.ResourcePath}}</div>
+                                        </div> -->
+                                    <!-- </div> -->
+                                    <div class="im_history_info" v-for="(item,index) in ssaudio" :key="item.id" >
+                                            <div class="im_history_name clearfix">
+                                                    <div class="im_record_name">{{item.name}}</div>
+                                                    <div class="im_record_time">{{item.time}}</div>
+                                            </div>
+                                            <div class="im_talk_content clearfix">
+                                                <div class="im_voice-wrap">
+                                                    <div class="im_voice_div">
+                                                        <img class="im_voice_img" :filename="item.file" 
+                                                        :src="pause_img" alt="" @click="play_audio(item,index)"  v-show="audio_play">
+                                                        <img  class="im_voice_gif"  :src="play_img" alt="" v-show="img_gif===index">
+                                                        <!-- <audio src="../../assets/img/qwe.mp3"></audio> -->
+                                                    </div>
+
+                                                    <span class="im_voice_num">{{item.long}}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                       <div class="im_history_info"  >
+                                            <div class="im_history_name clearfix">
+                                                    <div class="im_record_name">leikun</div>
+                                                    <div class="im_record_time">2019年04月29日 19:07:46</div>
+                                                </div>
+                                                <!-- <div class="im_history_comtent">{{item.ResourcePath}}</div> -->
+                                        </div>
+                                        <div class="im_history_info"  >
+                                                <div class="im_history_name clearfix">
+                                                        <div class="im_record_name">leikun</div>
+                                                        <div class="im_record_time">2019年04月29日 20:07:46</div>
+                                                    </div>
+                                                    <!-- <div class="im_history_comtent">{{item.ResourcePath}}</div> -->
+                                        </div>
+
+                            
+                           </div>                          
+ 
+
+
+
                         </div>
 
                     </div>
@@ -355,19 +452,23 @@
                                 {{computer_name}}
                                 </span> 
                             </li>
-                            <li  @contextmenu.prevent='media_control(index,item)'  v-for="(item,index) in select_group_num" :key="item.id">
-                                <div class='device_pic' >
-                                    <img src="../../assets/img/inter.png" alt="">
+                            <li  @contextmenu.prevent='media_control(index,item)'  v-for="(item,index) in select_group_num" :key="item.id" :class="{off_color:item.online == 1}">
+                                <div>
+                                        <div class='device_pic' >
+                                                <img src="../../assets/img/inter.png" alt="">
+                                            </div>
+                                            <span class="device_name" :title="item.user_name">
+                                                {{item.user_name}}
+                                            </span> 
+                                            <div class="control_menum" v-if="media_show === index">
+                                                <div class="control_voice" @click="audio_begin(item)">{{ $t("group.voice") }}</div>
+                                                <div class="control_vedio" @click="video_begin(item)">{{ $t("group.video") }}</div>
+                                                <!-- <div class="control_look">视频查看</div> -->
+                                                <div class="control_text" @click="text_begin(item)">{{ $t("group.messaging") }}</div>
+                                            </div>
+
                                 </div>
-                                <span class="device_name" :title="item.user_name">
-                                    {{item.user_name}}
-                                </span> 
-                                <div class="control_menum" v-if="media_show === index">
-                                    <div class="control_voice" @click="audio_begin(item)">{{ $t("group.voice") }}</div>
-                                    <div class="control_vedio" @click="video_begin(item)">{{ $t("group.video") }}</div>
-                                    <!-- <div class="control_look">视频查看</div> -->
-                                    <div class="control_text" @click="text_begin(item)">{{ $t("group.messaging") }}</div>
-                                </div>
+
                             </li>                             
                         </ul>
                     </div>
@@ -461,7 +562,6 @@
                     <el-button type="primary" @click="confirm_offline">{{$t('button_message.confirm')}}</el-button>
             </div>
     </div>
-
 </div>
 </template>
 
@@ -470,21 +570,23 @@ import adapter from 'webrtc-adapter'
 import $ from 'jquery'
 import Janus from '../../assets/videocall/janus.js'
 // import { win32 } from 'path';
-import intermap from '../inter-components/inter-map.vue'
+import intermap from '../inter-components/inter-baidumap.vue'
+import intergooglemap from '../inter-components/inter-googlemap'
 export default {
     components:{
-            intermap
+            intermap,intergooglemap
         // testComponent:require('./testComponent.vue').default
         },
     data() {   
         return {
+                mapshow:true,
                 local_group_list:[],
                 get_device_list:[],
                 yesData: [],
                 select_Data:[],
                 show:true,
-                online:6,
-                totalnum:20,
+                // online:6,
+                // totalnum:20,
                 active:null,
                 actived:null,
                 members_show:true,
@@ -553,7 +655,9 @@ export default {
                 im_line_actived:null,
                 talk_name:'',
                 talk_id:'',
-                im_select_hisrory:true,
+                im_select_text:true,
+                im_select_file:false,
+                im_select_talk:false,
                 history_right:'0px',
                 history_index:-1,
                 im_send_news:'',
@@ -561,8 +665,11 @@ export default {
                 receiver_type:1,
                 receiver_id:'',
                 im_now_date:'',
-                im_my_img:require('../../assets/img/computer.png'),
-                im_you_img:require( '../../assets/img/inter.png'),
+                // im_my_img:require('../../assets/img/computer.png'),
+                // im_you_img:require( '../../assets/img/inter.png'),
+                pause_img:require('../../assets/img/voiceStatic.png'),
+                play_img:require('../../assets//img/voiceDynamic.gif'),
+                audio_img:this.pause_img,
                 local_mymessage : [],
                 local_mynews:[],
                 local_groupnews:[],
@@ -580,7 +687,14 @@ export default {
                 upload_show:false,
                 other_show:false,
                 other_name:'',
+                sos_name:'',
                 other_send_type:'',
+                sos_show:false,
+                off_line_show:false,
+                online_show:false,
+                refresh_show:false,
+                off_line_name:'',
+                online_name:'',
                 // 单人、群
                 im_self_show:true,
                 im_record_show:false,
@@ -588,6 +702,7 @@ export default {
                 other_group_id:'',
                 select_text :true,
                 select_file:false,
+                select_talk:false,
                     // 视频申请
                  video_apply:false,
                 your_callname:'',
@@ -601,7 +716,23 @@ export default {
                 video_offline:false,
                 offline_span:false,
                 exist_span:false,
-                jiadata:'',
+                // jiadata:'',
+
+                // sosGps
+                // sosdata:'',
+                audio_file:'',
+                audio_play:true,
+                img_gif:false,
+                set_time:null,
+                time_long:'',
+
+                ssaudio:[
+                    {id:1,file:'http://yss.yisell.com/yisell/pays2018050819052088/sound/yisell_sound_2008041415090410973_88011.mp3',name:'chat1',time:'2019年04月28日 18:07:46',long:12},
+                    {id:2,file:'http://yss.yisell.com/yisell/pays2018050819052088/sound/yisell_sound_2008041415063070478_88011.mp3',name:'chat1',time:'2019年05月29日 18:07:46',long:10},
+                    {id:3,file:'http://yss.yisell.com/yisell/pays2018050819052088/sound/yisell_sound_2008041415055629975_88011.mp3',name:'chat2',time:'2019年06月29日 18:07:46',long:5},
+                    {id:4,file:'http://yss.yisell.com/yisell/pays2018050819052088/sound/yisell_sound_2008041415080752918_88011.mp3',name:'chat4',time:'2019年07月29日 18:07:46',long:8},
+                    {id:5,file:'http://yss.yisell.com/yisell/pays2018050819052088/sound/yisell_sound_2008041415080752918_88011.mp3',name:'chat1',time:'2019年08月29日 18:07:46',long:8},
+                ]
     
         }
     },
@@ -719,13 +850,23 @@ export default {
                         { headers: 
                         {"Authorization" : sessionStorage.getItem('setSession_id')}
                         })
-                        .then(() =>{
+                        .then((response) =>{
+                            window.console.log(response)
                         this.$message({
                         message: this.$t('establish.success'),
                         type: 'success'
                         });
                         this.get_new_group();
                         this.group_add_cancle();
+                        var grouproom={};
+                        var grouproom_id= response.data.group_info.gid;
+                        grouproom.REQUEST= 'create';
+                        grouproom.room=grouproom_id;
+                        grouproom.permanent=true;
+                        grouproom.is_private=false;
+                        window.console.log(grouproom);
+                        // this.videocall.send({'message':grouproom})
+
                         })
                         .catch( (error) => {
                         if( error.response.data.code == 422){
@@ -951,10 +1092,15 @@ export default {
             video_server(){
                 var self =this;
                 var server = [
-                "ws://" + "113.105.153.240" + ":9188",
+                "wss://" + "ptt.jimilab.com" + ":9188",
                 "/janus"
                 ];
-                // var server = "https://" + "113.105.153.240" + ":8188/janus"
+                //                var server = [
+                // "ws://" + "113.105.153.240" + ":9188",
+                // "/janus"
+                // ];
+                 
+                // var server = "https://" + "ptt.jimilab.com" + ":8089/janus"
                 var janus = null;
                 var opaqueId = "videocalltest-"+Janus.randomString(12);
                 var myusername = null;
@@ -978,16 +1124,20 @@ export default {
                             var user_register =sessionStorage.getItem('id').toString();
                             var viedo_register = { "request": "register", "username": user_register };
                             self.videocall.send({"message": viedo_register});   
+                            window.console.log('````````````````````````1')
                         },
                         error: function(error) {
                             Janus.error("  -- Error attaching plugin...", error);
                             alert("  -- Error attaching plugin... " + error);
+                            window.console.log('````````````````````````2')
                         },
                         consentDialog: function(on) {
                             Janus.debug("Consent dialog should be " + (on ? "on" : "off") + " now");
+                            window.console.log('````````````````````````3')
                         },
                         mediaState: function(medium, on) {
                             Janus.log("Janus " + (on ? "started" : "stopped") + " receiving our " + medium);
+                            window.console.log('````````````````````````4')
                         },
                         webrtcState: function(on) {
                             Janus.log("Janus says our WebRTC PeerConnection is " + (on ? "up" : "down") + " now");
@@ -997,14 +1147,17 @@ export default {
                                 setTimeout(()=>{self.close_video()},5000)
                                 // self.videocall.send({"message": { "request": "set", "video": false}});  
                             }
+                            window.console.log('````````````````````````5')
                         },
                         onmessage: function(msg, jsep) {
+                            window.console.log('````````````````````````6')
                             Janus.debug(" ::: Got a message :::");
                             Janus.debug(msg);
                             window.console.log(msg)
                             var result = msg["result"];
                             if(result !== null && result !== undefined) {
                                 if(result["list"] !== undefined && result["list"] !== null) {
+                                    window.console.log('````````````````````````7')
                                     var list = result["list"];
                                     Janus.debug("Got a list of registered peers:");
                                     Janus.debug(list);
@@ -1014,12 +1167,15 @@ export default {
                                 } else if(result["event"] !== undefined && result["event"] !== null) {
                                 var event = result["event"];
                                 if(event === 'registered') {
+                                    window.console.log('````````````````````````8')
                                     myusername = result["username"];
                                     self.videocall.send({"message": { "request": "list" }});
                                 } else if(event === 'calling') {
                                     Janus.log("Waiting for the peer to answer...");
                                     // alert("Waiting for the peer to answer...");
+                                    window.console.log('````````````````````````9')
                                 } else if(event === 'incomingcall') {
+                                    window.console.log('````````````````````````10')
                                     Janus.log("Incoming call from " + result["username"] + "!");
                                     yourusername = result["username"];
                                     self.$confirm("Incoming call from " + result["username"] + "!" , {
@@ -1063,16 +1219,16 @@ export default {
                                         
                                     });
                                 } else if(event === 'accepted') {
-                                    window.console.log('``````````````````````````0')
+                                    window.console.log('````````````````````````11')
                                     if(jsep){
                                         self.videocall.handleRemoteJsep({jsep: jsep});
                                     }
                                     
                                     if(self.video_audio == true){
-                                                   window.console.log('``````````````9')    
+                                        window.console.log('````````````````````````12')   
                                                 //    self.close_video()      
                                         }else{
-                                            window.console.log('``````````````1') 
+                                            window.console.log('````````````````````````13')
                                         
                                             //  self.videocall.send({"message": { "request": "set", "video": false}});                    
                                             //  self.videocall.send({"message": { "request": "set", "audio": false}});  
@@ -1081,10 +1237,13 @@ export default {
                                     }
                               
                                 } else if(event === 'update') {
+                                    window.console.log('````````````````````````13')
                                     if(jsep) {
                                     if(jsep.type === "answer") {
+                                        window.console.log('````````````````````````14')
                                         self.videocall.handleRemoteJsep({jsep: jsep});
                                     } else {
+                                        window.console.log('````````````````````````15')
                                         self.videocall.createAnswer(
                                         {
                                             jsep: jsep,
@@ -1104,13 +1263,22 @@ export default {
                                     }
                                     }
                                 } else if(event === 'hangup') {
+                                    window.console.log('````````````````````````16')
                                     Janus.log("Call hung up by " + result["username"] + " (" + result["reason"] + ")!");
                                     // Reset status
+                                    if(self.video_audio == true){
+                                            self.video_show= false;
+                                        }else{
+                                            self.aduio_show= false;
+                                            self.audio_logo=false  
+                                }
                                     self.videocall.hangup();
                                     $('#videos').hide();
+
                                 }
                                 }
                             } else {
+                                window.console.log('````````````````````````17')
                                 var no_video =msg
 									if(no_video.event === 'notified'){
 										window.console.log('5--------------------------------------')
@@ -1120,6 +1288,7 @@ export default {
 										
                                 var error = msg["error"];
                                 alert(error);
+                                self.$router.go(0)
                                 // self.video_hang.destroy();
                                 self.video_show=false;
                                 self.videocall.hangup();
@@ -1128,6 +1297,7 @@ export default {
                             }
                         },
                         onlocalstream: function(stream) {
+                            window.console.log('````````````````````````18')
                             Janus.debug(" ::: Got a local stream :::");
                             Janus.debug(stream);
                             // self.video_show= true
@@ -1157,6 +1327,7 @@ export default {
                                     // $('#myvideo').removeClass('hide').show();
                                 }
                             }else{
+                                window.console.log('````````````````````````19')
                                 $('#videos').show();
                                 if($('#myvideo').length === 0)
                                     $('#videoleft').append('<video class="rounded centered" id="myvideo" width=131 height=83 autoplay playsinline muted="muted" />');
@@ -1179,6 +1350,7 @@ export default {
                             }
                         },
                         onremotestream: function(stream) {
+                            window.console.log('````````````````````````20')
                             Janus.debug(" ::: Got a remote stream :::");
                             Janus.debug(stream);
                             var addButtons = false;
@@ -1215,6 +1387,7 @@ export default {
                                 return;
 
                             }else{
+                                window.console.log('````````````````````````21')
                             if($('#remotevideo').length === 0) {
                                 addButtons = true;
                                 $('#videoright').append('<video class="rounded centered hide" id="remotevideo" width=406 height=271   autoplay playsinline/>');
@@ -1247,12 +1420,14 @@ export default {
                         });
                     },
                     error: function(error) {
+                        window.console.log('````````````````````````22')
                         Janus.error(error);
                         alert(error, function() {
                         // window.location.reload();
                         });
                     },
                     mycallmessage:function(e){
+                        window.console.log('````````````````````````23')
                         window.console.log(e);
                         window.console.log('--------------------p');
                         if(e.code == 1){
@@ -1266,6 +1441,7 @@ export default {
                         }
                     },
                     youcallmessage:function(e){
+                        window.console.log('````````````````````````24')
                         window.console.log(e);
                         window.console.log('````````````````````````````p');
                         if(e.type == 0&&e.isAccept == 0){
@@ -1276,10 +1452,12 @@ export default {
                                 self.your_calltype = 'video';
                                 self.is_Video= 'true';
                                 self.video_audio=true;
+                                window.console.log('````````````````````````0')
                             }else{
                                 self.your_calltype = 'audio';
                                 self.is_Video= 'false';
                                 self.video_audio=false
+                                window.console.log('````````````````````````5')
                             }
                         }
                         if(e.type == 1){
@@ -1300,13 +1478,13 @@ export default {
                     },
                     destroyed: function() {
                         // window.location.reload();
+                        window.console.log('````````````````````````25')
                     }
                     });
                 }})
                 this.video_hang=janus;
             },
             video_begin(item){
-               
                 this.audio_answer = false;
                 var body ={
                 'uid':item.id,'type':0,"name":sessionStorage.getItem('username'),"isVideo":'true','isAccept':0,
@@ -1314,90 +1492,19 @@ export default {
                 }
                 window.console.log(body)
                 this.videocall.send({'user_call':body})
-                // selfs.videocall.send({"message": body});
-        // this. video_server()
-                // this.$confirm(this.$t('video.message'), {
-                //     confirmButtonText: this.$t("button_message.confirm"),
-                //     cancelButtonText: this.$t("button_message.cancel"),
-                //     type: 'warning'
-                //     }).then(() => {
-                //     this.video_show=true;
-                //     var userpeer = item.id.toString();
-                //         this.videocall.createOffer(
-                //         {
-                //             media: { data: true },	
-                //             success: function(jsep) {
-                //             // var body = { "request": "call", "username": userpeer };
-                //             var body ={"request": "usercall",
-                //             'uid':1501,'type':0,"name":'text002',"isVideo":'true','isAccept':0,
-                //             'myId':'1503'
-                //             }
-                //             selfs.videocall.send({"message": body});
-                //             },
-                //             error: function(error) {
-                //             Janus.error("WebRTC error...", error);
-                //             }
-                //         });	  
-                //     }).catch(() => {                     
-                //     });
-                // // this. video_server()
-                // this.$confirm(this.$t('video.message'), {
-                //     confirmButtonText: this.$t("button_message.confirm"),
-                //     cancelButtonText: this.$t("button_message.cancel"),
-                //     type: 'warning'
-                //     }).then(() => {
-                //     this.video_show=true;
-                //     var userpeer = item.id.toString();
-                //         this.videocall.createOffer(
-                //         {
-                //             media: { data: true },	
-                //             success: function(jsep) {
-                //             var body = { "request": "call", "username": userpeer };
-                //             selfs.videocall.send({"message": body, "jsep": jsep});
-                //             },
-                //             error: function(error) {
-                //             Janus.error("WebRTC error...", error);
-                //             }
-                //         });	  
-                //     }).catch(() => {                     
-                //     });
+                
+        
             },
             // 语音通话
             audio_begin(item){
-                var audio_self=this 
+                // var audio_self=this 
                 var body ={
                 'uid':item.id,'type':0,"name":sessionStorage.getItem('username'),"isVideo":'false','isAccept':0,
                  'myId':sessionStorage.getItem('id')
                 }
                 window.console.log(body)
-                audio_self.videocall.send({'user_call':body})
-                // this.audio_answer = true
-                // this.$confirm(this.$t('video.audio'), {
-                //     confirmButtonText: this.$t("button_message.confirm"),
-                //     cancelButtonText: this.$t("button_message.cancel"),
-                //     type: 'warning'
-                //     }).then(() => {
-                //     this.aduio_show=true;
-                //     var username =sessionStorage.getItem('id').toString();
-                //     // var register = { "request": "register", "username": username };
-                //     // this.videocall.send({"message": register});   
-                //         var userpeer = item.id.toString();
-                //         this.videocall.createOffer(
-                //         {
-                //             media: { data: true },	
-                //             success: function(jsep) {
-                //             var body = { "request": "call", "username": userpeer };
-                //             audio_self.videocall.send({"message": body, "jsep": jsep});
-                //             audio_self.videocall.send({"message":{"request":"set","video":false}})
-                //             },
-                //             error: function(error) {
-                //             Janus.error("WebRTC error...", error);
-                //             }
-                //         });	 
-                //     }).catch(() => {
-                        
-                //     });
-
+                // audio_self.videocall.send({'user_call':body})
+                this.videocall.send({'user_call':body})
             },
             // 即时链接
             text_begin(item){
@@ -1410,7 +1517,7 @@ export default {
                 window.console.log(this.receiver_id)
                 this.talk_name = item.user_name;  
                 // this.websocket = new WebSocket('ws://10.0.18.132:10000/im-server/'+sessionStorage.getItem('id'));
-                // // this.websocket = new WebSocket('ws://113.105.153.240:8888/im-server/'+sessionStorage.getItem('id'));
+                // this.websocket = new WebSocket('ws://113.105.153.240:8888/im-server/'+sessionStorage.getItem('id'));
                 // this. initWebSocket();
                 this.im_self_show =true;
                 this.receiver_type = 1;
@@ -1420,7 +1527,9 @@ export default {
             }, 
             createWebSocket(){
                 // this.websocket = new WebSocket('ws://10.0.18.132:10000/im-server/'+sessionStorage.getItem('id'));
-                this.websocket = new WebSocket('ws://113.105.153.240:8888/im-server/'+sessionStorage.getItem('id'));
+                // this.websocket = new WebSocket('ws://10.0.18.132:8888/im-server/'+sessionStorage.getItem('id'));
+                // this.websocket = new WebSocket('ws://113.105.153.240:8888/im-server/'+sessionStorage.getItem('id'));
+                this.websocket = new WebSocket('wss://ptt.jimilab.com/websocket/'+sessionStorage.getItem('id'));
                 this. initWebSocket();
             },
             initWebSocket() {
@@ -1766,14 +1875,51 @@ export default {
              this.history_right='0px'
             },
             select_im_text(){
-                this.im_select_hisrory = true;
+                this.im_select_text = true;
+                this.im_select_file =false;
+                this.im_select_talk =false;
                 this.select_text =true;
-                this.select_file=false
+                this.select_file=false;
+                this.select_talk=false;
             },
             select_im_file(){
-                this.im_select_hisrory = false;
+                this.im_select_text = false;
+                this.im_select_file =true;
+                this.im_select_talk =false;
                 this.select_file =true;
                 this.select_text =false;
+                this.select_talk=false;
+            },
+            select_im_talk(){
+                this.im_select_text = false;
+                this.im_select_file =false;
+                this.im_select_talk =true;
+                this.select_file =false;
+                this.select_text =false;
+                this.select_talk=true;
+
+            },
+            play_audio(item,index){
+                 if(this.set_time != null){
+                    clearTimeout(this.set_time)
+                }
+                if(this.audio_file.paused ==true ||this.audio_file.paused ==undefined){
+                    this.img_gif =index
+                    var time_this =this       
+                    var ad=item.long
+                    window.console.log(ad)
+                    this.set_time=setTimeout(()=>{time_this.close_gif()},1000*ad)
+                    this.audio_file = new Audio()
+                    this.audio_file.src=item.file
+                    // this.audio_file.load() 
+                    this.audio_file.play()
+                     window.console.log("`````2");
+                }else{
+                    window.console.log("`````1")
+                }
+            },
+            close_gif(){ 
+                this.img_gif =false
             },
             // 发送消息
             im_send_subimt(){
@@ -1865,33 +2011,12 @@ export default {
                     file_body.file_name = this.file_name;
                     window.console.log( this.file_type)
                     // this.$axios.post('http://10.0.18.132:10000/upload', formData,{ headers: 
-                    this.$axios.post('http://113.105.153.240:8888/upload', formData,{ headers: 
+                    this.$axios.post('/upload', formData,{ headers: 
                             {
                             "Authorization" : sessionStorage.getItem('setSession_id'),
                             'Content-Type': 'multipart/form-data'
                             }
                             }).then((response) => {
-
-                            // if(this.receiver_type ==1){
-                            //     file_body.ResourcePath = "http://"+response.data.resourcePath;
-                            //     // window.console.log(message_body)     
-                            //     // this.local_mymessage.push(message_body);
-                            //     // window.console.log(this.local_mymessage)
-                            //     this.local_mynews = JSON.parse(localStorage.getItem(file_num));
-                            //     // window.console.log(this.local_mymessage)
-                            //     window.console.log(this.local_mynews);
-                            //             if(this.local_mynews ==null){
-                            //                 this.local_mynews = [];
-                            //                 this.local_mynews.push(file_body);
-
-                            //             }else{
-                            //                 this.local_mynews.push(file_body);
-                            //             }
-                            //             localStorage.setItem(file_num, JSON.stringify(this.local_mynews));
-                            // }else{
-                            //     window.console.log('```````````````````````````````````')
-
-                            //     }
                             this.upload_show = false;
                             this.im_box_show = true;
                             this.file_name =''
@@ -1907,83 +2032,14 @@ export default {
                 })
             },
             im_send_close(){
-                // this.websocket.close()
-                // window.console.log(this.im_off_line) 
-             var a= {
-                    "offlineSingleImMsgs": [
-                        {"SenderId": 8, "MsgReceiverType": 1,"Name": "大紫薯",
-                        "imMsgData": [ { "id": 8,"SenderName": "大紫薯","ReceiverType": 1,"ReceiverId": 9,"ResourcePath": "hello word","MsgType": 1, "ReceiverName": "fff", "SendTime": "123468646"},
-                        { "id": 8,"SenderName": "大紫薯","ReceiverType": 1,"ReceiverId": 9,"ResourcePath": "3","MsgType": 1, "ReceiverName": "fff", "SendTime": "123468646"},
-                        { "id": 8,"SenderName": "大紫薯","ReceiverType": 1,"ReceiverId": 9,"ResourcePath": "4 word","MsgType": 1, "ReceiverName": "fff", "SendTime": "123468646"},
-                        { "id": 8,"SenderName": "大紫薯","ReceiverType": 1,"ReceiverId": 9,"ResourcePath": "5","MsgType": 1, "ReceiverName": "fff", "SendTime": "123468646"},
-                        { "id": 8,"SenderName": "大紫薯","ReceiverType": 1,"ReceiverId": 9,"ResourcePath": "6","MsgType": 1, "ReceiverName": "fff", "SendTime": "123468646"},
-                        { "id": 8,"SenderName": "大紫薯","ReceiverType": 1,"ReceiverId": 9,"ResourcePath": "7","MsgType": 1, "ReceiverName": "fff", "SendTime": "123468646"},
-                        { "id": 8,"SenderName": "大紫薯","ReceiverType": 1,"ReceiverId": 9,"ResourcePath": "8","MsgType": 1, "ReceiverName": "fff", "SendTime": "123468646"},
-                        { "id": 8,"SenderName": "大紫薯","ReceiverType": 1,"ReceiverId": 9,"ResourcePath": "9","MsgType": 1, "ReceiverName": "fff", "SendTime": "123468646"},
-                        { "id": 8,"SenderName": "大紫薯","ReceiverType": 1,"ReceiverId": 9,"ResourcePath": "10","MsgType": 1, "ReceiverName": "fff", "SendTime": "123468646"},
-                    
-                    ]
-                        },
-                        {"SenderId": 3, "MsgReceiverType": 1,"Name": "大紫薯3",
-                        "imMsgData": [{"id": 3,"SenderName": "大紫薯3","ReceiverType": 1,"ReceiverId": 12,"ResourcePath": "hello word","MsgType": 1, "ReceiverName": "201","SendTime": "123468646"},
-                        {"id": 3,"SenderName": "大紫薯3","ReceiverType": 1,"ReceiverId": 12,"ResourcePath": "h","MsgType": 1, "ReceiverName": "201","SendTime": "123468646"},
-                        {"id": 3,"SenderName": "大紫薯3","ReceiverType": 1,"ReceiverId": 12,"ResourcePath": "o word","MsgType": 1, "ReceiverName": "201","SendTime": "123468646"},
-                        {"id": 3,"SenderName": "大紫薯3","ReceiverType": 1,"ReceiverId": 12,"ResourcePath": "hllo word","MsgType": 1, "ReceiverName": "201","SendTime": "123468646"},
-                        {"id": 3,"SenderName": "大紫薯3","ReceiverType": 1,"ReceiverId": 12,"ResourcePath": "heo word","MsgType": 1, "ReceiverName": "201","SendTime": "123468646"},
-                    ]
-                        }
-                    ],
-                    "offlineGroupImMsgs": [
-                        { "GroupId": 209,"MsgReceiverType": 2,"Name": "fff",
-                        "imMsgData": [
-                            {"id": 6, "SenderName": "蔡徐坤", "ReceiverType": 2, "ReceiverId": 209,"ResourcePath": "hello word group","MsgType": 1,"ReceiverName": "fff","SendTime": "123468646"},
-                            {"id": 8,"SenderName": "吴亦凡", "ReceiverType": 2,"ReceiverId": 209,"ResourcePath": "hello word groupdasd","MsgType": 1, "ReceiverName": "fff","SendTime": "123468646" },
-                            {"id": 7, "SenderName": "鹿晗", "ReceiverType": 2, "ReceiverId": 209,"ResourcePath": "hello word groupdasdsgadf","MsgType": 1,"ReceiverName": "fff","SendTime": "123468646" },
-                            {"id": 9,"SenderName": "郭碧婷","ReceiverType": 2,"ReceiverId": 209, "ResourcePath": "hello word group222","MsgType": 1, "ReceiverName": "fff","SendTime": "123468646" }
-                            ]
-                        },
-                        { "GroupId": 109,"MsgReceiverType": 2,"Name": "ggg",
-                        "imMsgData": [
-                            {"id": 16, "SenderName": "坤", "ReceiverType": 2, "ReceiverId": 109,"ResourcePath": "hello word oup","MsgType": 1,"ReceiverName": "ggg","SendTime": "123468646"},
-                            {"id": 28,"SenderName": "凡", "ReceiverType": 2,"ReceiverId": 109,"ResourcePath": "hello wordoupdasd","MsgType": 1, "ReceiverName": "ggg","SendTime": "123468646" },
-                            {"id": 19,"SenderName": "婷","ReceiverType": 2,"ReceiverId": 109, "ResourcePath": "hello word group222","MsgType": 1, "ReceiverName": "gggg","SendTime": "123468646" },
-                            {"id": 37, "SenderName": "晗", "ReceiverType": 2, "ReceiverId": 109,"ResourcePath": "hello word groupdasdsgadf","MsgType": 1,"ReceiverName": "ggg","SendTime": "123468646" },
-                            {"id": 19,"SenderName": "婷","ReceiverType": 2,"ReceiverId": 109, "ResourcePath": "hello word group2","MsgType": 1, "ReceiverName": "gggg","SendTime": "123468646" },
-                            {"id": 19,"SenderName": "婷","ReceiverType": 2,"ReceiverId": 109, "ResourcePath": "hello wordup222","MsgType": 1, "ReceiverName": "gggg","SendTime": "123468646" },
-                            {"id": 19,"SenderName": "婷","ReceiverType": 2,"ReceiverId": 109, "ResourcePath": "hello word group222","MsgType": 1, "ReceiverName": "gggg","SendTime": "123468646" },
-                            {"id": 37, "SenderName": "晗", "ReceiverType": 2, "ReceiverId": 109,"ResourcePath": "hello word grougadf","MsgType": 1,"ReceiverName": "ggg","SendTime": "123468646" },
-                            ]
-                        }
-                    ]
-                 }
-
-                 var b =[]
-                 if(a.hasOwnProperty('offlineSingleImMsgs')){
-                     window.console.log('```````456')
-                     for(var i =0;i<a.offlineSingleImMsgs.length;i++){
-                         b.push(a.offlineSingleImMsgs[i])
-                     }
-                 }
-                 if(a.hasOwnProperty('offlineGroupImMsgs')){
-                    for(var j =0;j<a.offlineGroupImMsgs.length;j++){
-                         b.push(a.offlineGroupImMsgs[j])
-                     }                
-                    }
-                 for (var k = 0; k<b.length;k++){
-                     b[k].id=k
-                 }
-               window.console.log(a) 
-               window.console.log(b) 
-               this.jiadata=b
-               window.console.log(this.im_off_line)
-                
-
+                this.im_show = false;
+                // this.mapshow=false
             },
             im_close(){
                 this.im_show = false;
+                // this.mapshow=true
                 // this.closeWebSocket();
                 // this.websocket.close()
-        
             },
             websocket_cloes(){
                 this.websocket.close()
@@ -2021,12 +2077,11 @@ export default {
             },
             setOncloseMessage(){
                 window.console.log('....................关闭了')
-                alert('聊天室已断开，请重新刷新页面')
+                this.refresh_show = true;
             },
             setOnmessageMessage (e){ //数据接收
                 window.console.log(e)
                 window.console.log(e.data)
-                window.console.log(JSON.parse(e.data).DataType)
                 if(JSON.parse(e.data).DataType == 2){
                     window.console.log('---------------------------------p')
                     var off_line =JSON.parse(e.data).offlineImMsgResp;
@@ -2041,7 +2096,7 @@ export default {
                         
                     }
                     window.console.log(off_line)
-                }else{
+                }else if(JSON.parse(e.data).DataType == 3){
                     const redata = JSON.parse(e.data).imMsgData;
                     window.console.log(redata)
                     // if(redata.MsgType != 1){
@@ -2146,8 +2201,70 @@ export default {
                             window.console.log(scrollHeight)
                             $('.im_message').scrollTop(scrollHeight,200);
                             })
+                }else if(JSON.parse(e.data).DataType == 5){
+                    this.off_line_show =true;
+                    // var off_device=JSON.parse(e.data).logoutNotify.group_list[0].usr_list;
+                    // window.console.log(off_device)
+                    // for(var i=0;i<off_device.length;i++){
+                    //     if(off_device[i].online == 2){
+                    //         this.off_line_name =off_device[i].name;
+                    //     }
+                    // }
+                    var off_device=JSON.parse(e.data).Notify.userInfo.name;
+                    this.off_line_name =off_device;
+                    window.console.log('````````````````````````78')
+                    this.$axios.get('/account/'+sessionStorage.getItem('loginName'),
+                            { headers: 
+                            {
+                            "Authorization" : sessionStorage.getItem('setSession_id')
+                            }
+                            })
+                            .then((response) =>{
+                             window.console.log(response);
+                            localStorage.setItem('group_list', JSON.stringify(response.data.group_list));  
+                            this.local_group_list = response.data.group_list    
+                            })
+                            .catch( (error) => {
+                            window.console.log(error);
+                            }); 
+                            window.console.log('````````````````````````89')
+                }else if(JSON.parse(e.data).DataType == 6){
+                    this.online_show =true;
+                    var online_device=JSON.parse(e.data).Notify.userInfo.name;
+                    this.online_name =online_device;
+                    window.console.log('````````````````````````178')
+                    this.$axios.get('/account/'+sessionStorage.getItem('loginName'),
+                            { headers: 
+                            {
+                            "Authorization" : sessionStorage.getItem('setSession_id')
+                            }
+                            })
+                            .then((response) =>{
+                             window.console.log(response);
+                            localStorage.setItem('group_list', JSON.stringify(response.data.group_list));  
+                            this.local_group_list = response.data.group_list    
+                            })
+                            .catch( (error) => {
+                            window.console.log(error);
+                            }); 
+                            window.console.log('````````````````````````289')
+                }else if(JSON.parse(e.data).DataType == 7){
+                    this.sos_show = true;
+                    window.console.log(JSON.parse(e.data))
+                    this.sos_name=JSON.parse(e.data).Notify.userInfo.name
+                    var sos_location = JSON.parse(e.data).Notify.userLocation;
+                    var gps_sos = {};
+                    gps_sos.lng=sos_location.longitude;
+                    gps_sos.lat=sos_location.latitude;
+                    if(this.mapshow == true){
+                        this.$refs.soschild.sos_point(gps_sos);
+                    }else{
+                         this.$refs.googlechild.sos_google(gps_sos);
+                     }
+                    
+
+                    
                 }
-                // redata.ReceiverType=2;
 
             },
             look_other(){
@@ -2202,6 +2319,37 @@ export default {
                 this.receiver_type = this.other_send_type;
                 this.other_show =false;
             },
+            look_sos(){
+                var ccc= {
+                        "localTime": 1557160225,
+                        "longitude":114.1153786184,
+                        "latitude": 22.4644910453,
+                        "speed": 123.45646,
+                        "course": 123
+                }
+                var a ={};
+                a.lng=ccc.longitude;
+                a.lat=ccc.latitude;
+                if(this.mapshow == true){
+                    this.$refs.soschild.sos_point(a);
+                }else{
+                    this.$refs.googlechild.sos_google(a);
+                }
+               
+                this.sos_show = false
+            },
+            off_line_button(){
+                this.off_line_show=false;
+            },
+            online_button(){
+                this.online_show =false;
+                
+            },
+            // websocket断开重连
+            chat_refresh(){
+                this.refresh_show = false;
+                this.$router.go(0)
+            },
 
             // 时间
             im_create_time(){
@@ -2215,13 +2363,43 @@ export default {
                 this.im_now_date =year + "年" + month + "月" + date +"日"+" "+hh+":"+mm+":"+ss;
             },
             im_audio(){
+                window.console.log(this.talk_id)
+                window.console.log(this.receiver_type)
+                if(this.receiver_type == 1){
+                    var body ={
+                    'uid':this.talk_id,'type':0,"name":sessionStorage.getItem('username'),"isVideo":'false','isAccept':0,
+                    'myId':sessionStorage.getItem('id')
+                    }
+                    window.console.log(body)
+                    // this.videocall.send({'user_call':body})
+                }
+
                 
             },
             im_video(){
+                window.console.log(this.talk_id)
+                window.console.log(this.receiver_type);
+                if(this.receiver_type == 1){
+                    this.audio_answer = false;
+                        var body ={
+                        'uid':this.talk_id,'type':0,"name":sessionStorage.getItem('username'),"isVideo":'true','isAccept':0,
+                        'myId':sessionStorage.getItem('id')
+                        }
+                        window.console.log(body)
+                        // this.videocall.send({'user_call':body})                   
+                }
+
             
             },
             map_show(){
             },
+            // 地图切换
+            baidu_selected(){
+              this.mapshow=true;
+            },
+            google_selected(){
+                this.mapshow=false;
+            }
 
     },
     computed:{
@@ -2313,26 +2491,34 @@ export default {
                 return this.local_history
             },
             im_off_line(){
-                // var a = JSON.parse(localStorage.getItem('off_line_local'));
-                // var b =[]
-                //  if(a.hasOwnProperty('offlineSingleImMsgs')){
-                //      window.console.log('```````456')
-                //      for(var i =0;i<a.offlineSingleImMsgs.length;i++){
-                //          b.push(a.offlineSingleImMsgs[i])
-                //      }
-                //  }
-                //  if(a.hasOwnProperty('offlineGroupImMsgs')){
-                //     for(var j =0;j<a.offlineGroupImMsgs.length;j++){
-                //          b.push(a.offlineGroupImMsgs[j])
-                //      }                
-                //     }
-                //  for (var k = 0; k<b.length;k++){
-                //      b[k].id=k
-                //  }   
-              return this.jiadata
-            //   return b
-        }
-
+                var a = JSON.parse(localStorage.getItem('off_line_local'));
+                var b =[]
+                if (a !== null){
+                    if(a.hasOwnProperty('offlineSingleImMsgs')){
+                     window.console.log('```````456')
+                     for(var i =0;i<a.offlineSingleImMsgs.length;i++){
+                         b.push(a.offlineSingleImMsgs[i])
+                     }
+                 }
+                 if(a.hasOwnProperty('offlineGroupImMsgs')){
+                    for(var j =0;j<a.offlineGroupImMsgs.length;j++){
+                         b.push(a.offlineGroupImMsgs[j])
+                     }                
+                    }
+                 for (var k = 0; k<b.length;k++){
+                     b[k].id=k
+                 }   
+                }
+                 
+                //   return this.jiadata
+                return b
+            },
+            // sosGps(){
+            //     this.sosdata = {l:114.07,s:22.62}
+            //     return this.sosdata
+            // }
+            // 在线
+            
     },
     created(){
       
@@ -2347,13 +2533,14 @@ export default {
         this.video_server();     
         //  this.video_begin();
         // this.createMap();
-        // this.createWebSocket()
+        this.createWebSocket()
+        window.console.log(this.group_list)
     },
     updated() {
             
     },
     beforeDestroy(){
-        // this.websocket_cloes()
+        this.websocket_cloes()
     }
 }
 </script>
@@ -2362,6 +2549,34 @@ export default {
 #big_box{
     position: relative;
     height: 100%;
+}
+/* 地图切换 */
+.map_select{
+    z-index: 888;
+    position: absolute;
+    right: 9px;
+    top: 57px;
+    background-color: white;
+    height: 29px;
+    line-height: 29px;
+}
+.map_select div{
+    display: inline-block;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+.baidumap{
+    padding-right: 10px;
+    font-size: 12px;
+    cursor: pointer;
+}
+.googlemap{
+    font-size: 12px;
+    cursor: pointer;
+}
+.map_active{
+    color: white;
+    background-color: #8ea8e0;
 }
 #monotor_content{
     z-index: 1000;
@@ -2536,6 +2751,9 @@ export default {
     width: 80px;
     overflow: hidden;
  
+}
+.off_color{
+    background-color: #ccc !important;
 }
 .addbotton{
     margin-top: 10px
@@ -2728,8 +2946,8 @@ margin-top: 10px;
      /* display: none */
 }
 .audio_img{
-    width: 32px;
-    height: 38px;
+    width: 83px;
+    height: 86px;
 }
 .audio_loding{
     color: white;
@@ -2975,7 +3193,7 @@ margin-top: 10px;
     background-color: white;
     border-bottom: 1px solid #ccc;
 }
-.im_history_text,.im_history_file{ 
+.im_history_text,.im_history_file,.im_history_talk{ 
     display: inline-block;
     float: left;
     margin-left: 6px;
@@ -2983,6 +3201,9 @@ margin-top: 10px;
     text-align: center;
     width: 46px;
     cursor: pointer;
+}
+.im_history_talk{ 
+  width: 72px;
 }
 .active_history{
     border: 1px solid #ccc;
@@ -3008,6 +3229,38 @@ margin-top: 10px;
 .im_history_name{
     width: 277px;
     height: 20px;
+}
+.im_talk_content{
+    width: 277px;
+    height: 30px;  
+}
+.im_voice-wrap{
+    width: 140px;
+    height: 30px;
+    border-radius: 2px;
+    border: 1px solid #e5e5e5;
+    line-height: 30px;
+}
+.im_voice_div{
+    height: 26px;
+    width: 26px;
+    margin-top: 3px;
+    display: inline-block;
+}
+.im_voice_num{
+    float: right
+}
+.im_voice_img{
+ height: 23px;
+    width: 25px;
+}
+.im_voice_gif{
+    height: 23px;
+    width: 25px;
+    z-index: 666;
+    position: absolute;
+    left: 1px;
+    background-color: white;
 }
 .im_record_name{
    float: left;
@@ -3041,6 +3294,23 @@ margin-top: 10px;
     background-color: white;
     border-radius: 21px;
 }
+.sos_div{
+    height: 69px;
+    width: 307px;
+    position: absolute;
+    right: 0px;
+    top: 200px;
+    z-index: 666;
+    background-color: red;
+    border-radius: 21px;   
+    text-align: center;
+}
+.sos_title{
+    color: white;
+}
+.sos_body{
+    margin-top: 3px
+}
 .other_answer{
     display: inline-block;
     float: right;
@@ -3058,6 +3328,40 @@ margin-top: 10px;
     position: absolute;
     top: 24%;
     left: 41%;
+}
+.off_line_div{
+    width: 274px;
+    height: 176px;
+    background-color: white;
+    position: absolute;
+    top: 24%;
+    left: 41%;
+    z-index: 55;
+}
+.chat_div{
+    width: 274px;
+    height: 176px;
+    background-color: white;
+    position: absolute;
+    top: 24%;
+    left: 41%;
+    z-index: 999;   
+}
+.off_title{
+    text-align: center;
+    margin-top: 10px;
+}
+.chat_title{
+    text-align: center;
+    margin-top: 37px;
+}
+.off_body{
+    text-align: center;
+    margin-top: 30px;
+}
+.off_foot{
+    text-align: center;
+    margin-top: 40px;
 }
 .video_apply_title{
     text-align: center;
