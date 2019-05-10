@@ -59,20 +59,22 @@ func (imClientFuncImpl) DispatcherScheduler(dc *DataContext, longLived bool) {
 // Ptt
 type pttImMsgImpl struct{}
 type interphoneMsg struct {
-	Uid       int32  `json:"uid"`
-	MsgType   string `json:"msg_type"`
-	Md5       string `json:"md_5"`
-	GId       int32  `json:"g_id"`
+	Uid       string `json:"uid"`
+	MsgType   string `json:"m_type"`
+	Md5       string `json:"md5"`
+	GId       string `json:"grp_id"`
 	FilePath  string `json:"file_path"`
 	Timestamp string `json:"timestamp"`
 }
 
 func (pttImMsgImpl) Dispatcher(dc *DataContext, ds DataSource) {
 	// TODO redis获取对讲音频信息，分发
+	redisCli := cache.GetRedisClient()
 	pttD := make(chan string, 1)
 	go func() {
 		for {
-			value, err := redis.Strings(cache.GetRedisClient().Do("blpop", "mylist", 2))
+			//log.Printf("Start get ptt msg form redis")
+			value, err := redis.Strings(redisCli.Do("blpop", cfgGs.PttMsgKey, cfgGs.PttWaitTime))
 			if err != nil {
 				//log.Println("blpop failed:", err.Error())
 			}
@@ -83,26 +85,59 @@ func (pttImMsgImpl) Dispatcher(dc *DataContext, ds DataSource) {
 		}
 	}()
 
+	var tasks [] string
+	var executor = CreatePttDispatcher(dc)
+	//tick := time.NewTicker(time.Second * time.Duration(5))
 	for {
-		m := <-pttD
-		log.Printf("Will send Ptt msg%s", m)
-		pttMsg := &interphoneMsg{}
-		if err := json.Unmarshal([]byte(m), pttMsg); err != nil {
-			log.Printf("Interphone ppt msg json unmarshal fail with error :%+v", err)
+		var activeExecu chan string
+		var activeTask string
+		if len(tasks) > 0 {
+			activeExecu = executor
+			activeTask = tasks[0]
 		}
-
-		if pttMsg.Uid != 0 && pttMsg.GId != 0 {
-			pttMsgDispatcher(dc, pttMsg)
+		select {
+		case t := <-pttD:
+			tasks = append(tasks, t)
+		case activeExecu <- activeTask:
+			tasks = tasks[1:]
+		//case <-tick.C:
+		//	log.Printf("now ptt task queue len:%d", len(tasks))
 		}
 	}
 }
 
+func CreatePttDispatcher(dc *DataContext) chan string {
+	tc := make(chan string)
+	go pttMidHandler(tc, dc)
+	return tc
+}
+
+func pttMidHandler(c chan string, dc *DataContext) {
+	go func() {
+		for {
+			m := <-c
+			log.Printf("Will send Ptt msg%s", m)
+			pttMsg := &interphoneMsg{}
+			if err := json.Unmarshal([]byte(m), pttMsg); err != nil {
+				log.Printf("Interphone ppt msg json unmarshal fail with error :%+v", err)
+			}
+
+			if pttMsg != nil && pttMsg.Uid != "" && pttMsg.GId != "" {
+				pttMsgDispatcher(dc, pttMsg)
+			}
+		}
+	}()
+}
+
 func pttMsgDispatcher(dc *DataContext, pttMsg *interphoneMsg) {
-	imU, err := tuc.GetUserFromCache(pttMsg.Uid)
+	uId, _ := strconv.ParseInt(pttMsg.Uid, 10, 64)
+	imU, err := tuc.GetUserFromCache(int32(uId))
 	if err != nil {
 		log.Printf("pttImMsgImpl Dispatcher GetUserFromCache error: %+v", err)
 	}
-	imG, err := tgc.GetGroupInfoFromCache(pttMsg.GId, cache.GetRedisClient())
+
+	gId, _ := strconv.ParseInt(pttMsg.GId, 10, 64)
+	imG, err := tgc.GetGroupInfoFromCache(int32(gId), cache.GetRedisClient())
 	if err != nil {
 		log.Printf("pttImMsgImpl Dispatcher GetGroupInfoFromCache error: %+v", err)
 	}
@@ -111,7 +146,7 @@ func pttMsgDispatcher(dc *DataContext, pttMsg *interphoneMsg) {
 		fType, fTStr := utils.GetImFileType(pttMsg.FilePath)
 		log.Printf("Get ptt file type:%d, %s", fType, fTStr)
 		fContext := &model.FileContext{
-			UserId:         int(pttMsg.Uid),
+			UserId:         int(uId),
 			FilePath:       cfgGs.FILE_BASE_URL + pttMsg.FilePath,
 			FileType:       fType,
 			FileName:       pttMsg.FilePath,

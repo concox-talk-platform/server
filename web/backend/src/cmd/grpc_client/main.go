@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc"
 	"log"
 	"sync"
+	"time"
 )
 
 const GROUP_PORT = "9999"
@@ -21,22 +22,35 @@ func main() {
 	//host := "113.105.153.240"
 	host := "127.0.0.1"
 
-	conn, err := grpc.Dial(host+":9000", grpc.WithInsecure())
+	conn, err := grpc.Dial(host+":9001", grpc.WithInsecure())
 	if err != nil {
 		log.Printf("grpc.Dial err : %v", err)
 	}
 	defer conn.Close()
-	//webCli := pb.NewWebServiceClient(conn)
+	userClient := pb.NewTalkCloudClient(conn)
 	//res, err := webCli.ImportDeviceByRoot(context.Background(), &pb.ImportDeviceReq{
 	//	DeviceImei:[]string{"1234567897777777"},
 	//	AccountId: 1,
 	//})
 
 	// 调用调用GRPC接口，转发数据
+	/*for i := 0; i <1000; i++ {
+		go func() {
+			res, err := webCli.ImMessagePublish(context.Background(), &pb.ImMsgReqData{
+				Id:           8,
+				SenderName:   "xiaoliu",
+				ReceiverType: 2,
+				ReceiverId:   229,
+				ResourcePath: "SOSOS",
+				MsgType:      6,
+				ReceiverName: "xx group",
+				SendTime:     strconv.FormatInt(time.Now().Unix(), 10),
+			})
 
-	if err != nil {
-		log.Printf("grpc.Dial err : %v", err)
+			log.Printf("res:%+v err : %+v",res, err)
+		}()
 	}
+	select {}*/
 	/*webCli := pb.NewTalkCloudClient(conn)
 	for i:= 0; i < 1500; i++ {
 		time.Sleep(time.Microsecond*300)
@@ -55,25 +69,12 @@ func main() {
 			log.Printf("%+v, err:%+v",res.Result.Msg, err)
 		}()
 	}*/
-	//streamCli := pb.NewStreamServiceClient(conn)
-	userClient := pb.NewTalkCloudClient(conn)
 	/*res, err := userClient.AppRegister(context.Background(), &pb.AppRegReq{
 		Name:     "355172100003878",
 		Password: "123456",
 	})
 	log.Printf(res.String())*/
-	/*res, err := userClient.CreateGroup(context.Background(), &pb.CreateGroupReq{
-		DeviceIds: "1482,333,1003,1004",
-		DeviceInfos: nil,
-		GroupName:"papi333组",
-		AccountId: 333,
-		GroupInfo: &pb.Group{
-			Id:0,
-			GroupName:"papi333组",
-			AccountId: 333,
-			Status: 1,
-		}})
-*/
+
 	/*res, err := webCli.DeleteGroup(context.Background(), &pb.Group{
 		Id: 102,
 	})*/
@@ -83,20 +84,23 @@ func main() {
 		Fuid:500,
 	})*/
 
+	log.Println("---------------------------------------Login Start-------------------------------------------")
 	res, err := userClient.Login(context.Background(), &pb.LoginReq{
-		Name:     "zebra3",
+		Name:     "264333",
 		Passwd: "123456",
 	})
 	log.Println(res.GroupList)
+
+	time.Sleep(time.Second*3)
 /*
 	for _, v := range res.GroupList {
 		if v.GroupManager == -1 {
 			log.Printf("find a no mannage group: %d", v.Gid)
 		}
-	}
+	}*/
 
-	log.Println("this user groups:", len(res.GroupList))
-*/
+	log.Printf("this user groups:%d, all:%+v", len(res.GroupList), res)
+
 /*	res, err := userClient.InviteUserIntoGroup(context.Background(), &pb.InviteUserReq{
 		Uids:"1536",
 		Gid:208,
@@ -114,11 +118,12 @@ func main() {
 	})*/
 	/*for i := 0; i < 3000; i++ {
 		go func(i int) {
-			resss, err := userClient.GetGroupList(context.Background(), &pb.GrpListReq{
+		*/
+		log.Println("---------------------------------------GetGroupList Start-------------------------------------------")
+		resss, err := userClient.GetGroupList(context.Background(), &pb.GrpListReq{
 				Uid:int32(333),
 			})
-			log.Println(resss, "-----------++++----",  err)
-			log.Printf("Get group list **************************** # %d", i)
+			log.Printf("%+v Get group list **************************** # %+v",err, resss)/*
 		}(i)
 
 		go func() {
@@ -130,6 +135,30 @@ func main() {
 			log.Printf("InviteUserIntoGroup **************************** # %d", i)
 		}()
 	}*/
+
+	log.Println("---------------------------------------Create group Start-------------------------------------------")
+	create, err := userClient.CreateGroup(context.Background(), &pb.CreateGroupReq{
+		DeviceIds: "1482,333,1003,1004",
+		DeviceInfos: nil,
+		GroupName:"trsss组",
+		AccountId: 333,
+		GroupInfo: &pb.Group{
+			Id:0,
+			GroupName:"trsss组",
+			AccountId: 333,
+			Status: 1,
+		}})
+	log.Printf("%+v>>>>>>>>>>>>>>>>>>>>>create:%+v",err, create)
+
+
+	time.Sleep(time.Second*2)
+
+
+	log.Println("---------------------------------------GetGroupList again Start-------------------------------------------")
+	glAgain, err := userClient.GetGroupList(context.Background(), &pb.GrpListReq{
+		Uid:int32(333),
+	})
+	log.Printf("%+v Get group list **************************** # %+v",err, glAgain)
 
 	/*res, err := userClient.SearchGroup(context.Background(), &pb.GrpSearchReq{
 		Uid:uint64(333),

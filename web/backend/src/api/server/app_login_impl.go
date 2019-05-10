@@ -22,7 +22,7 @@ type TalkCloudServiceImpl struct{}
 
 // 用户登录
 func (tcs *TalkCloudServiceImpl) Login(ctx context.Context, req *pb.LoginReq) (*pb.LoginRsp, error) {
-	log.Println("enter login")
+	log.Printf("%s enter login", req.Name)
 	//　验证用户名是否存在以及密码是否正确，然后就生成一个uuid session, 把sessionid放进metadata返回给客户端，
 	//  然后之后的每一次连接都需要客户端加入这个metadata，使用拦截器，对用户进行鉴权
 	if req.Name == "" || req.Passwd == "" {

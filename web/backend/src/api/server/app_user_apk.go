@@ -9,9 +9,9 @@ package server
 
 import (
 	pb "api/talk_cloud"
+	cfgGs "configs/grpc_server"
 	"context"
 	"net/http"
-	cfgGs "configs/grpc_server"
 	tfi "pkg/file_info"
 )
 
@@ -24,7 +24,7 @@ func (tcs *TalkCloudServiceImpl) GetApkInfo(ctx context.Context, req *pb.ApkInfo
 		resp.Res.Msg = "Get apk info fail please try again later"
 		return resp, nil
 	}
-	resp.ApkPath =  cfgGs.FILE_BASE_URL + apkInfo.FileMD5
+	resp.ApkPath = cfgGs.FILE_BASE_URL + apkInfo.FileMD5
 	resp.ApkVersion = apkInfo.FileName
 	return resp, nil
 }

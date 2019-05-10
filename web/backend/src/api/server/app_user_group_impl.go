@@ -76,7 +76,7 @@ func (serv *TalkCloudServiceImpl) CreateGroup(ctx context.Context, req *pb.Creat
 		gl.GroupInfo.Id = int(gid)
 	}
 
-	// 增加到缓存
+	// 群组信息和群组成员id增加到缓存
 	if err := tgc.AddGroupAndUserInCache(gl, cache.GetRedisClient()); err != nil {
 		log.Printf("CreateGroup AddGroupAndUserInCache error: %v", err)
 	}
@@ -94,7 +94,9 @@ func (serv *TalkCloudServiceImpl) CreateGroup(ctx context.Context, req *pb.Creat
 			}
 
 			u := &pb.UserRecord{}
-			tuc.UpdateUserFromDBToRedis(u, uId)
+			if uId != gl.GroupInfo.AccountId {  // TODO 有问题， 为什么要写这一步，暂时放着
+				tuc.UpdateUserFromDBToRedis(u, uId)
+			}
 		}
 	} else {
 		for _, v := range gl.DeviceIds {
@@ -107,7 +109,9 @@ func (serv *TalkCloudServiceImpl) CreateGroup(ctx context.Context, req *pb.Creat
 			}
 
 			u := &pb.UserRecord{}
-			tuc.UpdateUserFromDBToRedis(u, v)
+			if v != gl.GroupInfo.AccountId {  // TODO 有问题， 为什么要写这一步，暂时放着
+				tuc.UpdateUserFromDBToRedis(u, v)
+			}
 		}
 	}
 
@@ -229,7 +233,7 @@ func (serv *TalkCloudServiceImpl) JoinGroup(ctx context.Context, req *pb.GrpUser
 		if err := tuc.AddUserDataInCache(&pb.Member{
 			Id:          u.Uid,
 			IMei:        u.Imei,
-			UserName:    u.Name,
+			NickName:    u.Name,
 			Online:      u.Online,
 			LockGroupId: u.LockGroupId,
 		}, cache.GetRedisClient()); err != nil {
@@ -284,7 +288,7 @@ func (serv *TalkCloudServiceImpl) GetGroupList(ctx context.Context, req *pb.GrpL
 					if err := tuc.AddUserDataInCache(&pb.Member{
 						Id:          u.Uid,
 						IMei:        u.Imei,
-						UserName:    u.Name,
+						NickName:    u.Name,
 						Online:      u.Online,
 						LockGroupId: u.LockGroupId,
 					}, cache.GetRedisClient()); err != nil {

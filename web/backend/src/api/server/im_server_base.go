@@ -100,7 +100,7 @@ type DataSource interface{}
 var TQ = struct {
 	Tasks chan Task
 	m     sync.Mutex
-}{Tasks: make(chan Task, 100000)}
+}{Tasks: make(chan Task, 10000000)}
 
 // 全局map，记录在线人 // TODO 后期修改
 var StreamMap = sync.Map{}
@@ -110,11 +110,11 @@ func init() {
 }
 
 func (ie ImEngine) Run() {
-	// 消息推送exec TODO 暂时只用一个exec
-	go pushDataExecutor(TQ.Tasks)
+	// 消息推送exec TODO 暂时只用一个scher
+	go ExcecScheduler()
 
 	// redis持续获取im数据，dispatcher
-	go JanusPttMsgPublish()
+	JanusPttMsgPublish()
 }
 
 // gen im task
@@ -130,7 +130,7 @@ func NewImTask(senderId int32, receiver []int32, resp *pb.StreamResponse, ) *Tas
 func NewDataContent() *DataContext {
 	return &DataContext{
 		UId:  make(chan int32, 1),
-		Task: make(chan Task, 10000),
+		Task: make(chan Task, 1000),
 	}
 }
 
@@ -144,6 +144,34 @@ func (c *Client) Run() {
 		c.Cf.Dispatcher(c.Dc, c.Ds)
 		c.Cf.DispatcherScheduler(c.Dc, c.LongLived)
 	}
+}
+
+func ExcecScheduler() {
+	var tasks []Task
+	var executor = CreateExecutor()
+	tick := time.NewTicker(time.Second * time.Duration(5))
+	for {
+		var activeExecu chan Task
+		var activeTask Task
+		if len(tasks) > 0 {
+			activeExecu = executor
+			activeTask = tasks[0]
+		}
+		select {
+		case t := <-TQ.Tasks:
+			tasks = append(tasks, t)
+		case activeExecu <- activeTask:
+			tasks = tasks[1:]
+		case <-tick.C:
+			log.Printf("now task queue len:%d", len(tasks))
+		}
+	}
+}
+
+func CreateExecutor() chan Task {
+	tc := make(chan Task)
+	go pushDataExecutor(tc)
+	return tc
 }
 
 // 分发上传文件方式产生的IM数据
@@ -239,12 +267,11 @@ func pushDataDispatcher(dc *DataContext, ds DataSource) {
 		}
 		// 更新stream和redis状态
 		StreamMap.Store(data.Uid, srv)
-		log.Println("login data.Uid:", data.Uid)
-
+		log.Println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>login data.Uid>>>>:", data.Uid)
 		if err := tuc.UpdateOnlineInCache(&pb.Member{Id: data.Uid, Online: USER_ONLINE}, cache.GetRedisClient()); err != nil {
 			log.Println("Update user online state error:", err)
 		}
-
+		log.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>start gen data for dispatcher")
 		switch data.DataType {
 
 		/*case FIRST_LOGIN_DATA:
@@ -279,12 +306,12 @@ func pushDataDispatcher(dc *DataContext, ds DataSource) {
 func dispatcherScheduler(dContent *DataContext, multiSend bool) {
 	log.Printf("start Scheduler im msg")
 	var notify int32
-	tick := time.Tick(time.Minute * 10)
+	tick := time.Tick(time.Minute * 5)
 	for {
 		// 接收任务
 		select {
 		case t := <-dContent.Task:
-			TQ.Tasks <- t
+			go func() { TQ.Tasks <- t }()
 			//log.Printf("///////////%T///////%+v", t, t)
 			if t.Data.DataType == LOGOUT_NOTIFY_MSG {
 				notify++
@@ -299,7 +326,7 @@ func dispatcherScheduler(dContent *DataContext, multiSend bool) {
 				return
 			}
 		case <-tick:
-			log.Printf(" im task queue len = %d", len(dContent.UId)) //TODO 合理退出，关闭调度器
+			log.Printf("single im task queue len = %d", len(dContent.UId)) //TODO 合理退出，关闭调度器
 		}
 	}
 }
@@ -562,7 +589,7 @@ func getGroupList(uid int32, gList chan *pb.GroupListRsp, errMap *sync.Map, wg *
 					if err := tuc.AddUserDataInCache(&pb.Member{
 						Id:          u.Uid,
 						IMei:        u.Imei,
-						UserName:    u.Name,
+						NickName:    u.Name,
 						Online:      u.Online,
 						LockGroupId: u.LockGroupId,
 					}, cache.GetRedisClient()); err != nil {
@@ -588,11 +615,13 @@ func getGroupList(uid int32, gList chan *pb.GroupListRsp, errMap *sync.Map, wg *
 
 // 增加缓存
 func addUserInfoToCache(userInfo *pb.Member, wg *sync.WaitGroup) {
-	log.Println("Add User Info into cache start")
-	if err := tuc.AddUserDataInCache(userInfo, cache.GetRedisClient()); err != nil {
+
+	log.Printf("will get rediscli, now redis pool info :%+v |<<<>>>| idleCount: %+v", cache.RedisPool, cache.RedisPool.IdleCount())
+	redisCli := cache.GetRedisClient()
+	if err := tuc.AddUserDataInCache(userInfo, redisCli); err != nil {
 		log.Println("Add user information to cache with error: ", err)
 	}
-	log.Println("Add User Info into cache done")
+	log.Println("addUserInfoToCache done")
 }
 
 // 返回的IM离线数据
@@ -682,21 +711,21 @@ func sendHeartbeat(dc *DataContext, data *pb.StreamRequest, interval int, srv pb
 				srv := value.(pb.TalkCloud_DataPublishServer)
 				if err := srv.Send(resp); err != nil {
 					//if errSC, _ := status.FromError(err); errSC.Code() == codes.Unavailable || errSC.Code() == codes.Canceled {
-						// 只要是发送失败，就认为对方离线
-						log.Printf("client %d close with %+v", data.Uid, err)
-						log.Printf("now dc stream : %+v", StreamMap)
+					// 只要是发送失败，就认为对方离线
+					log.Printf("client %d close with %+v", data.Uid, err)
+					log.Printf("now dc stream : %+v", StreamMap)
 
-						// 删除map中的stream
-						StreamMap.Delete(data.Uid)
-						log.Printf("# user %d is logout", data.Uid)
+					// 删除map中的stream
+					StreamMap.Delete(data.Uid)
+					log.Printf("# user %d is logout", data.Uid)
 
-						// 更新redis状态
-						if err := tuc.UpdateOnlineInCache(&pb.Member{Id: data.Uid, Online: USER_OFFLINE}, cache.GetRedisClient()); err != nil {
-							log.Println("Update user online state error:", err)
-						}
-						// 往dc里面写掉线通知
-						go notifyToOther(dc, data.Uid, LOGOUT_NOTIFY_MSG)
-						return
+					// 更新redis状态
+					if err := tuc.UpdateOnlineInCache(&pb.Member{Id: data.Uid, Online: USER_OFFLINE}, cache.GetRedisClient()); err != nil {
+						log.Println("Update user online state error:", err)
+					}
+					// 往dc里面写掉线通知
+					go notifyToOther(dc, data.Uid, LOGOUT_NOTIFY_MSG)
+					return
 					//}
 				}
 			}

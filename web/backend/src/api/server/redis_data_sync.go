@@ -124,7 +124,7 @@ func GroupData(uid int32) error {
 			if err := tuc.AddUserDataInCache(&pb.Member{
 				Id:          u.Uid,
 				IMei:        u.Imei,
-				UserName:    u.Name,
+				NickName:    u.Name,
 				Online:      u.Online,
 				LockGroupId: u.LockGroupId,
 			}, cache.GetRedisClient()); err != nil {

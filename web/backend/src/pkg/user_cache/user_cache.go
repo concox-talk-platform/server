@@ -136,7 +136,7 @@ func GetGroupMemDataFromCache(gid int32, rd redis.Conn) ([]*pb.UserRecord, error
 	for _, v := range uids {
 		user := &pb.UserRecord{}
 		value, err := redis.Values(rd.Do("HMGET", MakeUserDataKey(int32(v)),
-			"id", "imei", "username", "online", "lock_gid"))
+			"id", "imei", "nickname", "online", "lock_gid"))
 		if err != nil {
 			fmt.Println("hmget failed", err.Error())
 		}
@@ -173,7 +173,7 @@ func GetGroupMemDataFromCache(gid int32, rd redis.Conn) ([]*pb.UserRecord, error
 			// 在线离线顺序
 			if user.Online == USER_ONLINE {
 				res = append(res, user)
-			} else  {
+			} else {
 				resOffline = append(resOffline, user)
 			}
 		}
@@ -190,14 +190,14 @@ func UpdateUserFromDBToRedis(user *pb.UserRecord, v int) {
 	}
 	user.Uid = int32(res.Id)
 	user.Imei = res.IMei
-	user.Name = res.UserName
+	user.Name = res.NickName
 	user.Online = USER_OFFLINE
 	user.LockGroupId = int32(res.LockGroupId)
 	// 增加到缓存
 	if err := AddUserDataInCache(&pb.Member{
 		Id:          user.Uid,
 		IMei:        user.Imei,
-		UserName:    user.Name,
+		NickName:    user.Name,
 		Online:      user.Online,
 		LockGroupId: user.LockGroupId,
 	}, cache.GetRedisClient()); err != nil {
@@ -326,11 +326,13 @@ func AddUserDataInCache(m *pb.Member, redisCli redis.Conn) error {
 		return errors.New("redis conn is nil")
 	}
 	defer redisCli.Close()
-
+	//log.Printf(">>>>> start AddUserDataInCache")
 	if _, err := redisCli.Do("HMSET", MakeUserDataKey(m.Id),
-		"id", m.Id, "imei", m.IMei, "username", m.UserName, "online", m.Online, "lock_gid", m.LockGroupId); err != nil {
+		"id", m.Id, "imei", m.IMei, "username", m.UserName, "nickname", m.NickName, "online", m.Online, "lock_gid", m.LockGroupId); err != nil {
+			//log.Printf("AddUserDataInCache HMSET error: %+v",err)
 		return errors.New("hSet failed with error: " + err.Error())
 	}
+	//log.Printf(">>>>> done AddUserDataInCache")
 	return nil
 }
 
@@ -349,6 +351,7 @@ func UpdateLockGroupIdInCache(req *pb.SetLockGroupIdReq, redisCli redis.Conn) er
 
 // 更新用户在线状态
 func UpdateOnlineInCache(m *pb.Member, redisCli redis.Conn) error {
+	log.Printf("start update user online state")
 	if redisCli == nil {
 		return errors.New("redis conn is nil")
 	}
@@ -386,7 +389,6 @@ func GetUserStatusFromCache(uId int32, redisCli redis.Conn) (int32, error) {
 	}
 }
 
-
 // 获取单个成员信息
 func GetUserFromCache(uId int32) (*pb.UserRecord, error) {
 	rd := cache.GetRedisClient()
@@ -394,7 +396,7 @@ func GetUserFromCache(uId int32) (*pb.UserRecord, error) {
 
 	user := &pb.UserRecord{}
 	value, err := redis.Values(rd.Do("HMGET", MakeUserDataKey(uId),
-		"id", "imei", "username", "online", "lock_gid"))
+		"id", "imei", "nickname", "online", "lock_gid"))
 	if err != nil {
 		fmt.Println("hmget failed", err.Error())
 	}

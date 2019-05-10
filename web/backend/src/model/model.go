@@ -5,7 +5,10 @@
  */
 package model
 
-import "database/sql"
+import (
+	pb "api/talk_cloud"
+	"database/sql"
+)
 
 // request
 // update pwd modal
@@ -23,7 +26,7 @@ type AccountDeviceTransReq struct {
 }
 
 type AccountImportDeviceReq struct {
-	DeviceIMei []string `json:"device_imei"`
+	Devices []*pb.DeviceInfo `json:"devices"`
 }
 
 // validate
@@ -81,6 +84,7 @@ type Device struct {
 	Id         int     `json:"id"`
 	IMei       string  `json:"imei"`
 	UserName   string  `json:"user_name"`
+	NickName   string  `json:"nick_name"`
 	PassWord   string  `json:"password"`
 	AccountId  int     `json:"account_id"`
 	CreateTime string  `json:"create_time"`
@@ -90,6 +94,9 @@ type Device struct {
 	GPSData    *GPS    `json:"gps_data"`
 	Speed      float32 `json:"speed"`
 	Course     float32 `json:"course"`
+	DeviceType string  `json:"device_type"`
+	ActiveTime string  `json:"active_time"`
+	SaleTime   string  `json:"sale_time"`
 }
 
 type GPS struct {
@@ -112,6 +119,9 @@ type User struct {
 	LLTime      string `json:"last_login_time"`
 	ChangeTime  string `json:"change_time"`
 	Online      int    `json:"online"`
+	DeviceType  string `json:"device_type"`
+	ActiveTime  string `json:"active_time"`
+	SaleTime    string `json:"sale_time"`
 }
 
 type Customer struct {

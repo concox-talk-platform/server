@@ -17,6 +17,7 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+	"utils"
 )
 
 const (
@@ -35,7 +36,7 @@ func UpdateUserLocationInCache(req *pb.ReportDataReq, redisCli redis.Conn) error
 	defer redisCli.Close()
 
 	if _, err := redisCli.Do("HMSET", MakeUserDataKey(req.DeviceInfo.Id),
-		"local_time", convertTimeUnix(req.LocationInfo.GpsInfo.LocalTime),
+		"local_time", utils.ConvertTimeUnix(req.LocationInfo.GpsInfo.LocalTime),
 		"lon", req.LocationInfo.GpsInfo.Longitude,
 		"lat", req.LocationInfo.GpsInfo.Latitude,
 		"speed", req.LocationInfo.GpsInfo.Speed,
@@ -103,8 +104,8 @@ func GetUserLocationInCache(uId int32, rd redis.Conn) (*pb.GPSHttpResp, *pb.GPS,
 			Course:    float32(course),
 		}
 		gpsDataResp = &pb.GPSHttpResp{
-			Uid: uId,
-			Res: &pb.Result{Msg: "", Code: http.StatusOK},
+			Uid:     uId,
+			Res:     &pb.Result{Msg: "", Code: http.StatusOK},
 			GpsInfo: gpsData,
 		}
 	} else {

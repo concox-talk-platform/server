@@ -26,8 +26,9 @@ func main() {
 	flag.Parse()
 
 	go func() {
-		http.ListenAndServe("localhost:6060", nil)
+		_ = http.ListenAndServe(cfgGs.PprofAddr, nil)
 	}()
+	
 
 	talkCloudServer := grpc.NewServer()
 	talk_cloud.RegisterTalkCloudServer(talkCloudServer, &gServer.TalkCloudServiceImpl{})

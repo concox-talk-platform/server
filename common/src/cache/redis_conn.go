@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gomodule/redigo/redis"
+	"log"
 	"time"
 )
 
@@ -54,12 +55,16 @@ func GetRedisClient() redis.Conn {
 }
 
 func init() {
-
+	var err error
 	cfg := config.NewRedisConfig()
 	if err := cfg.LoadConfig("redis", DEFAULT_REDIS_CONFIG); err != nil {
 		RedisPool = nil
+		log.Printf("Init NewRedisConfig LoadConfig fail with error: %+v", err)
 		return
 	}
 
-	RedisPool, _ = NewRedisPool(cfg)
+	RedisPool, err = NewRedisPool(cfg)
+	if err != nil {
+		log.Printf("Init NewRedisPool fail with error:%+v", err)
+	}
 }

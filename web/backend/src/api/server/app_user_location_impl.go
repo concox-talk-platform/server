@@ -16,7 +16,7 @@ import (
 	tl "pkg/location"
 	"server/common/src/cache"
 	"server/common/src/db"
-	"server/web/backend/src/configs/grpc_server"
+	"configs/grpc_server"
 	"service/grpc_client_pool"
 )
 

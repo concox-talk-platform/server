@@ -9,13 +9,12 @@ package location
 
 import (
 	pb "api/talk_cloud"
-	cfgComm "configs/common"
 	"database/sql"
 	"github.com/smartwalle/dbs"
 	"log"
 	"strconv"
 	"strings"
-	"time"
+	"utils"
 )
 
 /*
@@ -42,7 +41,7 @@ func InsertLocationData(req *pb.ReportDataReq, db *sql.DB) error {
 	ib.Table("location")
 
 	ib.SET("uid", req.DeviceInfo.Id)
-	ib.SET("local_time", convertTimeUnix(req.LocationInfo.GpsInfo.LocalTime))
+	ib.SET("local_time", utils.ConvertTimeUnix(req.LocationInfo.GpsInfo.LocalTime))
 	ib.SET("lng", req.LocationInfo.GpsInfo.Longitude)
 	ib.SET("lat", req.LocationInfo.GpsInfo.Latitude)
 	ib.SET("cse_sp", PackCourseSpeed(req.LocationInfo.GpsInfo.Course, req.LocationInfo.GpsInfo.Speed))
@@ -51,13 +50,13 @@ func InsertLocationData(req *pb.ReportDataReq, db *sql.DB) error {
 	ib.SET("lac", req.LocationInfo.BSInfo.Lac)
 	ib.SET("cid", req.LocationInfo.BSInfo.Cid)
 	ib.SET("bs_sth",
-		formatStrength(req.LocationInfo.BSInfo.FirstBs, req.LocationInfo.BSInfo.SecondBs,
+		utils.FormatStrength(req.LocationInfo.BSInfo.FirstBs, req.LocationInfo.BSInfo.SecondBs,
 			req.LocationInfo.BSInfo.ThirdBs, req.LocationInfo.BSInfo.FourthBs))
 	ib.SET("bt_sth",
-		formatStrength(req.LocationInfo.BtInfo.FirstBt, req.LocationInfo.BtInfo.SecondBt,
+		utils.FormatStrength(req.LocationInfo.BtInfo.FirstBt, req.LocationInfo.BtInfo.SecondBt,
 			req.LocationInfo.BtInfo.ThirdBt, req.LocationInfo.BtInfo.FourthBt))
 	ib.SET("wifi_sth",
-		formatStrength(req.LocationInfo.WifiInfo.FirstWifi, req.LocationInfo.WifiInfo.SecondWifi,
+		utils.FormatStrength(req.LocationInfo.WifiInfo.FirstWifi, req.LocationInfo.WifiInfo.SecondWifi,
 			req.LocationInfo.WifiInfo.ThirdWifi, req.LocationInfo.WifiInfo.FourthWifi))
 	if _, err := ib.Exec(db); err != nil {
 		return err
@@ -86,15 +85,4 @@ func ParseCourseSpeed(cseSpeed string) (int32, float32) {
 	}
 
 	return int32(course), float32(speed)
-}
-
-func convertTimeUnix(t uint64) string {
-	return time.Unix(int64(t), 0).Format(cfgComm.TimeLayout)
-}
-
-func formatStrength(first, second, third, fourth int32) string {
-	return strconv.FormatInt(int64(first), 10) + "," +
-		strconv.FormatInt(int64(second), 10) + "," +
-		strconv.FormatInt(int64(third), 10) + "," +
-		strconv.FormatInt(int64(fourth), 10)
 }

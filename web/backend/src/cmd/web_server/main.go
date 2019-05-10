@@ -17,7 +17,7 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"server/web/backend/src/controllers"
+	"controllers"
 	"strings"
 	"time"
 )
@@ -78,6 +78,8 @@ func Prepare() *gin.Engine {
 
 	// device
 	engine.POST("/device/import/:account_name", controllers.ImportDeviceByRoot)
+
+	engine.POST("/device/update", controllers.UpdateDeviceInfo)
 
 	// upload file
 	engine.POST("/upload", controllers.UploadFile)

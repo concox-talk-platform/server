@@ -217,7 +217,7 @@ func GetGruopMembers(gid int32, db *sql.DB) ([]*pb.UserRecord, error) {
 		return nil, fmt.Errorf("db is nil")
 	}
 
-	sql := fmt.Sprintf("SELECT u.id, u.imei, u.name, u.user_type, u.lock_gid "+
+	sql := fmt.Sprintf("SELECT u.id, u.imei, u.nick_name, u.user_type, u.lock_gid "+
 		"FROM user AS u INNER JOIN group_member AS gm ON gm.uid=u.id WHERE gm.gid=%d AND gm.stat=1", gid)
 
 	rows, err := db.Query(sql)

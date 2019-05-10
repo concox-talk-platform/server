@@ -41,10 +41,10 @@ func testGetMsgFromRedis(t *testing.T) {
 
 func TestPushDataIntoRedis(t *testing.T) {
 	m := &interphoneMsg{
-		Uid:       9,
+		Uid:       "9",
 		MsgType:   "ptt",
 		Md5:       "555555555555",
-		GId:    229,
+		GId:    "229",
 		FilePath: "123456789",
 		Timestamp: time.Now().String(),
 	}
@@ -53,9 +53,13 @@ func TestPushDataIntoRedis(t *testing.T) {
 	if e != nil {
 
 	}
-	_, err := cache.GetRedisClient().Do("lpush", "mylist", v)
+	_, err := cache.GetRedisClient().Do("lpush", "janusImUrlList", v)
 	if err != nil {
 		log.Printf("push redis data with error: %+v", err)
 		return
 	}
+}
+
+func testTIme(t *testing.T) {
+	log.Println(time.Now().Unix())
 }

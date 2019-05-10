@@ -8,6 +8,7 @@
 package web_server
 
 import (
+	"flag"
 	"github.com/go-ini/ini"
 	"log"
 	"os"
@@ -24,7 +25,9 @@ var (
 )
 
 func init() {
-	cfg, err := ini.Load("web_conf.ini") // 编译之后的执行文件所在位置的相对位置
+	cfgFilePath := flag.String("d", "web_conf.ini", "web api configuration file path")
+	flag.Parse()
+	cfg, err := ini.Load(*cfgFilePath) // 编译之后的执行文件所在位置的相对位置
 	if err != nil {
 		log.Printf("Fail to read file: %v", err)
 		os.Exit(1)

@@ -8,20 +8,26 @@
 package grpc_server
 
 import (
+	"flag"
 	"github.com/go-ini/ini"
 	"log"
 	"os"
 )
 
 var (
-	GrpcSPort     string
-	RedisCoMax    int
+	GrpcSPort     string // grpc服务监听端口
+	RedisCoMax    int    // 启动grpc服务的时候，读取redis工作的最大连接数
 	FILE_BASE_URL string // 保存文件到fastdfs服务器之后的访问前缀（ip、域名）
-	Interval      int  // im 心跳检测时间间隔
+	Interval      int    // im 心跳检测时间间隔
+	PttMsgKey     string // ptt音视频数据在redis中的key
+	PttWaitTime   int    // ptt音视频获取时阻塞等待的时间
+	PprofAddr     string // pprof监听的地址
 )
 
 func init() {
-	cfg, err := ini.Load("grpc_conf.ini") // 编译之后的执行文件所在位置的相对位置
+	iniFilePath := flag.String("d", "grpc_conf.ini", "grpc server conf file path")
+	flag.Parse()
+	cfg, err := ini.Load(*iniFilePath) // 编译之后的执行文件所在位置的相对位置
 	if err != nil {
 		log.Printf("Fail to read file: %v", err)
 		os.Exit(1)
@@ -32,6 +38,12 @@ func init() {
 
 	Interval, _ = cfg.Section("im").Key("heartbeat_interval").Int()
 
+	PprofAddr = cfg.Section("pprof").Key("pprof_addr").String()
+
 	FILE_BASE_URL = cfg.Section("upload_file").Key("save_path_url").String()
+
+	PttMsgKey = cfg.Section("ptt").Key("ptt_msg_key").String()
+
+	PttWaitTime, _ = cfg.Section("ptt").Key("wait_time").Int()
 
 }
