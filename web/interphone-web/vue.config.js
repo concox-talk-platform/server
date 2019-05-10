@@ -1,7 +1,8 @@
 module.exports = {
     configureWebpack: {
       externals: {
-        "BMap": "BMap"
+        "BMap": "BMap",
+        'google': 'google',
       }
     }
   }

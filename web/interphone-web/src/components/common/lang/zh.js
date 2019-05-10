@@ -21,7 +21,8 @@ module.exports = {
         ensure: '提交',
         add: '添加',
         confirm :'确定',
-        reset: '重置'
+        reset: '重置',
+        refresh:'刷新',
 
         
     },
@@ -131,9 +132,12 @@ module.exports = {
         model: '型号',
         name: '设备名',
         time: '导入时间',
+        sell:'销售时间',
         operation :'操作',
         export: '转移',
+        nickname:'昵称',
         mass:'批量转移',
+        amend:'修改',
         device: '请选择转移的设备',
         info:'转移信息',
         message:'确定转出?',
@@ -178,6 +182,7 @@ module.exports = {
         chat_history:'聊天记录',
         text:'文本',
         file:'文件',
+        talk:'组呼',
         send:'发送',
         close:'关闭',
         media:'发送图片、视频、文件',
@@ -185,6 +190,11 @@ module.exports = {
         from:"收到来自",
         news:"的消息",
         answer:"回复",
+        off_line:'下线提醒',
+        off_span:'已下线',
+        on_line:'上线提醒',
+        on_span:'已上线',
+        chat:'聊天连接已断开，点击刷新重连',
     },
     apply:{
         request:'请求发起',
@@ -196,6 +206,26 @@ module.exports = {
         reject:'对方拒绝了您的请求',
         offline:'对方不在线',
         exist:'对方不存在',
-     }
+     },
+     map:{
+        baidu:'百度地图',
+        google:'谷歌地图'
+    },
+    sos:{
+      alert:'发出一条sos警报' ,
+      place:'报警位置在地图上跳动'
+    },
+    device:{
+        title:'修改信息',
+        imei:'IMEI',
+        user_name:'账户',
+        nick_name:'昵称',
+        import_time:'导入时间',
+        sale:'销售时间',
+        type:'设备类型',
+        submit:'提交',
+        success:'成功'
+    }
+
 
 }

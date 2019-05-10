@@ -15,12 +15,12 @@ module.exports = {
     },
     button_message: {
         launcher: 'Log In',
-       
         cancel: 'Cancel',
         sign_up: 'Sign Up',
         ensure: 'Submit',
         add: 'Add',
         confirm :'Confirm',
+        refresh:'Refresh',
         reset: 'Reset'
         
     },
@@ -128,9 +128,12 @@ module.exports = {
            model: 'Model',
            name: 'Device name',
            time: 'Import time',
+           sell:'Sales time',
+           nickname:'nickname',
            operation :'Operation',
            export: 'Transfer',
            mass:'Batch transfer',
+           amend:'Amend',
            device: 'Please select a device',
            info:'Transinformation',
            message:'Are you sure to transfer out?',
@@ -175,6 +178,7 @@ module.exports = {
             chat_history:'Chat Record',
             text:'Text',
             file:'File',
+            talk:'Group call',
             send:'Send',
             close:'Close',
             media:'Send pictures, videos, files',
@@ -182,6 +186,11 @@ module.exports = {
             from:"You have received a message from",
             news:" ",
             answer:"Reply",
+            off_line:'Offline reminder',
+            off_span:'has been offline',
+            on_line:'Online reminder',
+            on_span:'has been online',
+            chat:'The chat connection has been disconnected, click to refresh and reconnect',
 
         },
         apply:{
@@ -194,7 +203,28 @@ module.exports = {
             reject:'The other party rejected your request',
             offline:' The other party is not online',
             exist:'The other party does not exist',
-         }
+         },
+         map:{
+             baidu:'Baidu Map',
+             google:'Google Maps'
+         },
+         sos:{
+           alert:'issued a sos alert' ,
+           place:'The alarm position jumps on the map'
+         },
+         device:{
+            title:'Modify information',
+            imei:'IMEI',
+            user_name:'Account',
+            
+            import_time:'Import time',
+            sale:'Sales time',
+            type:'Device type',
+            nick_name:'Nickname',
+            submit:'Submit',
+            success:'Modify Successfully '
+        }
+         
     
 
         

@@ -583,14 +583,11 @@ function Janus(gatewayCallbacks) {
 			return;
 		}
 		else if(json["janus"] === "user_call") {
-			console.log(8888888)
 			Janus.debug(8888888888);
 			gatewayCallbacks.youcallmessage(json);
 
 		}else if(json["janus"] === "user_called"){
-			console.log(999999)
 			console.log(json);
-			var asds =212
 			gatewayCallbacks.mycallmessage(json);
 			Janus.debug(data);
 		}
@@ -1253,14 +1250,13 @@ function Janus(gatewayCallbacks) {
 		// var message = callbacks.message;
 		if(callbacks.message ==null){
 			var user_call = callbacks.user_call;
-			console.log(11111111111111)
 			var jsep = callbacks.jsep;
 			var transaction = Janus.randomString(12);
 			var request = { "janus": "user_call", "uid": user_call.uid,"myId":user_call.myId,"type":user_call.type,"name":user_call.name,"isVideo":user_call.isVideo, "isAccept":user_call.isAccept, "transaction": transaction, };
 			// var request = { "janus": "user_call", "body": user_call, "transaction": transaction };
 		}else{
 			var message = callbacks.message;
-			console.log(2222222)
+			// var user_call = callbacks.user_call;
 			var jsep = callbacks.jsep;
 			var transaction = Janus.randomString(12);
 			var request = { "janus": "message", "body": message, "transaction": transaction };
@@ -1273,13 +1269,12 @@ function Janus(gatewayCallbacks) {
 		if(jsep !== null && jsep !== undefined)
 			request.jsep = jsep;
 		Janus.debug("Sending message to plugin (handle=" + handleId + "):");
-		Janus.debug(request);
 		if(websockets) {
+			console.log(transaction)
 			request["session_id"] = sessionId;
 			request["handle_id"] = handleId;
 			transactions[transaction] = function(json) {
 				Janus.debug("Message sent!");
-				Janus.debug(json);
 				if(json["janus"] === "success") {
 					// We got a success, must have been a synchronous transaction
 					var plugindata = json["plugindata"];
@@ -1315,6 +1310,8 @@ function Janus(gatewayCallbacks) {
 			withCredentials: withCredentials,
 			body: request,
 			success: function(json) {
+				// console.log(body)
+				console.log(json["janus"]);
 				Janus.debug("Message sent!");
 				Janus.debug(json);
 				if(json["janus"] === "success") {
@@ -1330,8 +1327,16 @@ function Janus(gatewayCallbacks) {
 					Janus.debug(data);
 					callbacks.success(data);
 					return;
-				}
-				else if(json["janus"] !== "ack") {
+				}else if(json["janus"] !== "ack") {
+
+					if(json["janus"] === "user_call") {
+						gatewayCallbacks.youcallmessage(json);
+			
+					}else if(json["janus"] === "user_called"){
+						console.log(json);
+						gatewayCallbacks.mycallmessage(json);
+						Janus.debug(data);
+					}else{
 					// Not a success and not an ack, must be an error
 					if(json["error"] !== undefined && json["error"] !== null) {
 						Janus.error("Ooops: " + json["error"].code + " " + json["error"].reason);	// FIXME
@@ -1341,6 +1346,8 @@ function Janus(gatewayCallbacks) {
 						callbacks.error("Unknown error");
 					}
 					return;
+					}
+				
 				}
 				// If we got here, the plugin decided to handle the request asynchronously
 				callbacks.success();
@@ -1397,6 +1404,8 @@ function Janus(gatewayCallbacks) {
 
 	// Private method to create a data channel
 	function createDataChannel(handleId, dclabel, incoming, pendingText) {
+		console.log('zou123')
+
 		var pluginHandle = pluginHandles[handleId];
 		if(pluginHandle === null || pluginHandle === undefined ||
 				pluginHandle.webrtcStuff === null || pluginHandle.webrtcStuff === undefined) {
@@ -1410,6 +1419,7 @@ function Janus(gatewayCallbacks) {
 			pluginHandle.ondata(event.data, label);
 		}
 		var onDataChannelStateChange = function(event) {
+			console.log('zou456')
 			Janus.log('Received state change on data channel:', event);
 			var label = event.target.label;
 			var dcState = config.dataChannel[label] !== null ? config.dataChannel[label].readyState : "null";
@@ -1451,6 +1461,7 @@ function Janus(gatewayCallbacks) {
 
 	// Private method to send a data channel message
 	function sendData(handleId, callbacks) {
+		console.log('zou098')
 		callbacks = callbacks || {};
 		callbacks.success = (typeof callbacks.success == "function") ? callbacks.success : Janus.noop;
 		callbacks.error = (typeof callbacks.error == "function") ? callbacks.error : Janus.noop;
