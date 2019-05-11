@@ -9,9 +9,7 @@ package server
 
 import (
 	"api/talk_cloud"
-	"encoding/json"
 	"log"
-	"server/common/src/cache"
 	"testing"
 	"time"
 )
@@ -40,24 +38,7 @@ func testGetMsgFromRedis(t *testing.T) {
 }
 
 func TestPushDataIntoRedis(t *testing.T) {
-	m := &interphoneMsg{
-		Uid:       "9",
-		MsgType:   "ptt",
-		Md5:       "555555555555",
-		GId:    "229",
-		FilePath: "123456789",
-		Timestamp: time.Now().String(),
-	}
-	v, e := json.Marshal(m)
-	log.Printf("%s", v)
-	if e != nil {
 
-	}
-	_, err := cache.GetRedisClient().Do("lpush", "janusImUrlList", v)
-	if err != nil {
-		log.Printf("push redis data with error: %+v", err)
-		return
-	}
 }
 
 func testTIme(t *testing.T) {

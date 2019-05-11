@@ -103,7 +103,12 @@ var TQ = struct {
 }{Tasks: make(chan Task, 10000000)}
 
 // 全局map，记录在线人 // TODO 后期修改
-var StreamMap = sync.Map{}
+//var StreamMap = sync.Map{}
+
+var StreamNormalMap = struct {
+	m         sync.Mutex
+	StreamMap map[int32]interface{}
+}{StreamMap: make(map[int32]interface{})}
 
 func init() {
 	ImEngine{}.Run()
@@ -187,7 +192,8 @@ func imMessagePublishDispatcher(dc *DataContext, ds DataSource) {
 	// 获取在线、离线用户id
 	if req.ReceiverType == IM_MSG_FROM_UPLOAD_RECEIVER_IS_USER { // 发给单人
 		// 判断是否在线
-		v, ok := StreamMap.Load(req.ReceiverId)
+		//v, ok := StreamMap.Load(req.ReceiverId)
+		v, ok := StreamNormalMap.StreamMap[req.ReceiverId]
 		log.Println(req.ReceiverId, v, ok)
 		//log.Printf("now dc.StreamMap map have: %+v， %p", dc.StreamMap, &dc.StreamMap)
 		log.Println(req.ReceiverId)
@@ -212,8 +218,9 @@ func imMessagePublishDispatcher(dc *DataContext, ds DataSource) {
 
 		log.Printf("the group %d has %+v", req.ReceiverId, res)
 		for _, v := range res {
-			log.Printf("now stream map have:%+v", StreamMap)
-			_, ok := StreamMap.Load(int32(v))
+			log.Printf("now stream map have:%+v", StreamNormalMap.StreamMap)
+			//_, ok := StreamMap.Load(int32(v))
+			_, ok := StreamNormalMap.StreamMap[int32(v)]
 			log.Println("the group member online state:", req.ReceiverId, v, ok)
 			if ok {
 				onlineMem = append(onlineMem, int32(v))
@@ -239,7 +246,7 @@ func imMessagePublishDispatcher(dc *DataContext, ds DataSource) {
 	}
 	// 发送在线用户消息
 	if onlineMem != nil {
-		dc.Task <- *NewImTask(req.Id, onlineMem, resp)
+		TQ.Tasks <- *NewImTask(req.Id, onlineMem, resp)
 		log.Printf("dispatcher finish %+v <-||||-> %+v", req.Id, resp)
 	}
 }
@@ -259,14 +266,19 @@ func pushDataDispatcher(dc *DataContext, ds DataSource) {
 		}
 
 		// 如果再次登录的用户在map中已存在，并且srv不同，那么就给dc的chan里面写一个终止信号
-		if v, ok := StreamMap.Load(data.Uid); ok && v != srv {
+		//if v, ok := StreamMap.Load(data.Uid); ok && v != srv {
+		if v, ok := StreamNormalMap.StreamMap[data.Uid]; ok && v != srv {
 			log.Printf("this here %+v, %+v", v, srv)
 			log.Printf("this user # %d is login already", data.Uid)
 			dc.ExceptionalLogin <- data.Uid
 			return
 		}
 		// 更新stream和redis状态
-		StreamMap.Store(data.Uid, srv)
+		//StreamMap.Store(data.Uid, srv)
+		StreamNormalMap.m.Lock()
+		StreamNormalMap.StreamMap[data.Uid]= srv
+		StreamNormalMap.m.Unlock()
+
 		log.Println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>login data.Uid>>>>:", data.Uid)
 		if err := tuc.UpdateOnlineInCache(&pb.Member{Id: data.Uid, Online: USER_ONLINE}, cache.GetRedisClient()); err != nil {
 			log.Println("Update user online state error:", err)
@@ -352,8 +364,8 @@ func pushDataExecutor(ct chan Task) {
 func pushData(task Task, receiverId int32, resp *pb.StreamResponse, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	log.Printf("the stream map have: %+v", StreamMap)
-	if value, ok := StreamMap.Load(receiverId); ok {
+	log.Printf("the stream map have: %+v", StreamNormalMap.StreamMap)
+	if value, ok := StreamNormalMap.StreamMap[receiverId]; ok && value != nil{
 		srv := value.(pb.TalkCloud_DataPublishServer)
 		log.Printf("# %d receiver response: %+v", receiverId, resp)
 		if err := srv.Send(resp); err != nil {
@@ -455,7 +467,7 @@ func firstLoginData(dc *DataContext, data *pb.StreamRequest, srv pb.TalkCloud_Da
 	}()
 
 	// 如果再次登录的用户在map中已存在，并且srv不同，那么就给dc的chan里面写一个终止信号
-	if v, ok := StreamMap.Load(int32(res.Id)); ok && v != srv {
+	if v, ok := StreamNormalMap.StreamMap[int32(res.Id)]; ok && v != srv {
 		log.Printf("this here %+v, %+v", v, srv)
 		dc.ExceptionalLogin <- int32(res.Id)
 		log.Println("this user is login already")
@@ -465,7 +477,12 @@ func firstLoginData(dc *DataContext, data *pb.StreamRequest, srv pb.TalkCloud_Da
 	}
 	// 更新stream和redis状态
 	log.Println("login data.Uid:", int32(res.Id))
-	StreamMap.Store(int32(res.Id), srv)
+	//StreamMap.Store(int32(res.Id), srv)
+
+	StreamNormalMap.m.Lock()
+	StreamNormalMap.StreamMap[int32(res.Id)] = srv
+	StreamNormalMap.m.Unlock()
+
 	if err := tuc.UpdateOnlineInCache(&pb.Member{Id: int32(res.Id), Online: USER_ONLINE}, cache.GetRedisClient()); err != nil {
 		log.Println("Update user online state error:", err)
 	}
@@ -707,16 +724,19 @@ func sendHeartbeat(dc *DataContext, data *pb.StreamRequest, interval int, srv pb
 		select {
 		case <-timerTask.C:
 			log.Printf("# %d receiver response: %+v", data.Uid, resp)
-			if value, ok := StreamMap.Load(data.Uid); ok {
+			//if value, ok := StreamMap.Load(data.Uid); ok {
+			if value, ok := StreamNormalMap.StreamMap[data.Uid]; ok  && value != nil{
 				srv := value.(pb.TalkCloud_DataPublishServer)
 				if err := srv.Send(resp); err != nil {
 					//if errSC, _ := status.FromError(err); errSC.Code() == codes.Unavailable || errSC.Code() == codes.Canceled {
 					// 只要是发送失败，就认为对方离线
 					log.Printf("client %d close with %+v", data.Uid, err)
-					log.Printf("now dc stream : %+v", StreamMap)
+					log.Printf("now dc stream : %+v", StreamNormalMap.StreamMap)
 
 					// 删除map中的stream
-					StreamMap.Delete(data.Uid)
+					StreamNormalMap.m.Lock()
+					StreamNormalMap.StreamMap[data.Uid] = nil
+					StreamNormalMap.m.Unlock()
 					log.Printf("# user %d is logout", data.Uid)
 
 					// 更新redis状态
