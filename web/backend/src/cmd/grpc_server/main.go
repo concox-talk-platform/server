@@ -28,7 +28,7 @@ func main() {
 	go func() {
 		_ = http.ListenAndServe(cfgGs.PprofAddr, nil)
 	}()
-	
+
 
 	talkCloudServer := grpc.NewServer()
 	talk_cloud.RegisterTalkCloudServer(talkCloudServer, &gServer.TalkCloudServiceImpl{})
