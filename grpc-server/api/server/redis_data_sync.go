@@ -9,13 +9,13 @@ package server
 
 import (
 	"database/sql"
-	"log"
-	"server/common/cache"
-	tg "server/common/dao/group"
-	tgc "server/common/dao/group_cache"
-	tu "server/common/dao/user"
-	tuc "server/common/dao/user_cache"
-	"server/common/db"
+	"server/grpc-server/log"
+	"server/grpc-server/cache"
+	tg "server/grpc-server/dao/group"
+	tgc "server/grpc-server/dao/group_cache"
+	tu "server/grpc-server/dao/user"
+	tuc "server/grpc-server/dao/user_cache"
+	"server/grpc-server/db"
 	pb "server/grpc-server/api/talk_cloud"
 	"sync"
 )
@@ -42,12 +42,12 @@ func (e ConcurrentEngine) Run() {
 	// 查找所有的用户id
 	uIds, _ := tu.SelectAllUserId()
 	for _, v := range uIds {
-		log.Printf("# uid %d", v)
+		log.Log.Printf("# uid %d", v)
 		wg.Add(1)
 		go func() { e.Scheduler.Submit(v) }()
 	}
 	wg.Wait()
-	log.Printf("**********************redis data sync done*****************************")
+	log.Log.Printf("**********************redis data sync done*****************************")
 }
 
 func createWorker(in chan int32, wg *sync.WaitGroup) {
@@ -80,7 +80,7 @@ func UserData(uId int32) error {
 	// 根据用户id去获取每一位的信息，放进缓存
 	res, err := tu.SelectUserByKey(int(uId))
 	if err != nil && err != sql.ErrNoRows {
-		log.Printf("UserData SelectUserByKey error : %s", err)
+		log.Log.Printf("UserData SelectUserByKey error : %s", err)
 		return err
 	}
 
@@ -93,12 +93,12 @@ func UserData(uId int32) error {
 		LockGroupId: int32(res.LockGroupId),
 		Online:      tuc.USER_OFFLINE, // 加载数据默认全部离线
 	}
-	log.Println("Add User Info into cache start")
+	log.Log.Println("Add User Info into cache start")
 
 	if err := tuc.AddUserDataInCache(userInfo, cache.GetRedisClient()); err != nil {
-		log.Println("Add user information to cache with error: ", err)
+		log.Log.Println("Add user information to cache with error: ", err)
 	}
-	log.Println("Add User Info into cache done")
+	log.Log.Println("Add User Info into cache done")
 	return nil
 }
 
@@ -107,7 +107,7 @@ func GroupData(uid int32) error {
 	if err != nil {
 		return err
 	}
-	log.Println("GroupData GetGroupListFromDB start update redis")
+	log.Log.Println("GroupData GetGroupListFromDB start update redis")
 	// 新增到缓存 更新两个地方，首先，每个组的信息要更新，就是group data，记录了群组的id和名字
 	if err := tgc.AddGroupInCache(gl, cache.GetRedisClient()); err != nil {
 		return err
@@ -128,7 +128,7 @@ func GroupData(uid int32) error {
 				Online:      u.Online,
 				LockGroupId: u.LockGroupId,
 			}, cache.GetRedisClient()); err != nil {
-				log.Println("Add user information to cache with error: ", err)
+				log.Log.Println("Add user information to cache with error: ", err)
 			}
 		}
 	}

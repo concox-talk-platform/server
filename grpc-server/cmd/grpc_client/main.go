@@ -8,7 +8,7 @@ package main
 import (
 	"context"
 	"google.golang.org/grpc"
-	"log"
+	"server/web-api/log"
 	pb "server/grpc-server/api/talk_cloud"
 	"sync"
 	"time"
@@ -24,7 +24,7 @@ func main() {
 
 	conn, err := grpc.Dial(host+":9001", grpc.WithInsecure())
 	if err != nil {
-		log.Printf("grpc.Dial err : %v", err)
+		log.Log.Printf("grpc.Dial err : %v", err)
 	}
 	defer conn.Close()
 	userClient := pb.NewTalkCloudClient(conn)
@@ -47,7 +47,7 @@ func main() {
 				SendTime:     strconv.FormatInt(time.Now().Unix(), 10),
 			})
 
-			log.Printf("res:%+v err : %+v",res, err)
+			log.Log.Printf("res:%+v err : %+v",res, err)
 		}()
 	}
 	select {}*/
@@ -66,14 +66,14 @@ func main() {
 				SendTime:     "hhhhh",
 				MsgCode:      strconv.FormatInt(time.Now().Unix(), 10),
 			})
-			log.Printf("%+v, err:%+v",res.Result.Msg, err)
+			log.Log.Printf("%+v, err:%+v",res.Result.Msg, err)
 		}()
 	}*/
 	/*res, err := userClient.AppRegister(context.Background(), &pb.AppRegReq{
 		Name:     "355172100003878",
 		Password: "123456",
 	})
-	log.Printf(res.String())*/
+	log.Log.Printf(res.String())*/
 
 	/*res, err := webCli.DeleteGroup(context.Background(), &pb.Group{
 		Id: 102,
@@ -84,29 +84,29 @@ func main() {
 		Fuid:500,
 	})*/
 
-	log.Println("---------------------------------------Login Start-------------------------------------------")
-	res, err := userClient.Login(context.Background(), &pb.LoginReq{
-		Name:   "264333",
-		Passwd: "123456",
-	})
-	log.Println(res.GroupList)
-
-	time.Sleep(time.Second * 3)
+	//log.Log.Println("---------------------------------------Login Start-------------------------------------------")
+	//res, err := userClient.Login(context.Background(), &pb.LoginReq{
+	//	Name:   "264333",
+	//	Passwd: "123456",
+	//})
+	//log.Log.Println(res.GroupList)
+	//
+	//time.Sleep(time.Second * 3)
 	/*
 		for _, v := range res.GroupList {
 			if v.GroupManager == -1 {
-				log.Printf("find a no mannage group: %d", v.Gid)
+				log.Log.Printf("find a no mannage group: %d", v.Gid)
 			}
 		}*/
 
-	log.Printf("this user groups:%d, all:%+v", len(res.GroupList), res)
+	//log.Log.Printf("this user groups:%d, all:%+v", len(res.GroupList), res)
 
 	/*	res, err := userClient.InviteUserIntoGroup(context.Background(), &pb.InviteUserReq{
 			Uids:"1536",
 			Gid:208,
 		})
 
-		log.Println(ress, "---------------++++++",  err)*/
+		log.Log.Println(ress, "---------------++++++",  err)*/
 
 	/*res, err := userClient.SearchUserByKey(context.Background(), &pb.UserSearchReq{
 		Uid:uint64(333),
@@ -117,12 +117,13 @@ func main() {
 	})*/
 	/*for i := 0; i < 3000; i++ {
 		go func(i int) {
-		*/
-	log.Println("---------------------------------------GetGroupList Start-------------------------------------------")
-	resss, err := userClient.GetGroupList(context.Background(), &pb.GrpListReq{
-		Uid: int32(333),
-	})
-	log.Printf("%+v Get group list **************************** # %+v", err, resss) /*
+	//	*/
+	//log.Log.Println("---------------------------------------GetGroupList Start-------------------------------------------")
+	//resss, err := userClient.GetGroupList(context.Background(), &pb.GrpListReq{
+	//	Uid: int32(333),
+	//})
+	//log.Log.Printf("%+v Get group list **************************** # %+v", err, resss)
+	/*
 		}(i)
 
 		go func() {
@@ -130,32 +131,32 @@ func main() {
 				Uids:"457",
 				Gid:210,
 			})
-			log.Println(ress, "*******---------++++++",  err)
-			log.Printf("InviteUserIntoGroup **************************** # %d", i)
+			log.Log.Println(ress, "*******---------++++++",  err)
+			log.Log.Printf("InviteUserIntoGroup **************************** # %d", i)
 		}()
 	}*/
 
-	log.Println("---------------------------------------Create group Start-------------------------------------------")
-	create, err := userClient.CreateGroup(context.Background(), &pb.CreateGroupReq{
-		DeviceIds:   "1482,333,1003,1004",
-		DeviceInfos: nil,
-		GroupName:   "trsss组",
-		AccountId:   333,
-		GroupInfo: &pb.Group{
-			Id:        0,
-			GroupName: "trsss组",
-			AccountId: 333,
-			Status:    1,
-		}})
-	log.Printf("%+v>>>>>>>>>>>>>>>>>>>>>create:%+v", err, create)
-
-	time.Sleep(time.Second * 2)
-
-	log.Println("---------------------------------------GetGroupList again Start-------------------------------------------")
-	glAgain, err := userClient.GetGroupList(context.Background(), &pb.GrpListReq{
-		Uid: int32(333),
-	})
-	log.Printf("%+v Get group list **************************** # %+v", err, glAgain)
+	//log.Log.Println("---------------------------------------Create group Start-------------------------------------------")
+	//create, err := userClient.CreateGroup(context.Background(), &pb.CreateGroupReq{
+	//	DeviceIds:   "1482,333,1003,1004",
+	//	DeviceInfos: nil,
+	//	GroupName:   "trsss组",
+	//	AccountId:   333,
+	//	GroupInfo: &pb.Group{
+	//		Id:        0,
+	//		GroupName: "trsss组",
+	//		AccountId: 333,
+	//		Status:    1,
+	//	}})
+	//log.Log.Printf("%+v>>>>>>>>>>>>>>>>>>>>>create:%+v", err, create)
+	//
+	//time.Sleep(time.Second * 2)
+	//
+	//log.Log.Println("---------------------------------------GetGroupList again Start-------------------------------------------")
+	//glAgain, err := userClient.GetGroupList(context.Background(), &pb.GrpListReq{
+	//	Uid: int32(333),
+	//})
+	//log.Log.Printf("%+v Get group list **************************** # %+v", err, glAgain)
 
 	/*res, err := userClient.SearchGroup(context.Background(), &pb.GrpSearchReq{
 		Uid:uint64(333),
@@ -173,7 +174,7 @@ func main() {
 		Gid: 151,
 	})*/
 
-	//log.Println(res, "---------------",  err)
+	//log.Log.Println(res, "---------------",  err)
 	/*res, err := userClient.SetLockGroupId(context.Background(), &pb.SetLockGroupIdReq{
 		UId:333,
 		GId:215,
@@ -213,42 +214,41 @@ func main() {
 			},
 		},
 	})
-	log.Printf("%+v", res)*/
+	log.Log.Printf("%+v", res)*/
 
 	//if err != nil {
-	//	log.Println(err)
+	//	log.Log.Println(err)
 	//} else {
-	//	log.Printf("%+v", len(res.GroupList))
+	//	log.Log.Printf("%+v", len(res.GroupList))
 	//}
 
 	// TODO 服务端 客户端 双向流
-	//allStr, _ := userClient.DataPublish(context.Background())
-	/*
-		go func() {
-			for {
-				log.Println("start send heartbeat")
-				if err := allStr.Send(&pb.StreamRequest{
-					Uid:      334,
-					DataType: 3,
-					ACK:      334,
-				}); err != nil {
-				}
-
-				time.Sleep(time.Second * 3)
-			}
-		}()*/
-	//i := 335
+	allStr, _ := userClient.DataPublish(context.Background())
+	i := 334
 	//for ; i < 1500 ; i++ {
-	/*go func(i int) {
-		log.Printf("%d start send get offline msg", i)
+	go func(i int) {
+		log.Log.Printf("%d start send get offline msg", i)
 		if err := allStr.Send(&pb.StreamRequest{
 			Uid:      int32(i),
 			DataType: 2,
 		}); err != nil {
 		}
 	}(i)
-	time.Sleep(time.Microsecond*300)*/
+
 	//}
+
+	go func() {
+		for {
+			log.Log.Println("start send heartbeat")
+			if err := allStr.Send(&pb.StreamRequest{
+				Uid:      334,
+				DataType: 4,
+			}); err != nil {
+			}
+
+			time.Sleep(time.Second * 3)
+		}
+	}()
 
 	const (
 		FIRST_LOGIN_DATA                = 1 // 初次登录返回的数据。比如用户列表，群组列表，该用户的个人信息
@@ -275,12 +275,15 @@ func main() {
 		for {
 			_, _ = (*allStr).Recv()
 			//if data.DataType == KEEP_ALIVE_MSG {
-			//	log.Println("client receive: 5 ", data.KeepAlive)
+			//	log.Log.Println("client receive: 5 ", data.KeepAlive)
 			//} else if data.DataType == OFFLINE_IM_MSG {
-			//	log.Println("client receive: 2", data.OfflineImMsgResp)
+			//	log.Log.Println("client receive: 2", data.OfflineImMsgResp)
 			//} else if data.DataType == IM_MSG_FROM_UPLOAD_OR_WS_OR_APP {
-			//	log.Println("client receive: 2", data.ImMsgData)
+			//	log.Log.Println("client receive: 2", data.ImMsgData)
 			//}
 		}
 	}(&allStr)*/
+	select {
+
+	}
 }

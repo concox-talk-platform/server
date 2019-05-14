@@ -17,7 +17,7 @@ export default new Router({
         {
             path: '/',
             redirect: '/homePage',
-            component: resolve => require(['../components/common/Home.vue'], resolve),
+            component: resolve => require(['../components/web-api/Home.vue'], resolve),
             meta: { title: '自述文件' },
             children:[
                 {

@@ -10,11 +10,12 @@ package server
 import (
 	"context"
 	"database/sql"
-	"log"
 	pb "server/grpc-server/api/talk_cloud"
+	"server/grpc-server/log"
+	"time"
 
-	tu "server/common/dao/user"
-	tuc "server/common/dao/user_cache"
+	tu "server/grpc-server/dao/user"
+	tuc "server/grpc-server/dao/user_cache"
 	"sync"
 )
 
@@ -22,7 +23,7 @@ type TalkCloudServiceImpl struct{}
 
 // 用户登录
 func (tcs *TalkCloudServiceImpl) Login(ctx context.Context, req *pb.LoginReq) (*pb.LoginRsp, error) {
-	log.Printf("%s enter login", req.Name)
+	log.Log.Debugf("%s enter login with time: %d", req.Name, time.Now().UnixNano())
 	//　验证用户名是否存在以及密码是否正确，然后就生成一个uuid session, 把sessionid放进metadata返回给客户端，
 	//  然后之后的每一次连接都需要客户端加入这个metadata，使用拦截器，对用户进行鉴权
 	if req.Name == "" || req.Passwd == "" {
@@ -31,7 +32,7 @@ func (tcs *TalkCloudServiceImpl) Login(ctx context.Context, req *pb.LoginReq) (*
 
 	res, err := tu.SelectUserByKey(req.Name)
 	if err != nil && err != sql.ErrNoRows {
-		log.Printf("App login >>> err != nil && err != sql.ErrNoRows <<< error : %s", err)
+		log.Log.Printf("App login >>> err != nil && err != sql.ErrNoRows <<< error : %s", err)
 		loginRsp := &pb.LoginRsp{
 			Res: &pb.Result{
 				Code: 500,
@@ -41,7 +42,7 @@ func (tcs *TalkCloudServiceImpl) Login(ctx context.Context, req *pb.LoginReq) (*
 	}
 
 	if err == sql.ErrNoRows {
-		log.Printf("App login error : %s", err)
+		log.Log.Printf("App login error : %s", err)
 		loginRsp := &pb.LoginRsp{
 			Res: &pb.Result{
 				Code: 500,
@@ -51,7 +52,7 @@ func (tcs *TalkCloudServiceImpl) Login(ctx context.Context, req *pb.LoginReq) (*
 	}
 
 	if res.PassWord != req.Passwd {
-		log.Printf("App login error : %s", err)
+		log.Log.Printf("App login error : %s", err)
 		loginRsp := &pb.LoginRsp{
 			Res: &pb.Result{
 				Code: 500,
@@ -99,7 +100,7 @@ func (tcs *TalkCloudServiceImpl) Login(ctx context.Context, req *pb.LoginReq) (*
 	errMap.Range(func(k, v interface{}) bool {
 		err = v.(error)
 		if err != nil {
-			log.Println(k, " gen error: ", err)
+			log.Log.Println(k, " gen error: ", err)
 			existErr = true
 			return false
 		}
@@ -116,5 +117,6 @@ func (tcs *TalkCloudServiceImpl) Login(ctx context.Context, req *pb.LoginReq) (*
 		Res:        &pb.Result{Code: 200, Msg: req.Name + " login successful"},
 	}
 
+	log.Log.Debugf("login done with time : %d", time.Now().UnixNano())
 	return loginRep, nil
 }

@@ -85,7 +85,7 @@
 </template>
 <script>
 import vSidebar from './Sidebar.vue';
-    // import bus from '../common/bus';
+    // import bus from '../web-api/bus';
     export default {
         data() {
             var validatePass = (rule, value, callback) => {

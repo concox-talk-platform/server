@@ -12,23 +12,24 @@ import (
 	"errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"log"
 	"net/http"
-	"server/common/cache"
-	tg "server/common/dao/group"
-	tgc "server/common/dao/group_cache"
-	tgm "server/common/dao/group_member"
-	tlc "server/common/dao/location"
 	pb "server/grpc-server/api/talk_cloud"
+	"server/grpc-server/cache"
+	cfgGs "server/grpc-server/configs/grpc_server"
+	tg "server/grpc-server/dao/group"
+	tgc "server/grpc-server/dao/group_cache"
+	tgm "server/grpc-server/dao/group_member"
+	tlc "server/grpc-server/dao/location"
+	"server/grpc-server/log"
 	"server/web-api/model"
-	//tlc "server/common/dao/location"
-	tm "server/common/dao/msg"
-	s "server/common/dao/session"
-	tu "server/common/dao/user"
-	tuc "server/common/dao/user_cache"
-	tuf "server/common/dao/user_friend"
-	"server/common/db"
-	"server/common/utils"
+	//tlc "server/web-api/dao/location"
+	tm "server/grpc-server/dao/msg"
+	s "server/grpc-server/dao/session"
+	tu "server/grpc-server/dao/user"
+	tuc "server/grpc-server/dao/user_cache"
+	tuf "server/grpc-server/dao/user_friend"
+	"server/grpc-server/db"
+	"server/grpc-server/utils"
 	"strconv"
 	"sync"
 	"time"
@@ -102,12 +103,9 @@ var TQ = struct {
 }{Tasks: make(chan Task, 10000000)}
 
 // 全局map，记录在线人 // TODO 后期修改
-//var StreamMap = sync.Map{}
-
-var StreamNormalMap = struct {
-	m         sync.Mutex
-	StreamMap map[int32]interface{}
-}{StreamMap: make(map[int32]interface{})}
+var StreamMap = StreamMspSt{
+	Streams: make(map[int32]interface{}),
+}
 
 func init() {
 	ImEngine{}.Run()
@@ -117,11 +115,56 @@ func (ie ImEngine) Run() {
 	// 消息推送exec TODO 暂时只用一个scher
 	go ExcecScheduler()
 
-	//// 开启协程
-	//go sendHeartbeat(dc, data, cfgGs.Interval, srv)
+	// 根据时间间隔，检查stream map和redis
+	//go syncStreamWithRedis(cfgGs.Interval)
 
 	// redis持续获取im数据，dispatcher
 	JanusPttMsgPublish()
+}
+
+//间隔interval 更新stream map
+func syncStreamWithRedis(Interval int) {
+	// 遍历map，检测redis是否
+	// 存在很严重的问题，比如，在这急短的时间内同步stream和redis
+	for {
+		for k, v := range StreamMap.Streams {
+			log.Log.Printf("check %d, %+v", k, v)
+			res, _ := tuc.GetUserStatusFromCache(k, cache.GetRedisClient())
+			if res == USER_OFFLINE {
+				StreamMap.Del(k)
+			}
+		}
+		time.Sleep(time.Second * time.Duration(Interval))
+	}
+}
+
+type StreamMspSt struct {
+	Streams map[int32]interface{}
+	Lock    sync.RWMutex
+}
+
+func (s StreamMspSt) Get(k int32) interface{} {
+	s.Lock.RLock()
+	defer s.Lock.RUnlock()
+	return s.Streams[k]
+}
+
+func (s StreamMspSt) Len() int {
+	s.Lock.RLock()
+	defer s.Lock.RUnlock()
+	return len(s.Streams)
+}
+
+func (s StreamMspSt) Set(k int32, v interface{}) {
+	s.Lock.Lock()
+	defer s.Lock.Unlock()
+	s.Streams[k] = v
+}
+
+func (s StreamMspSt) Del(k int32) {
+	s.Lock.Lock()
+	defer s.Lock.Unlock()
+	delete(s.Streams, k)
 }
 
 // gen im task
@@ -170,7 +213,7 @@ func ExcecScheduler() {
 		case activeExecu <- activeTask:
 			tasks = tasks[1:]
 		case <-tick.C:
-			log.Printf("now task queue len:%d", len(tasks))
+			log.Log.Debugf("now task queue len:%d", len(tasks))
 		}
 	}
 }
@@ -189,58 +232,58 @@ func imMessagePublishDispatcher(dc *DataContext, ds DataSource) {
 	offlineMem := make([]int32, 0)
 	onlineMem := make([]int32, 0)
 
-	log.Printf("grpc receive im from web : %+v", req)
+	log.Log.Printf("grpc receive im from web : %+v", req)
 
 	// 获取在线、离线用户id
 	if req.ReceiverType == IM_MSG_FROM_UPLOAD_RECEIVER_IS_USER { // 发给单人
 		// 判断是否在线
-		//v, ok := StreamMap.Load(req.ReceiverId)
-		v, ok := StreamNormalMap.StreamMap[req.ReceiverId]
-		log.Println(req.ReceiverId, v, ok)
-		//log.Printf("now dc.StreamMap map have: %+v， %p", dc.StreamMap, &dc.StreamMap)
-		log.Println(req.ReceiverId)
-		if !ok {
-			log.Println(req.ReceiverId, " is offline")
+		v := StreamMap.Get(req.ReceiverId)
+		log.Log.Println(req.ReceiverId, v)
+		log.Log.Printf("now dc.StreamMap map have: %+v， %p", StreamMap, &StreamMap)
+		if v != nil {
+			log.Log.Println(req.ReceiverId, " is online")
 			// 保存进数据库
 			if err := tm.AddMsg(req, db.DBHandler); err != nil {
-				log.Println("Add offline msg with error: ", err)
+				log.Log.Errorf("Add offline msg with error: ", err)
 			}
-		} else {
 			onlineMem = append(onlineMem, req.ReceiverId)
+		} else {
+			log.Log.Println(req.ReceiverId, " is offline")
+			offlineMem = append(offlineMem, req.ReceiverId)
 		}
 		onlineMem = append(onlineMem, req.Id)
 	}
 
 	if req.ReceiverType == IM_MSG_FROM_UPLOAD_RECEIVER_IS_GROUP { // 发送给群组成员，然后区分离线在线
-		log.Printf("want send msg to group %d", req.ReceiverId)
+		log.Log.Printf("want send msg to group %d", req.ReceiverId)
 		res, err := tgm.SelectDeviceIdsByGroupId(int(req.ReceiverId))
 		if err != nil {
-			log.Println("Add offline msg get group member with error: ", err)
+			log.Log.Errorln("Add offline msg get group member with error: ", err)
 		}
 
-		log.Printf("the group %d has %+v", req.ReceiverId, res)
+		log.Log.Printf("the group %d has %+v", req.ReceiverId, res)
+		log.Log.Printf("now dc.StreamMap map have: %+v， %p", StreamMap, &StreamMap)
 		for _, v := range res {
-			log.Printf("now stream map have:%+v", StreamNormalMap.StreamMap)
-			//_, ok := StreamMap.Load(int32(v))
-			_, ok := StreamNormalMap.StreamMap[int32(v)]
-			log.Println("the group member online state:", req.ReceiverId, v, ok)
-			if ok {
+			log.Log.Printf("now stream map have:%+v", StreamMap)
+			srv := StreamMap.Get(int32(v))
+			log.Log.Infof("the group # %d member %d online state: %+v", req.ReceiverId, v, srv)
+			if srv != nil {
 				onlineMem = append(onlineMem, int32(v))
 			} else {
 				offlineMem = append(offlineMem, int32(v))
 			}
 		}
-
+		//onlineMem = append(onlineMem, req.Id)
 		// 存储离线消息
-		log.Printf("the offline: %+v， the length is %d", offlineMem, len(offlineMem))
+		log.Log.Printf("the offline: %+v， the length is %d", offlineMem, len(offlineMem))
 		if len(offlineMem) != 0 {
 			if err := tm.AddMultiMsg(req, offlineMem, db.DBHandler); err != nil {
-				log.Println("Add offline msg with error: ", err)
+				log.Log.Println("Add offline msg with error: ", err)
 			}
 		}
 	}
 
-	log.Println("web api want send to :", onlineMem)
+	log.Log.Println("web api want send to :", onlineMem)
 	resp := &pb.StreamResponse{
 		DataType:  IM_MSG_FROM_UPLOAD_OR_WS_OR_APP,
 		ImMsgData: req,
@@ -248,46 +291,44 @@ func imMessagePublishDispatcher(dc *DataContext, ds DataSource) {
 	}
 	// 发送在线用户消息
 	if onlineMem != nil {
-		TQ.Tasks <- *NewImTask(req.Id, onlineMem, resp)
-		log.Printf("dispatcher finish %+v <-||||-> %+v", req.Id, resp)
+		dc.Task <- *NewImTask(req.Id, onlineMem, resp)
+		log.Log.Printf("dispatcher finish %+v <-||||-> %+v", req.Id, resp)
 	}
 }
 
 // Dispatcher 根据数据类型，调用不同的函数，产生不同的数据，然后把数据放到发送chan中
 func pushDataDispatcher(dc *DataContext, ds DataSource) {
 	for {
-		log.Println("dispatcher client msg")
+		log.Log.Infof("dispatcher client msg")
 		errMap := &sync.Map{}
 		srv := ds.(pb.TalkCloud_DataPublishServer)
 
 		data, _ := srv.Recv()
 
 		if data == nil {
-			log.Println("this stream is no data, maybe is offline")
+			log.Log.Println("this stream is no data, maybe is offline")
 			return
 		}
 
 		// 如果再次登录的用户在map中已存在，并且srv不同，那么就给dc的chan里面写一个终止信号
-		//if v, ok := StreamMap.Load(data.Uid); ok && v != srv {
-		if v, ok := StreamNormalMap.StreamMap[data.Uid]; ok && v != srv {
-			log.Printf("this here %+v, %+v", v, srv)
-			log.Printf("this user # %d is login already", data.Uid)
+		if v := StreamMap.Get(data.Uid); v != nil && v != srv {
+			log.Log.Printf("this here %+v, %+v", v, srv)
+			log.Log.Printf("this user # %d is login already", data.Uid)
 			dc.ExceptionalLogin <- data.Uid
 			return
 		}
-		// 更新stream和redis状态
-		//StreamMap.Store(data.Uid, srv)
-		StreamNormalMap.m.Lock()
-		StreamNormalMap.StreamMap[data.Uid] = srv
-		StreamNormalMap.m.Unlock()
 
-		log.Println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>login data.Uid>>>>:", data.Uid)
-		if err := tuc.UpdateOnlineInCache(&pb.Member{Id: data.Uid, Online: USER_ONLINE}, cache.GetRedisClient()); err != nil {
-			log.Println("Update user online state error:", err)
+		if v := StreamMap.Get(data.Uid); v == nil {
+			// 更新stream和redis状态
+			StreamMap.Set(data.Uid, srv)
+			log.Log.Println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> login data.Uid :", data.Uid)
+			if err := tuc.UpdateOnlineInCache(&pb.Member{Id: data.Uid, Online: USER_ONLINE}, cache.GetRedisClient()); err != nil {
+				log.Log.Println("Update user online state error:", err)
+			}
 		}
-		log.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>start gen data for dispatcher")
-		switch data.DataType {
 
+		log.Log.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start gen data for dispatcher")
+		switch data.DataType {
 		/*case FIRST_LOGIN_DATA:
 			res, err := firstLoginData(dc, data, srv)
 			if err != nil {
@@ -295,7 +336,6 @@ func pushDataDispatcher(dc *DataContext, ds DataSource) {
 			}
 			re := make([]int32, 0)
 			dc.Task <- *NewImTask(data.Uid, append(re, data.Uid), res)*/
-
 		case OFFLINE_IM_MSG:
 			res, err := GetOfflineImMsgFromDB(data)
 			if err != nil {
@@ -306,19 +346,25 @@ func pushDataDispatcher(dc *DataContext, ds DataSource) {
 			dc.Task <- *NewImTask(data.Uid, append(re, data.Uid), res)
 
 			//// 如果连接存在，就3s往channel里面放一个数据
-			//go sendHeartbeat(dc, data, cfgGs.Interval, srv)
+			go sendHeartbeat(dc, data, cfgGs.Interval, srv)
 
 			// 往dc里面写上线通知
 			go notifyToOther(dc, data.Uid, LOGIN_NOTIFY_MSG)
+
 		case IM_MSG_FROM_UPLOAD_OR_WS_OR_APP:
 			imMessagePublishDispatcher(dc, data.ImMsg)
+
+		case KEEP_ALIVE_MSG:
+			if err := tuc.UpdateOnlineInCache(&pb.Member{Id: data.Uid, Online: USER_ONLINE}, cache.GetRedisClient()); err != nil {
+				log.Log.Println("KEEP_ALIVE_MSG Update user online state error:", err)
+			}
 		}
 	}
 }
 
 // temp  临时用一下，后期统统会改用RabbitMQ
 func dispatcherScheduler(dContent *DataContext, multiSend bool) {
-	log.Printf("start Scheduler im msg")
+	log.Log.Printf("start Scheduler im msg")
 	var notify int32
 	tick := time.Tick(time.Minute * 5)
 	for {
@@ -326,21 +372,20 @@ func dispatcherScheduler(dContent *DataContext, multiSend bool) {
 		select {
 		case t := <-dContent.Task:
 			go func() { TQ.Tasks <- t }()
-			//log.Printf("///////////%T///////%+v", t, t)
+			//log.Log.Printf("///////////%T///////%+v", t, t)
 			if t.Data.DataType == LOGOUT_NOTIFY_MSG {
 				notify++
 				if notify == t.Data.NotifyTotal {
-					log.Printf("notify: %d, total: %d", notify, t.Data.NotifyTotal)
+					log.Log.Printf("notify: %d, total: %d", notify, t.Data.NotifyTotal)
 					return
 				}
-
 			}
 			if !multiSend {
-				log.Printf("only scheduler once")
+				log.Log.Printf("only scheduler once")
 				return
 			}
 		case <-tick:
-			log.Printf("single im task queue len = %d", len(dContent.UId)) //TODO 合理退出，关闭调度器
+			log.Log.Printf("single im task queue len = %d", len(dContent.UId)) //TODO 合理退出，关闭调度器
 		}
 	}
 }
@@ -351,11 +396,11 @@ func pushDataExecutor(ct chan Task) {
 	for {
 		select {
 		case task := <-ct:
-			log.Println("global executor receiver: ", task.Receiver)
+			log.Log.Println("global executor receiver: ", task.Receiver)
 			for _, receiverId := range task.Receiver {
 				wg.Add(1)
 				go pushData(task, receiverId, task.Data, &wg)
-				log.Println("will send to ", receiverId)
+				log.Log.Println("will send to ", receiverId)
 			}
 			wg.Wait()
 		}
@@ -365,32 +410,31 @@ func pushDataExecutor(ct chan Task) {
 // 推送数据
 func pushData(task Task, receiverId int32, resp *pb.StreamResponse, wg *sync.WaitGroup) {
 	defer wg.Done()
-
-	log.Printf("the stream map have: %+v", StreamNormalMap.StreamMap)
-	if value, ok := StreamNormalMap.StreamMap[receiverId]; ok && value != nil {
+	log.Log.Printf("the stream map have: %+v", StreamMap)
+	if value := StreamMap.Get(receiverId); value != nil {
 		srv := value.(pb.TalkCloud_DataPublishServer)
-		log.Printf("# %d receiver response: %+v", receiverId, resp)
+		log.Log.Printf("# %d receiver response: %+v", receiverId, resp)
 		if err := srv.Send(resp); err != nil {
 			// 发送失败处理
 			processErrorSendMsg(err, task, receiverId, resp)
 		} else {
 			// 发送成功如果是离线数据（接收者等于stream id自己）就去更新状态
-			log.Printf("send success. dc.senderId: %d, receiverId: %d", task.SenderId, receiverId)
+			log.Log.Printf("send success. dc.senderId: %d, receiverId: %d", task.SenderId, receiverId)
 			if task.SenderId == receiverId && resp.DataType == OFFLINE_IM_MSG {
 				//  更新数据库里面的消息的状态
 				if err := tm.SetMsgStat(receiverId, READ_OFFLINE_IM_MSG, db.DBHandler); err != nil {
-					log.Println("Add offline msg with error: ", err)
+					log.Log.Println("Add offline msg with error: ", err)
 				}
 			}
 		}
 	} else {
-		log.Println("can't find stream") //TODO 就依靠那边心跳了，这里就不管发送失败了
+		log.Log.Errorf("Send to %d  im that can't find stream", receiverId) //TODO 就依靠那边心跳了，这里就不管发送失败了
 		// 存储即时发送失败的消息
 		if resp.DataType == IM_MSG_FROM_UPLOAD_OR_WS_OR_APP && task.SenderId != receiverId {
 			// 把发送数据保存进数据库, 如果是离线数据就忽略
-			log.Printf("send fail. dc.senderId: %d, receiverId: %d", task.SenderId, receiverId)
+			log.Log.Printf("send fail. dc.senderId: %d, receiverId: %d", task.SenderId, receiverId)
 			if err := tm.AddMsg(resp.ImMsgData, db.DBHandler); err != nil {
-				log.Println("Send fail and add offline msg with error: ", err)
+				log.Log.Errorf("Send fail and add offline msg with error: ", err)
 			}
 		}
 	}
@@ -398,17 +442,17 @@ func pushData(task Task, receiverId int32, resp *pb.StreamResponse, wg *sync.Wai
 
 // 处理推送数据失败的情况
 func processErrorSendMsg(err error, task Task, receiverId int32, resp *pb.StreamResponse) {
-	log.Println("send msg fail with error: ", err)
+	log.Log.Debugf("send msg fail with error: ", err)
 
 	// 判断错误类型
 	if errSC, _ := status.FromError(err); errSC.Code() == codes.Unavailable || errSC.Code() == codes.Canceled {
 
-		//log.Printf("%+v ---- %+v start add offline msg: ", resp, task)
+		//log.Log.Printf("%+v ---- %+v start add offline msg: ", resp, task)
 		if resp.DataType == IM_MSG_FROM_UPLOAD_OR_WS_OR_APP && task.SenderId != receiverId {
 			// 把发送数据保存进数据库, 如果是离线数据就忽略
-			log.Printf("send fail. dc.senderId: %d, receiverId: %d", task.SenderId, receiverId)
+			log.Log.Infof("send fail. dc.senderId: %d, receiverId: %d", task.SenderId, receiverId)
 			if err := tm.AddMsg(resp.ImMsgData, db.DBHandler); err != nil {
-				log.Println("Send fail and add offline msg with error: ", err)
+				log.Log.Errorf("Send fail and add offline msg with error: ", err)
 			}
 		}
 	}
@@ -427,21 +471,21 @@ func firstLoginData(dc *DataContext, data *pb.StreamRequest, srv pb.TalkCloud_Da
 
 	res, err := tu.SelectUserByKey(data.Name)
 	if err != nil && err != sql.ErrNoRows {
-		log.Printf("App login error : %s", err)
+		log.Log.Printf("App login error : %s", err)
 		return &pb.StreamResponse{
 			Res: &pb.Result{Code: 500, Msg: "User Login Process failed. Please try again later"},
 		}, err
 	}
 
 	if err == sql.ErrNoRows {
-		log.Printf("App login error : %s", err)
+		log.Log.Printf("App login error : %s", err)
 		return &pb.StreamResponse{
 			Res: &pb.Result{Code: 500, Msg: "User is not exist error. Please try again later"},
 		}, err
 	}
 
 	if res.PassWord != data.Passwd {
-		log.Printf("App login error : %s", err)
+		log.Log.Printf("App login error : %s", err)
 		return &pb.StreamResponse{
 			Res: &pb.Result{Code: 500, Msg: "User Login pwd error. Please try again later"},
 		}, err
@@ -469,24 +513,22 @@ func firstLoginData(dc *DataContext, data *pb.StreamRequest, srv pb.TalkCloud_Da
 	}()
 
 	// 如果再次登录的用户在map中已存在，并且srv不同，那么就给dc的chan里面写一个终止信号
-	if v, ok := StreamNormalMap.StreamMap[int32(res.Id)]; ok && v != srv {
-		log.Printf("this here %+v, %+v", v, srv)
+	if v := StreamMap.Get(int32(res.Id)); v != srv {
+		log.Log.Printf("this here %+v, %+v", v, srv)
 		dc.ExceptionalLogin <- int32(res.Id)
-		log.Println("this user is login already")
+		log.Log.Println("this user is login already")
 		return &pb.StreamResponse{
 			Res: &pb.Result{Code: 500, Msg: "this user is login already"},
 		}, errors.New("the user is login already")
 	}
 	// 更新stream和redis状态
-	log.Println("login data.Uid:", int32(res.Id))
+	log.Log.Println("login data.Uid:", int32(res.Id))
 	//StreamMap.Store(int32(res.Id), srv)
 
-	StreamNormalMap.m.Lock()
-	StreamNormalMap.StreamMap[int32(res.Id)] = srv
-	StreamNormalMap.m.Unlock()
+	StreamMap.Set(int32(res.Id), srv)
 
 	if err := tuc.UpdateOnlineInCache(&pb.Member{Id: int32(res.Id), Online: USER_ONLINE}, cache.GetRedisClient()); err != nil {
-		log.Println("Update user online state error:", err)
+		log.Log.Println("Update user online state error:", err)
 	}
 
 	//wg.Add(3) // 获取用户列表 用户群组列表，加入缓存, 插入session
@@ -509,7 +551,7 @@ func firstLoginData(dc *DataContext, data *pb.StreamRequest, srv pb.TalkCloud_Da
 	errMap.Range(func(k, v interface{}) bool {
 		err = v.(error)
 		if err != nil {
-			log.Println(k, " gen error: ", err)
+			log.Log.Println(k, " gen error: ", err)
 			existErr = true
 			return false
 		}
@@ -537,7 +579,7 @@ func processSession(req *pb.StreamRequest, errMap *sync.Map, wg *sync.WaitGroup)
 	defer wg.Done()
 	sessionId, err := utils.NewUUID()
 	if err != nil {
-		log.Panicf("session id is error%s", err)
+		log.Log.Printf("session id is error%s", err)
 		errMap.Store("processSession", err)
 		return
 	}
@@ -548,7 +590,7 @@ func processSession(req *pb.StreamRequest, errMap *sync.Map, wg *sync.WaitGroup)
 
 	sInfo := &model.SessionInfo{SessionID: sessionId, UserName: req.Name, UserPwd: req.Passwd, TTL: ttlStr}
 	if err := s.InsertSession(sInfo); err != nil {
-		log.Panicf("session id insert is error%s", err)
+		log.Log.Printf("session id insert is error%s", err)
 		errMap.Store("processSession", err)
 		return
 	}
@@ -556,7 +598,7 @@ func processSession(req *pb.StreamRequest, errMap *sync.Map, wg *sync.WaitGroup)
 
 // 获取好友列表
 func getFriendList(uid int32, fList chan *pb.FriendsRsp, errMap *sync.Map, wg *sync.WaitGroup) {
-	log.Println("get FriendList start")
+	log.Log.Println("get FriendList start")
 	var err error
 	fl, _, err := tuf.GetFriendReqList(int32(uid), db.DBHandler)
 	if err != nil {
@@ -565,31 +607,31 @@ func getFriendList(uid int32, fList chan *pb.FriendsRsp, errMap *sync.Map, wg *s
 	} else {
 		fList <- fl
 	}
-	log.Println("get FriendList done")
+	log.Log.Println("get FriendList done")
 }
 
 // 获取群组列表
 func getGroupList(uid int32, gList chan *pb.GroupListRsp, errMap *sync.Map, wg *sync.WaitGroup) {
-	log.Println("Get group list start")
+	log.Log.Debugf("Get group list start")
 	// 先去缓存取，取不出来再去mysql取
 	gl, err := tuc.GetGroupListFromRedis(int32(uid), cache.GetRedisClient())
 	if err != nil && err != sql.ErrNoRows {
-		log.Println("No find In CacheError")
+		log.Log.Println("No find In CacheError")
 		errMap.Store("getGroupList", err)
-		log.Printf("get GroupList%v", err)
+		log.Log.Printf("get GroupList%v", err)
 		gList <- gl
 		return
 	}
 
 	if err == sql.ErrNoRows {
-		log.Println("redis is not find")
+		log.Log.Println("redis is not find")
 		for {
 			gl, _, err = tg.GetGroupListFromDB(int32(uid), db.DBHandler)
 			if err != nil {
 				errMap.Store("getGroupList", err)
 				break
 			}
-			log.Println("start update redis GetGroupListFromDB")
+			log.Log.Println("start update redis GetGroupListFromDB")
 			// 新增到缓存 更新两个地方，首先，每个组的信息要更新，就是group data，记录了群组的id和名字
 			if err := tgc.AddGroupInCache(gl, cache.GetRedisClient()); err != nil {
 				errMap.Store("getGroupList", err)
@@ -612,7 +654,7 @@ func getGroupList(uid int32, gList chan *pb.GroupListRsp, errMap *sync.Map, wg *
 						Online:      u.Online,
 						LockGroupId: u.LockGroupId,
 					}, cache.GetRedisClient()); err != nil {
-						log.Println("Add user information to cache with error: ", err)
+						log.Log.Println("Add user information to cache with error: ", err)
 					}
 				}
 			}
@@ -629,30 +671,30 @@ func getGroupList(uid int32, gList chan *pb.GroupListRsp, errMap *sync.Map, wg *
 	}
 
 	gList <- gl
-	log.Println("Get group list done")
+	log.Log.Debugf("Get group list done")
 }
 
 // 增加缓存
 func addUserInfoToCache(userInfo *pb.Member, wg *sync.WaitGroup) {
 
-	log.Printf("will get rediscli, now redis pool info :%+v |<<<>>>| idleCount: %+v", cache.RedisPool, cache.RedisPool.IdleCount())
+	log.Log.Printf("will get rediscli, now redis pool info :%+v |<<<>>>| idleCount: %+v", cache.RedisPool, cache.RedisPool.IdleCount())
 	redisCli := cache.GetRedisClient()
 	if err := tuc.AddUserDataInCache(userInfo, redisCli); err != nil {
-		log.Println("Add user information to cache with error: ", err)
+		log.Log.Println("Add user information to cache with error: ", err)
 	}
-	log.Println("addUserInfoToCache done")
+	log.Log.Println("addUserInfoToCache done")
 }
 
 // 返回的IM离线数据
 func GetOfflineImMsgFromDB(req *pb.StreamRequest) (*pb.StreamResponse, error) {
 	// 去数据库拉取离线数据
-	log.Println("start get offline im msg")
+	log.Log.Println("start get offline im msg")
 	offlineMsg, err := tm.GetMsg(req.Uid, UNREAD_OFFLINE_IM_MSG, db.DBHandler)
 	if err != nil {
-		log.Println("Get offline msg fail with error:", err)
+		log.Log.Println("Get offline msg fail with error:", err)
 		return nil, err
 	}
-	log.Printf("get offline msg %+v", offlineMsg)
+	log.Log.Printf("get offline msg %+v", offlineMsg)
 
 	var (
 		idIndexSMap   = map[int32]int{}
@@ -688,7 +730,7 @@ func GetOfflineImMsgFromDB(req *pb.StreamRequest) (*pb.StreamResponse, error) {
 		if msg.ReceiverType == IM_MSG_FROM_UPLOAD_RECEIVER_IS_GROUP {
 			if v, ok := idIndexGMap[msg.ReceiverId]; ok {
 				// 已经发现了这个用户的一条消息，那么就把消息加到对应的切片下的
-				log.Printf("v %d, s %v msg %+v", v, ok, msg)
+				log.Log.Printf("v %d, s %v msg %+v", v, ok, msg)
 				respPkgGroup[v].ImMsgData = append(respPkgGroup[v].ImMsgData, msg)
 			} else {
 				// 首次找到这个用户的第一条单人消息，就respPackage添加一个slice，并记录index
@@ -705,7 +747,7 @@ func GetOfflineImMsgFromDB(req *pb.StreamRequest) (*pb.StreamResponse, error) {
 		}
 	}
 
-	log.Printf("%+v \n %+v", respPkgSingle, respPkgGroup)
+	log.Log.Printf("%+v \n %+v", respPkgSingle, respPkgGroup)
 
 	return &pb.StreamResponse{
 		OfflineImMsgResp: &pb.OfflineImMsgResp{
@@ -725,25 +767,23 @@ func sendHeartbeat(dc *DataContext, data *pb.StreamRequest, interval int, srv pb
 	for {
 		select {
 		case <-timerTask.C:
-			log.Printf("# %d receiver response: %+v", data.Uid, resp)
+			log.Log.Debugf("# %d receiver response: %+v", data.Uid, resp)
 			//if value, ok := StreamMap.Load(data.Uid); ok {
-			if value, ok := StreamNormalMap.StreamMap[data.Uid]; ok && value != nil {
+			if value := StreamMap.Get(data.Uid); value != nil {
 				srv := value.(pb.TalkCloud_DataPublishServer)
 				if err := srv.Send(resp); err != nil {
 					//if errSC, _ := status.FromError(err); errSC.Code() == codes.Unavailable || errSC.Code() == codes.Canceled {
 					// 只要是发送失败，就认为对方离线
-					log.Printf("client %d close with %+v", data.Uid, err)
-					log.Printf("now dc stream : %+v", StreamNormalMap.StreamMap)
+					log.Log.Infof("client %d close with %+v", data.Uid, err)
+					log.Log.Infof("now dc stream : %+v", StreamMap)
 
 					// 删除map中的stream
-					StreamNormalMap.m.Lock()
-					StreamNormalMap.StreamMap[data.Uid] = nil
-					StreamNormalMap.m.Unlock()
-					log.Printf("# user %d is logout", data.Uid)
+					StreamMap.Del(data.Uid)
+					log.Log.Infof("# user %d is logout successfully", data.Uid)
 
 					// 更新redis状态
 					if err := tuc.UpdateOnlineInCache(&pb.Member{Id: data.Uid, Online: USER_OFFLINE}, cache.GetRedisClient()); err != nil {
-						log.Println("Update user online state error:", err)
+						log.Log.Println("Update user online state error:", err)
 					}
 					// 往dc里面写掉线通知
 					go notifyToOther(dc, data.Uid, LOGOUT_NOTIFY_MSG)
@@ -764,7 +804,7 @@ func notifyToOther(dc *DataContext, uId int32, notifyType int32) {
 		selfGList   = make(chan *pb.GroupListRsp, 1)
 		notifyTotal = int32(0)
 	)
-	log.Printf("notify root id :%d", uId)
+	log.Log.Printf("notify root id :%d", uId)
 	uInfo, _ := tuc.GetUserFromCache(uId)
 	_, uLocation, _ := tlc.GetUserLocationInCache(uId, cache.GetRedisClient())
 
@@ -774,12 +814,12 @@ func notifyToOther(dc *DataContext, uId int32, notifyType int32) {
 		for _, g := range gl.GroupList {
 			for _, u := range g.UsrList {
 				if u.Uid == uId || u.Online == tuc.USER_ONLINE {
-					//log.Printf("will notify *******************------------------------------------------------%d", u.Uid)
+					//log.Log.Printf("will notify *******************------------------------------------------------%d", u.Uid)
 					notifyTotal++
 				}
 			}
 		}
-		log.Printf("notify total: %d", notifyTotal)
+		log.Log.Printf("notify total: %d", notifyTotal)
 		for _, g := range gl.GroupList {
 			for _, u := range g.UsrList {
 				if u.Uid == uId || u.Online == tuc.USER_ONLINE {
@@ -803,7 +843,7 @@ func notifyToOther(dc *DataContext, uId int32, notifyType int32) {
 					if notifyType == SOS_MSG {
 						resp.Notify.GroupList = nil
 					}
-					log.Printf("will send %d notify to %+v", notifyType, recvId)
+					log.Log.Printf("will send %d notify to %+v", notifyType, recvId)
 					dc.Task <- *NewImTask(uId, recvId, resp)
 					//}
 
@@ -811,7 +851,7 @@ func notifyToOther(dc *DataContext, uId int32, notifyType int32) {
 			}
 		}
 	}
-	log.Printf("cant load notify self info %v----------%v", gl, uInfo)
+	log.Log.Printf("cant load notify self info %v----------%v", gl, uInfo)
 }
 
 // 心跳数据

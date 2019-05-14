@@ -9,8 +9,8 @@ package main
 
 import (
 	"encoding/json"
-	"log"
-	"server/common/cache"
+	"server/grpc-server/log"
+	"server/web-api/cache"
 	"time"
 )
 
@@ -35,13 +35,13 @@ func main() {
 			Timestamp: time.Now().String(),
 		}
 		v, e := json.Marshal(m)
-		log.Printf("%s", v)
+		log.Log.Printf("%s", v)
 		if e != nil {
 
 		}
-		_, err := cache.GetRedisClient().Do("lpush", "janusImUrlLis", v)
+		_, err := cache.GetRedisClient().Do("lpush", "janusImUrlList", v)
 		if err != nil {
-			log.Printf("push redis data with error: %+v", err)
+			log.Log.Printf("push redis data with error: %+v", err)
 			return
 		}
 		//}(i)

@@ -8,11 +8,11 @@ package controllers
 import (
 	"context"
 	"github.com/gin-gonic/gin"
-	"log"
+	"server/web-api/log"
 	"net/http"
-	tg "server/common/dao/group"
-	"server/common/db"
-	"server/common/grpc_client_pool"
+	tg "server/web-api/dao/group"
+	"server/web-api/db"
+	"server/web-api/grpc_client_pool"
 	pb "server/grpc-server/api/talk_cloud"
 	cfgWs "server/web-api/configs/web_server"
 	"server/web-api/model"
@@ -24,7 +24,7 @@ import (
 func UpdateGroupDevice(c *gin.Context) {
 	gList := &model.GroupList{}
 	if err := c.BindJSON(gList); err != nil {
-		log.Printf("json parse fail , error : %s", err)
+		log.Log.Printf("json parse fail , error : %s", err)
 		c.JSON(http.StatusBadRequest, model.ErrorRequestBodyParseFailed)
 		return
 	}
@@ -46,10 +46,10 @@ func UpdateGroupDevice(c *gin.Context) {
 	}
 
 	// 更新群组
-	log.Println("update group start rpc")
+	log.Log.Println("update group start rpc")
 	conn, err := grpc_client_pool.GetConn(cfgWs.GrpcAddr)
 	if err != nil {
-		log.Printf("grpc.Dial err : %v", err)
+		log.Log.Printf("grpc.Dial err : %v", err)
 	}
 	webCli := pb.NewWebServiceClient(conn)
 
@@ -61,7 +61,7 @@ func UpdateGroupDevice(c *gin.Context) {
 	deviceInfos := make([]*pb.Member, 0)
 	for _, v := range gList.DeviceInfo {
 		vMap := v.(map[string]interface{})
-		log.Println((vMap["id"]).(float64))
+		log.Log.Println((vMap["id"]).(float64))
 		deviceInfos = append(deviceInfos, &pb.Member{
 			Id:       int32((vMap["id"]).(float64)),
 			IMei:     (vMap["imei"]).(string),
@@ -70,7 +70,7 @@ func UpdateGroupDevice(c *gin.Context) {
 			Pwd: (vMap["password"]).(string),
 		})
 	}
-	log.Println("group member update :gList.GroupInfo.Id :", gList.GroupInfo.Id)
+	log.Log.Println("group member update :gList.GroupInfo.Id :", gList.GroupInfo.Id)
 	status, _ := strconv.Atoi(gList.GroupInfo.Status)
 	resUpd, err := webCli.UpdateGroup(context.Background(), &pb.UpdateGroupReq{
 		DeviceIds:   deviceIds,
@@ -82,12 +82,12 @@ func UpdateGroupDevice(c *gin.Context) {
 			Status:    int32(status)},
 	})
 	if err != nil {
-		log.Printf("Update group fail , error: %s", err)
+		log.Log.Printf("Update group fail , error: %s", err)
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
 	}
 
-	log.Println(resUpd)
+	log.Log.Println(resUpd)
 	c.JSON(http.StatusOK, gin.H{
 		"result": "success",
 		"msg":    resUpd.ResultMsg.Msg,
@@ -98,7 +98,7 @@ func UpdateGroupDevice(c *gin.Context) {
 func CreateGroup(c *gin.Context) {
 	gList := &model.GroupList{}
 	if err := c.BindJSON(gList); err != nil {
-		log.Printf("json parse fail , error : %s", err)
+		log.Log.Printf("json parse fail , error : %s", err)
 		c.JSON(http.StatusBadRequest, model.ErrorRequestBodyParseFailed)
 		return
 	}
@@ -122,12 +122,12 @@ func CreateGroup(c *gin.Context) {
 	// 组名查重
 	res, err := tg.CheckDuplicateGName(gList.GroupInfo)
 	if err != nil {
-		log.Printf("CheckDuplicateGName fail , error: %s", err)
+		log.Log.Printf("CheckDuplicateGName fail , error: %s", err)
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
 	}
 	if res > 0 {
-		log.Printf("CheckDuplicateGName error: %s", err)
+		log.Log.Printf("CheckDuplicateGName error: %s", err)
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"msg":  "group name duplicate",
 			"code": "422",
@@ -136,13 +136,13 @@ func CreateGroup(c *gin.Context) {
 	}
 
 	// 创建群组
-	log.Println("start rpc")
+	log.Log.Println("start rpc")
 	conn, err := grpc_client_pool.GetConn(cfgWs.GrpcAddr)
 	if err != nil {
-		log.Printf("grpc.Dial err : %v", err)
+		log.Log.Printf("grpc.Dial err : %v", err)
 	}
 	webCli := pb.NewTalkCloudClient(conn)
-	log.Printf("++++++++++++++webCli: %+v", webCli)
+	log.Log.Printf("++++++++++++++webCli: %+v", webCli)
 	var deviceIds string
 	for _, v := range gList.DeviceIds {
 		if v == -1 {
@@ -155,7 +155,7 @@ func CreateGroup(c *gin.Context) {
 	deviceInfos := make([]*pb.Member, 0)
 	for _, v := range gList.DeviceInfo {
 		vMap := v.(map[string]interface{})
-		log.Println((vMap["id"]).(float64))
+		log.Log.Println((vMap["id"]).(float64))
 		deviceInfos = append(deviceInfos, &pb.Member{
 			Id:       int32((vMap["id"]).(float64)),
 			IMei:     (vMap["imei"]).(string),
@@ -165,7 +165,7 @@ func CreateGroup(c *gin.Context) {
 	}
 	status, _ := strconv.Atoi(gList.GroupInfo.Status)
 
-	log.Println("gList.GroupInfo.GroupName:", gList.GroupInfo.GroupName)
+	log.Log.Println("gList.GroupInfo.GroupName:", gList.GroupInfo.GroupName)
 
 	resCreate, err := webCli.CreateGroup(context.Background(), &pb.CreateGroupReq{
 		DeviceIds:   deviceIds,
@@ -176,14 +176,14 @@ func CreateGroup(c *gin.Context) {
 			AccountId: int32(gList.GroupInfo.AccountId),
 			Status:    int32(status)},
 	})
-	log.Printf("group: %+v", resCreate.GroupInfo.GroupName)
+	log.Log.Printf("group: %+v", resCreate.GroupInfo.GroupName)
 	if err != nil {
-		log.Printf("create group fail , error: %s", err)
+		log.Log.Printf("create group fail , error: %s", err)
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
 	}
 
-	log.Println(resCreate)
+	log.Log.Println(resCreate)
 	c.JSON(http.StatusOK, gin.H{
 		"result":     "success",
 		"group_info": resCreate.GroupInfo,
@@ -195,7 +195,7 @@ func CreateGroup(c *gin.Context) {
 func UpdateGroup(c *gin.Context) {
 	gI := &model.GroupInfo{}
 	if err := c.BindJSON(gI); err != nil {
-		log.Printf("json parse fail , error : %s", err)
+		log.Log.Printf("json parse fail , error : %s", err)
 		c.JSON(http.StatusBadRequest, model.ErrorRequestBodyParseFailed)
 		return
 	}
@@ -211,12 +211,12 @@ func UpdateGroup(c *gin.Context) {
 	// 组名查重
 	res, err := tg.CheckDuplicateGName(gI)
 	if err != nil {
-		log.Printf("CheckDuplicateGName fail , error: %s", err)
+		log.Log.Printf("CheckDuplicateGName fail , error: %s", err)
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
 	}
 	if res > 0 {
-		log.Printf("CheckDuplicateGName error: %s", err)
+		log.Log.Printf("CheckDuplicateGName error: %s", err)
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"msg":  "group name duplicate",
 			"code": "422",
@@ -225,7 +225,7 @@ func UpdateGroup(c *gin.Context) {
 	}
 
 	if err := tg.UpdateGroup(gI, db.DBHandler); err != nil {
-		log.Printf("update group fail , error: %s", err)
+		log.Log.Printf("update group fail , error: %s", err)
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
 	}
@@ -240,7 +240,7 @@ func UpdateGroup(c *gin.Context) {
 func DeleteGroup(c *gin.Context) {
 	gI := &model.GroupInfo{}
 	if err := c.BindJSON(gI); err != nil {
-		log.Printf("json parse fail , error : %s", err)
+		log.Log.Printf("json parse fail , error : %s", err)
 		c.JSON(http.StatusBadRequest, model.ErrorRequestBodyParseFailed)
 		return
 	}
@@ -252,15 +252,15 @@ func DeleteGroup(c *gin.Context) {
 		})
 		return
 	}
-	log.Println("start rpc")
+	log.Log.Println("start rpc")
 	conn, err := grpc_client_pool.GetConn(cfgWs.GrpcAddr)
 	if err != nil {
-		log.Printf("grpc.Dial err : %v", err)
+		log.Log.Printf("grpc.Dial err : %v", err)
 	}
 	webCli := pb.NewWebServiceClient(conn)
 
 	if _, err := webCli.DeleteGroup(context.Background(), &pb.Group{Id: int32(gI.Id)}); err != nil {
-		log.Printf("update group fail , error: %s", err)
+		log.Log.Printf("update group fail , error: %s", err)
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
 	}

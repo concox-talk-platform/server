@@ -7,17 +7,17 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
-	"log"
+	"server/web-api/log"
 	"net/http"
-	"server/common/cache"
-	tc "server/common/dao/customer" // table customer
-	td "server/common/dao/device"
-	tg "server/common/dao/group"         // table group
-	tgc "server/common/dao/group_member" // table group_device
-	tlc "server/common/dao/location"
-	tu "server/common/dao/user"
-	tuc "server/common/dao/user_cache"
-	"server/common/utils"
+	"server/web-api/cache"
+	tc "server/web-api/dao/customer" // table customer
+	td "server/web-api/dao/device"
+	tg "server/web-api/dao/group"         // table group
+	tgc "server/web-api/dao/group_member" // table group_device
+	tlc "server/web-api/dao/location"
+	tu "server/web-api/dao/user"
+	tuc "server/web-api/dao/user_cache"
+	"server/web-api/utils"
 	"server/web-api/model"
 
 	"server/web-api/service"
@@ -29,7 +29,7 @@ func CreateAccountBySuperior(c *gin.Context) {
 	// 1. 取出Post中的表单内容
 	uBody := &model.CreateAccount{}
 	if err := c.BindJSON(uBody); err != nil {
-		log.Println("bind json error : ", err)
+		log.Log.Println("bind json error : ", err)
 		c.JSON(http.StatusUnprocessableEntity, model.ErrorRequestBodyParseFailed)
 		return
 	}
@@ -45,7 +45,7 @@ func CreateAccountBySuperior(c *gin.Context) {
 
 	// 校验昵称
 	if !utils.CheckNickName(uBody.NickName) {
-		log.Println("NickName format error", uBody.NickName)
+		log.Log.Println("NickName format error", uBody.NickName)
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"error":      "昵称只能输入1-20个以字母或者数字开头、可以含中文、下划线的字串。",
 			"error_code": "0002",
@@ -54,7 +54,7 @@ func CreateAccountBySuperior(c *gin.Context) {
 	}
 
 	if !utils.CheckUserName(uBody.Username) {
-		log.Println("Username format error")
+		log.Log.Println("Username format error")
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"error":      "用户名只能输入5-20个包含字母、数字或下划线的字串",
 			"error_code": "0003",
@@ -65,7 +65,7 @@ func CreateAccountBySuperior(c *gin.Context) {
 	// 名字查重
 	aCount, err := tc.GetAccountByName(uBody.Username)
 	if err != nil {
-		log.Println("db error : ", err)
+		log.Log.Println("db error : ", err)
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
 	}
@@ -79,7 +79,7 @@ func CreateAccountBySuperior(c *gin.Context) {
 
 	// 校验密码
 	if !utils.CheckPwd(uBody.ConfirmPwd) || !utils.CheckPwd(uBody.Pwd) {
-		log.Println("Pwd format error")
+		log.Log.Println("Pwd format error")
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"error":      "密码6位-16位，至少包含一个数字字母",
 			"error_code": "0004",
@@ -87,7 +87,7 @@ func CreateAccountBySuperior(c *gin.Context) {
 		return
 	}
 	if uBody.ConfirmPwd != uBody.Pwd {
-		log.Println("Confirm Pwd is not match pwd")
+		log.Log.Println("Confirm Pwd is not match pwd")
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"error":      "两次输入密码必须一致",
 			"error_code": "0005",
@@ -96,10 +96,10 @@ func CreateAccountBySuperior(c *gin.Context) {
 	}
 
 	// 只有创建 1是普通用户， 2是调度员， 3是经销商 4是公司，5是超级管理员root
-	log.Println("创建等级:", uBody.RoleId)
+	log.Log.Println("创建等级:", uBody.RoleId)
 	if uBody.RoleId < 5 && uBody.RoleId >= 1 {
 	} else {
-		log.Println("创建权限出错")
+		log.Log.Println("创建权限出错")
 		c.JSON(http.StatusUnprocessableEntity, model.ErrorRequestBodyParseFailed)
 		return
 	}
@@ -153,7 +153,7 @@ func GetAccountInfo(c *gin.Context) {
 	// 获取账户信息
 	ai, err := tc.GetAccount(aName)
 	if err != nil {
-		log.Printf("Error in GetAccountInfo: %s", err)
+		log.Log.Printf("Error in GetAccountInfo: %s", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":      "get accountInfo DB error",
 			"error_code": "007",
@@ -163,7 +163,7 @@ func GetAccountInfo(c *gin.Context) {
 	// 获取所有用户设备
 	deviceAll, err := tu.SelectUserByAccountId(ai.Id)
 	if err != nil {
-		log.Printf("Error in GetGroups: %s", err)
+		log.Log.Printf("Error in GetGroups: %s", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":      "get devices DB error",
 			"error_code": "009",
@@ -174,7 +174,7 @@ func GetAccountInfo(c *gin.Context) {
 	for _, v := range deviceAll {
 		res, _, err := tlc.GetUserLocationInCache(int32(v.Id), cache.GetRedisClient())
 		if err != nil {
-			log.Printf("GetGpsData error: %+v", err)
+			log.Log.Printf("GetGpsData error: %+v", err)
 		}
 		if res != nil {
 			v.GPSData = &model.GPS{
@@ -193,7 +193,7 @@ func GetAccountInfo(c *gin.Context) {
 	for i := 0; i < len(groups); i++ {
 		us, err := tgc.SelectDevicesByGroupId((*groups[i]).Id)
 		if err != nil {
-			log.Printf("Error in Get Group devices: %s", err)
+			log.Log.Printf("Error in Get Group devices: %s", err)
 		}
 		groupMember := make([]interface{}, 0)
 		groupOfflineMember := make([]interface{}, 0)
@@ -244,7 +244,7 @@ func GetAccountInfo(c *gin.Context) {
 		// 群里的用户id
 		ids, err := tgc.SelectDeviceIdsByGroupId((*groups[i]).Id)
 		if err != nil {
-			log.Printf("Error in GetGroups: %s", err)
+			log.Log.Printf("Error in GetGroups: %s", err)
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error":      "get GetGroups DB error",
 				"error_code": "008",
@@ -257,7 +257,7 @@ func GetAccountInfo(c *gin.Context) {
 
 	resElem, err := tc.SelectChildByPId(ai.Id)
 	if err != nil {
-		log.Printf("db error : %s", err)
+		log.Log.Printf("db error : %s", err)
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
 	}
@@ -266,7 +266,7 @@ func GetAccountInfo(c *gin.Context) {
 	for i := 0; i < len(resElem); i++ {
 		child, err := tc.GetAccount((*resElem[i]).Id)
 		if err != nil {
-			log.Printf("db error : %s", err)
+			log.Log.Printf("db error : %s", err)
 			c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 			return
 		}
@@ -299,7 +299,7 @@ func GetAccountInfo(c *gin.Context) {
 func UpdateAccountInfo(c *gin.Context) {
 	accInf := &model.AccountUpdate{}
 	if err := c.BindJSON(accInf); err != nil {
-		log.Printf("%s", err)
+		log.Log.Printf("%s", err)
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"error":      "Request body is not correct.",
 			"error_code": "001",
@@ -309,7 +309,7 @@ func UpdateAccountInfo(c *gin.Context) {
 
 	// 校验参数信息 ：校首先必须要有id，其次是每个参数的合法性，首先都不允许为空
 	if accInf.LoginId == "" {
-		log.Printf("account id is nil")
+		log.Log.Printf("account id is nil")
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"error":      "The account id cannot be empty",
 			"error_code": "003",
@@ -329,7 +329,7 @@ func UpdateAccountInfo(c *gin.Context) {
 	}
 
 	if err := tc.UpdateAccount(accInf); err != nil {
-		log.Println("Update account error :", err)
+		log.Log.Println("Update account error :", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":      "get devices DB error",
 			"error_code": "009",
@@ -347,7 +347,7 @@ func UpdateAccountInfo(c *gin.Context) {
 func UpdateAccountPwd(c *gin.Context) {
 	accPwd := &model.AccountPwd{}
 	if err := c.BindJSON(accPwd); err != nil {
-		log.Printf("json parse fail , error : %s", err)
+		log.Log.Printf("json parse fail , error : %s", err)
 		c.JSON(http.StatusBadRequest, model.ErrorRequestBodyParseFailed)
 		return
 	}
@@ -360,7 +360,7 @@ func UpdateAccountPwd(c *gin.Context) {
 	}
 	// 校验参数信息 ：校首先必须要有id，都不允许为空
 	if accPwd.Id == "" {
-		log.Printf("account id is nil")
+		log.Log.Printf("account id is nil")
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"error":      "account id is null",
 			"error_code": "001",
@@ -370,7 +370,7 @@ func UpdateAccountPwd(c *gin.Context) {
 
 	// 校验密码
 	if !utils.CheckPwd(accPwd.ConfirmPwd) || !utils.CheckPwd(accPwd.NewPwd) {
-		log.Println("Pwd format error")
+		log.Log.Println("Pwd format error")
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"error":      "密码6位-16位，至少包含一个数字字母",
 			"error_code": "0004",
@@ -379,7 +379,7 @@ func UpdateAccountPwd(c *gin.Context) {
 	}
 	// 两次输入的密码必须一致
 	if accPwd.ConfirmPwd != accPwd.NewPwd {
-		log.Println("Confirm Pwd is not match pwd")
+		log.Log.Println("Confirm Pwd is not match pwd")
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"error":      "两次输入密码必须一致",
 			"error_code": "0005",
@@ -399,13 +399,13 @@ func UpdateAccountPwd(c *gin.Context) {
 	// 判断密码是否正确
 	pwd, err := tc.GetAccountPwdByKey(aid)
 	if err != nil {
-		log.Printf("db error : %s", err)
+		log.Log.Printf("db error : %s", err)
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
 	}
 	if pwd != accPwd.OldPwd {
-		log.Printf("db pwd: %s", pwd)
-		log.Printf("input old pwd %s", accPwd.OldPwd)
+		log.Log.Printf("db pwd: %s", pwd)
+		log.Log.Printf("input old pwd %s", accPwd.OldPwd)
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"error":      "Old password is not match",
 			"error_code": "002",
@@ -416,7 +416,7 @@ func UpdateAccountPwd(c *gin.Context) {
 	// 更新密码
 	id, _ := strconv.Atoi(accPwd.Id)
 	if err := tc.UpdateAccountPwd(accPwd.NewPwd, id); err != nil {
-		log.Println("Update account errr :", err)
+		log.Log.Println("Update account errr :", err)
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
 	} else {
@@ -432,7 +432,7 @@ func GetAccountClass(c *gin.Context) {
 	accountId := c.Param("accountId")
 	searchId := c.Param("searchId")
 
-	log.Println("searchId:", searchId, "accountId", accountId)
+	log.Log.Println("searchId:", searchId, "accountId", accountId)
 	//使用session来校验用户
 	aid, _ := strconv.Atoi(accountId)
 	sid, _ := strconv.Atoi(searchId)
@@ -445,14 +445,14 @@ func GetAccountClass(c *gin.Context) {
 	// 查询数据返回
 	root, err := tc.GetAccount(sid)
 	if err != nil {
-		log.Printf("GetAccount db error : %s", err)
+		log.Log.Printf("GetAccount db error : %s", err)
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
 	}
 
 	resElem, err := tc.SelectChildByPId(sid)
 	if err != nil {
-		log.Printf("SelectChildByPId db error : %s", err)
+		log.Log.Printf("SelectChildByPId db error : %s", err)
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
 	}
@@ -461,7 +461,7 @@ func GetAccountClass(c *gin.Context) {
 	for i := 0; i < len(resElem); i++ {
 		child, err := tc.GetAccount((*resElem[i]).Id)
 		if err != nil {
-			log.Printf("db error : %s", err)
+			log.Log.Printf("db error : %s", err)
 			c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 			return
 		}
@@ -501,7 +501,7 @@ func GetAccountDevice(c *gin.Context) {
 	// 获取账户信息
 	ai, err := tc.GetAccount(getAId)
 	if err != nil {
-		log.Printf("Error in GetAccountInfo: %s", err)
+		log.Log.Printf("Error in GetAccountInfo: %s", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":      "get accountInfo DB error",
 			"error_code": "007",
@@ -511,7 +511,7 @@ func GetAccountDevice(c *gin.Context) {
 	// 获取所有设备
 	deviceAll, err := tu.SelectUserByAccountId(ai.Id)
 	if err != nil {
-		log.Printf("db error : %s", err)
+		log.Log.Printf("db error : %s", err)
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
 	}
@@ -527,7 +527,7 @@ func TransAccountDevice(c *gin.Context) {
 	aidStr := c.Param("accountId")
 	accountDevices := &model.AccountDeviceTransReq{}
 	if err := c.BindJSON(accountDevices); err != nil {
-		log.Printf("json parse fail , error : %s", err)
+		log.Log.Printf("json parse fail , error : %s", err)
 		c.JSON(http.StatusBadRequest, model.ErrorRequestBodyParseFailed)
 		return
 	}
@@ -564,7 +564,7 @@ func TransAccountDevice(c *gin.Context) {
 
 	// 更新设备
 	if err := td.MultiUpdateDevice(accountDevices); err != nil {
-		log.Printf("db error : %s", err)
+		log.Log.Printf("db error : %s", err)
 		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
 		return
 	}

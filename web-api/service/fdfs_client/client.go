@@ -2,7 +2,7 @@ package fdfs_client
 
 import (
 	"fmt"
-	"log"
+	"server/web-api/log"
 	"net"
 	"sync"
 )
@@ -61,7 +61,7 @@ func (this *Client) UploadByFilename(fileName string) (string, error) {
 		return "", err
 	}
 
-	log.Printf("get storage Info %+v", storageInfo)
+	log.Log.Printf("get storage Info %+v", storageInfo)
 	task := &storageUploadTask{}
 	//req
 	task.fileInfo = fileInfo
@@ -77,12 +77,12 @@ func (this *Client) UploadByBuffer(buffer []byte, fileExtName string) (string, e
 	fileInfo, err := newFileInfo("", buffer, fileExtName)
 	defer fileInfo.Close()
 	if err != nil {
-		log.Printf("UploadByBuffer newFileInfo err: %+v", err)
+		log.Log.Printf("UploadByBuffer newFileInfo err: %+v", err)
 		return "", err
 	}
 	storageInfo, err := this.queryStorageInfoWithTracker(TRACKER_PROTO_CMD_SERVICE_QUERY_STORE_WITHOUT_GROUP_ONE, "", "")
 	if err != nil {
-		log.Printf("UploadByBuffer queryStorageInfoWithTracker err: %+v", err)
+		log.Log.Printf("UploadByBuffer queryStorageInfoWithTracker err: %+v", err)
 		return "", err
 	}
 
@@ -191,17 +191,17 @@ func (this *Client) DeleteFile(fileId string) error {
 func (this *Client) doTracker(task task) error {
 	trackerConn, err := this.getTrackerConn()
 	if err != nil {
-		log.Printf("doTracker getTrackerConn err: %+v", err)
+		log.Log.Printf("doTracker getTrackerConn err: %+v", err)
 		return err
 	}
 	defer trackerConn.Close()
 	
 	if err := task.SendReq(trackerConn); err != nil {
-		log.Printf("doTracker SendReq err: %+v", err)
+		log.Log.Printf("doTracker SendReq err: %+v", err)
 		return err
 	}
 	if err := task.RecvRes(trackerConn); err != nil {
-		log.Printf("doTracker RecvRes err: %+v", err)
+		log.Log.Printf("doTracker RecvRes err: %+v", err)
 		return err
 	}
 
@@ -211,17 +211,17 @@ func (this *Client) doTracker(task task) error {
 func (this *Client) doStorage(task task, storageInfo *storageInfo) error {
 	storageConn, err := this.getStorageConn(storageInfo)
 	if err != nil {
-		log.Printf("doStorage getStorageConn err: %+v", err)
+		log.Log.Printf("doStorage getStorageConn err: %+v", err)
 		return err
 	}
 	defer storageConn.Close()
 	
 	if err := task.SendReq(storageConn); err != nil {
-		log.Printf("doStorage SendReq err: %+v", err)
+		log.Log.Printf("doStorage SendReq err: %+v", err)
 		return err
 	}
 	if err := task.RecvRes(storageConn); err != nil {
-		log.Printf("doStorage RecvRes err: %+v", err)
+		log.Log.Printf("doStorage RecvRes err: %+v", err)
 		return err
 	}
 
@@ -235,7 +235,7 @@ func (this *Client) queryStorageInfoWithTracker(cmd int8, groupName string, remo
 	task.remoteFilename = remoteFilename
 
 	if err := this.doTracker(task); err != nil {
-		log.Printf("queryStorageInfoWithTracker doTracker err: %+v", err)
+		log.Log.Printf("queryStorageInfoWithTracker doTracker err: %+v", err)
 		return nil, err
 	}
 	return &storageInfo{

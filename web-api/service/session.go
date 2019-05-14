@@ -6,13 +6,13 @@
 package service
 
 import (
-	"log"
+	"server/web-api/log"
 	"server/web-api/model"
 	"net/http"
-	s "server/common/dao/session"
+	s "server/web-api/dao/session"
 	"strconv"
 	"time"
-	"server/common/utils"
+	"server/web-api/utils"
 )
 
 var HEADER_FIELD_SESSION = "Authorization"
@@ -31,7 +31,7 @@ func ValidateAccountSession(r *http.Request, value interface{}) bool {
 
 	ifExist, err := IsExistsSession(sid, value)
 	if err != nil{
-		log.Printf("validateAccountSession err: %v", err)
+		log.Log.Printf("validateAccountSession err: %v", err)
 		return false
 	}
 	return ifExist

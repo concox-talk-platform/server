@@ -9,28 +9,24 @@ import (
 	"flag"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/lestrrat/go-file-rotatelogs"
-	"github.com/rifflock/lfshook"
-	"github.com/sirupsen/logrus"
 	"github.com/unrolled/secure"
-	"log"
 	"net/http"
-	"os"
 	cfgWs "server/web-api/configs/web_server"
 	"server/web-api/controllers"
+	"server/web-api/log"
 	"strings"
-	"time"
 )
+
 
 func main() {
 	engine := Prepare()
-	//engine.Use(TlsHandler())
-	//if err := engine.RunTLS(":"+cfgWs.WebPort, cfgWs.CertFile, cfgWs.KeyFile); err != nil {
-	//	log.Printf("Read pem key file error: %+v", err)
-	//}
-	if err := engine.Run(":" + cfgWs.WebPort); err != nil {
-		log.Println("listen is error", err)
+	engine.Use(TlsHandler())
+	if err := engine.RunTLS(":"+cfgWs.WebPort, cfgWs.CertFile, cfgWs.KeyFile); err != nil {
+		log.Log.Printf("Read pem key file error: %+v", err)
 	}
+	//if err := engine.Run(":" + cfgWs.WebPort); err != nil {
+	//	log.Log.Println("listen is error", err)
+	//}
 }
 
 func Prepare() *gin.Engine {
@@ -44,7 +40,7 @@ func Prepare() *gin.Engine {
 	engine := gin.Default()
 
 	// 日志， 解决跨域问题
-	engine.Use(Logger(), Cors())
+	engine.Use(log.Logger(), Cors())
 
 	// 注册路由
 	// account
@@ -124,53 +120,8 @@ func Cors() gin.HandlerFunc {
 		c.Next() //  处理请求
 	}
 }
-func Logger() gin.HandlerFunc {
-	logClient := logrus.New()
 
-	//禁止logrus的输出
-	src, err := os.OpenFile(os.DevNull, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
-	if err != nil {
-		fmt.Println("err", err)
-	}
-	logClient.Out = src
-	logClient.SetLevel(logrus.DebugLevel)
-	apiLogPath := "web_server.log"
-	logWriter, err := rotatelogs.New(
-		apiLogPath+".%Y-%m-%d-%H-%M.log",
-		rotatelogs.WithLinkName(apiLogPath),       // 生成软链，指向最新日志文件
-		rotatelogs.WithMaxAge(7*24*time.Hour),     // 文件最大保存时间
-		rotatelogs.WithRotationTime(24*time.Hour), // 日志切割时间间隔
-	)
-	writeMap := lfshook.WriterMap{
-		logrus.InfoLevel:  logWriter,
-		logrus.FatalLevel: logWriter,
-	}
-	lfHook := lfshook.NewHook(writeMap, &logrus.JSONFormatter{})
-	logClient.AddHook(lfHook)
 
-	return func(c *gin.Context) {
-		// 开始时间
-		start := time.Now()
-		// 处理请求
-		c.Next()
-		// 结束时间
-		end := time.Now()
-		//执行时间
-		latency := end.Sub(start)
-
-		path := c.Request.URL.Path
-
-		clientIP := c.ClientIP()
-		method := c.Request.Method
-		statusCode := c.Writer.Status()
-		logClient.Infof("| %3d | %13v | %15s | %s  %s |",
-			statusCode,
-			latency,
-			clientIP,
-			method, path,
-		)
-	}
-}
 
 func TlsHandler() gin.HandlerFunc {
 	addr := flag.String("a", "localhost", "ssl 默认主机")

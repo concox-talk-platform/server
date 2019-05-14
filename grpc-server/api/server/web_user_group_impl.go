@@ -9,11 +9,11 @@ package server
 
 import (
 	"context"
-	"log"
-	"server/common/cache"
-	tg "server/common/dao/group"
-	tgc "server/common/dao/group_cache"
 	pb "server/grpc-server/api/talk_cloud"
+	"server/grpc-server/cache"
+	tg "server/grpc-server/dao/group"
+	tgc "server/grpc-server/dao/group_cache"
+	"server/grpc-server/log"
 	"server/web-api/model"
 	"strconv"
 )
@@ -23,7 +23,7 @@ type WebServiceServerImpl struct {
 
 // 更新组成员
 func (wssu *WebServiceServerImpl) UpdateGroup(ctx context.Context, req *pb.UpdateGroupReq) (*pb.UpdateGroupResp, error) {
-	log.Println("enter update group")
+	log.Log.Println("enter update group")
 	deviceIds := make([]int, 0)
 	for _, v := range req.DeviceIds {
 		deviceIds = append(deviceIds, int(v))
@@ -31,7 +31,7 @@ func (wssu *WebServiceServerImpl) UpdateGroup(ctx context.Context, req *pb.Updat
 
 	deviceInfos := make([]interface{}, 0)
 	for _, v := range req.DeviceInfos {
-		log.Println("web impl vid:", v.Id)
+		log.Log.Println("web impl vid:", v.Id)
 		deviceInfos = append(deviceInfos, map[string]interface{}{
 			"id":         int(v.Id),
 			"imei":       v.IMei,
@@ -60,7 +60,7 @@ func (wssu *WebServiceServerImpl) UpdateGroup(ctx context.Context, req *pb.Updat
 	}
 	if gid, err := tg.UpdateGroupMember(gl, userType);
 		err != nil {
-		log.Println("create group error :", err)
+		log.Log.Println("create group error :", err)
 		return &pb.UpdateGroupResp{ResultMsg: &pb.Result{Msg: "Update group unsuccessful, please try again later", Code: 422}}, err
 	} else {
 		gl.GroupInfo.Id = int(gid)
@@ -68,7 +68,7 @@ func (wssu *WebServiceServerImpl) UpdateGroup(ctx context.Context, req *pb.Updat
 
 	// TODO 增加到缓存
 	if err := tgc.AddGroupAndUserInCache(gl, cache.GetRedisClient()); err != nil {
-		log.Println("insert cache error")
+		log.Log.Println("insert cache error")
 		return &pb.UpdateGroupResp{ResultMsg: &pb.Result{Msg: "Update group unsuccessful, please try again later", Code: 422}}, err
 	}
 
@@ -78,7 +78,7 @@ func (wssu *WebServiceServerImpl) UpdateGroup(ctx context.Context, req *pb.Updat
 // 删除组
 func (wssu *WebServiceServerImpl) DeleteGroup(ctx context.Context, req *pb.Group) (*pb.DeleteGroupResp, error) {
 	if err := tg.DeleteGroup(&model.GroupInfo{Id: int(req.Id)}); err != nil {
-		log.Printf("delete group fail , error: %s", err)
+		log.Log.Printf("delete group fail , error: %s", err)
 		return &pb.DeleteGroupResp{
 			ResultMsg: &pb.Result{
 				Msg:  "delete group error ",

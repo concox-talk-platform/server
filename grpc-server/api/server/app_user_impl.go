@@ -4,14 +4,14 @@ import (
 	"context"
 	"errors"
 	"google.golang.org/grpc/metadata"
-	"log"
+	"server/grpc-server/log"
 	"math/rand"
-	"server/common/cache"
-	s "server/common/dao/session"
-	tu "server/common/dao/user"
-	tuc "server/common/dao/user_cache"
-	"server/common/db"
-	"server/common/utils"
+	"server/grpc-server/cache"
+	s "server/grpc-server/dao/session"
+	tu "server/grpc-server/dao/user"
+	tuc "server/grpc-server/dao/user_cache"
+	"server/grpc-server/db"
+	"server/grpc-server/utils"
 	pb "server/grpc-server/api/talk_cloud"
 	"server/web-api/model"
 	"strconv"
@@ -26,7 +26,7 @@ func (tcs *TalkCloudServiceImpl) AppRegister(ctx context.Context, req *pb.AppReg
 	// 查重
 	ifExist, err := tu.GetUserByName(req.Name)
 	if err != nil {
-		log.Printf("app register error : %s", err)
+		log.Log.Printf("app register error : %s", err)
 		appRegResp.Res = &pb.Result{
 			Code: 500,
 			Msg:  "User registration failed. Please try again later",
@@ -50,9 +50,9 @@ func (tcs *TalkCloudServiceImpl) AppRegister(ctx context.Context, req *pb.AppReg
 		UserType:  1,
 	}
 
-	log.Println("app register start")
+	log.Log.Println("app register start")
 	if err := tu.AddUser(user); err != nil {
-		log.Printf("app register error : %s", err)
+		log.Log.Printf("app register error : %s", err)
 		appRegResp.Res = &pb.Result{
 			Code: 500,
 			Msg:  "User registration failed. Please try again later",
@@ -62,7 +62,7 @@ func (tcs *TalkCloudServiceImpl) AppRegister(ctx context.Context, req *pb.AppReg
 
 	res, err := tu.SelectUserByKey(req.Name)
 	if err != nil {
-		log.Printf("app register error : %s", err)
+		log.Log.Printf("app register error : %s", err)
 		appRegResp.Res = &pb.Result{
 			Code: 500,
 			Msg:  "User registration Process failed. Please try again later",
@@ -86,7 +86,7 @@ func (tcs *TalkCloudServiceImpl) DeviceRegister(ctx context.Context, req *pb.Dev
 	}
 
 	if err := tu.AddUser(user); err != nil {
-		log.Printf("app register error : %s", err)
+		log.Log.Printf("app register error : %s", err)
 		return &pb.DeviceRegRsp{Res: &pb.Result{Code: 500, Msg: "Device registration failed. Please try again later"}}, err
 	}
 
@@ -97,12 +97,12 @@ func (tcs *TalkCloudServiceImpl) DeviceRegister(ctx context.Context, req *pb.Dev
 func (tcs *TalkCloudServiceImpl) Logout(ctx context.Context, req *pb.LogoutReq) (*pb.LogoutRsp, error) {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		log.Println("session id metadata set  error")
+		log.Log.Println("session id metadata set  error")
 		return &pb.LogoutRsp{Res: &pb.Result{Code: 403, Msg: "server internal error"}}, nil
 	}
 	// TODO 考虑要不要验证sessionInfo中的name和password
 	if err := s.DeleteSession(md.Get("sessionId")[1], nil); err != nil {
-		log.Printf("sessionid metadata delete  error%s", err)
+		log.Log.Printf("sessionid metadata delete  error%s", err)
 		return &pb.LogoutRsp{Res: &pb.Result{Code: 500, Msg: "server internal error"}}, err
 	}
 	return &pb.LogoutRsp{Res: &pb.Result{Code: 200, Msg: req.Name + "logout successful"}}, nil
@@ -112,20 +112,20 @@ func (tcs *TalkCloudServiceImpl) Logout(ctx context.Context, req *pb.LogoutReq) 
 func (tcs *TalkCloudServiceImpl) SetLockGroupId(ctx context.Context, req *pb.SetLockGroupIdReq) (*pb.SetLockGroupIdResp, error) {
 	if !utils.CheckId(int(req.UId)) || !utils.CheckId(int(req.GId)) {
 		err := errors.New("uid or gid is not valid")
-		log.Println("service SetLockGroupId error :", err)
+		log.Log.Println("service SetLockGroupId error :", err)
 		return &pb.SetLockGroupIdResp{Res: &pb.Result{Msg: "User id or group id is not valid, please try again later.", Code: 500}}, nil
 	}
 
 	// TODO 用户id是否在组所传id中
 
 	if err := tu.SetLockGroupId(req, db.DBHandler); err != nil {
-		log.Println("service SetLockGroupId error :", err)
+		log.Log.Println("service SetLockGroupId error :", err)
 		return &pb.SetLockGroupIdResp{Res: &pb.Result{Msg: "Set lock default group error, please try again later.", Code: 500}}, nil
 	}
 
 	// 更新缓存
 	if err := tuc.UpdateLockGroupIdInCache(req, cache.GetRedisClient()); err != nil {
-		log.Println("service SetLockGroupId error :", err)
+		log.Log.Println("service SetLockGroupId error :", err)
 		// TODO 去把数据库里的群组恢复？
 		return &pb.SetLockGroupIdResp{Res: &pb.Result{Msg: "Set lock default group error, please try again later.", Code: 500}}, nil
 	}

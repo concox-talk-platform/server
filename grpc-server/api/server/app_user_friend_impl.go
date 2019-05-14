@@ -2,24 +2,24 @@ package server
 
 import (
 	"context"
-	"log"
-	"server/common/dao/user_friend"
-	"server/common/db"
 	pb "server/grpc-server/api/talk_cloud"
+	"server/grpc-server/dao/user_friend"
+	"server/grpc-server/db"
+	"server/grpc-server/log"
 )
 
 // 添加好友 TODO 暂时不等对方确认加不加好友，直接给你加上
 func (serv *TalkCloudServiceImpl) AddFriend(ctx context.Context, req *pb.FriendNewReq) (*pb.FriendNewRsp, error) {
-	log.Printf("Add friend: uid: %d, friend_id:%d", req.Uid, req.Fuid)
+	log.Log.Printf("Add friend: uid: %d, friend_id:%d", req.Uid, req.Fuid)
 	resp := &pb.FriendNewRsp{Res: &pb.Result{Msg: "Add friend error, please try again later", Code: 500}}
 	_, err := user_friend.AddFriend(req.Fuid, req.Uid, db.DBHandler)
 	if err != nil {
-		log.Printf("AddFriend friend add self error: %v", err)
+		log.Log.Printf("AddFriend friend add self error: %v", err)
 		return resp, err
 	}
 	_, err = user_friend.AddFriend(req.Uid, req.Fuid, db.DBHandler)
 	if err != nil {
-		log.Printf("AddFriend self add friend error: %v", err)
+		log.Log.Printf("AddFriend self add friend error: %v", err)
 		return resp, err
 	}
 	return &pb.FriendNewRsp{Res: &pb.Result{Msg: "Add friend success", Code: 200}}, nil

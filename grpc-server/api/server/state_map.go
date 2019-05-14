@@ -12,8 +12,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gomodule/redigo/redis"
-	"log"
-	"server/common/cache"
+	"server/grpc-server/log"
+	"server/grpc-server/cache"
 	pb "server/grpc-server/api/talk_cloud"
 	"strconv"
 )
@@ -28,7 +28,7 @@ func GetUserState(uIdKey []interface{}, rd redis.Conn) (map[int32]string, error)
 			gInfo := &pb.GroupInfo{}
 			err = json.Unmarshal([]byte(v), gInfo)
 			if err != nil {
-				log.Printf("json parse user data(%s) error: %s\n", string(v), err)
+				log.Log.Printf("json parse user data(%s) error: %s\n", string(v), err)
 				g, err := group.SelectGroupByKey(v)
 				if err != nil {
 					return nil, err
@@ -51,7 +51,7 @@ func AddUserStream(uId int32, srv pb.TalkCloud_DataPublishServer) error {
 	// 先序列化后设置，同时设置在线时间
 	srvStream, err := json.Marshal(srv)
 	if err != nil {
-		log.Printf("json marshal error: %s\n", err)
+		log.Log.Printf("json marshal error: %s\n", err)
 		return err
 	}
 

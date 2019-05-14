@@ -8,7 +8,7 @@
 package server
 
 import (
-	"log"
+	"server/grpc-server/log"
 	"server/grpc-server/api/talk_cloud"
 	"testing"
 	"time"
@@ -30,7 +30,7 @@ func testGetOfflineImMsgFromDB(t *testing.T) {
 	res, err := GetOfflineImMsgFromDB(&talk_cloud.StreamRequest{
 		Uid: 1503,
 	})
-	log.Println(res, "-----------------------", err)
+	log.Log.Println(res, "-----------------------", err)
 }
 
 func testGetMsgFromRedis(t *testing.T) {
@@ -42,5 +42,5 @@ func TestPushDataIntoRedis(t *testing.T) {
 }
 
 func testTIme(t *testing.T) {
-	log.Println(time.Now().Unix())
+	log.Log.Println(time.Now().Unix())
 }

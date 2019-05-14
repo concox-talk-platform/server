@@ -11,16 +11,16 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/gomodule/redigo/redis"
-	"log"
 	"net/http"
-	"server/common/cache"
-	cfgComm "server/common/configs/common"
-	tfi "server/common/dao/file_info"
-	tgc "server/common/dao/group_cache"
-	tuc "server/common/dao/user_cache"
-	"server/common/utils"
 	pb "server/grpc-server/api/talk_cloud"
+	"server/grpc-server/cache"
+	cfgComm "server/grpc-server/configs/common"
 	cfgGs "server/grpc-server/configs/grpc_server"
+	tfi "server/grpc-server/dao/file_info"
+	tgc "server/grpc-server/dao/group_cache"
+	tuc "server/grpc-server/dao/user_cache"
+	"server/grpc-server/log"
+	"server/grpc-server/utils"
 	"server/web-api/model"
 	"strconv"
 	"time"
@@ -73,14 +73,14 @@ func (pttImMsgImpl) Dispatcher(dc *DataContext, ds DataSource) {
 	pttD := make(chan string, 1)
 	go func() {
 		for {
-			//log.Printf("Start get ptt msg form redis")
+			//log.Log.Printf("Start get ptt msg form redis")
 			value, err := redis.Strings(redisCli.Do("blpop", cfgGs.PttMsgKey, cfgGs.PttWaitTime))
 			if err != nil {
-				//log.Println("blpop failed:", err.Error())
+				//log.Log.Println("blpop failed:", err.Error())
 			}
 			if value != nil {
 				pttD <- value[1]
-				log.Printf("Get ptt msg from redis: %s", value[1])
+				log.Log.Printf("Get ptt msg from redis: %s", value[1])
 			}
 		}
 	}()
@@ -100,8 +100,8 @@ func (pttImMsgImpl) Dispatcher(dc *DataContext, ds DataSource) {
 			tasks = append(tasks, t)
 		case activeExecu <- activeTask:
 			tasks = tasks[1:]
-		//case <-tick.C:
-		//	log.Printf("now ptt task queue len:%d", len(tasks))
+			//case <-tick.C:
+			//	log.Log.Printf("now ptt task queue len:%d", len(tasks))
 		}
 	}
 }
@@ -116,10 +116,10 @@ func pttMidHandler(c chan string, dc *DataContext) {
 	go func() {
 		for {
 			m := <-c
-			log.Printf("Will send Ptt msg%s", m)
+			log.Log.Printf("Will send Ptt msg%s", m)
 			pttMsg := &interphoneMsg{}
 			if err := json.Unmarshal([]byte(m), pttMsg); err != nil {
-				log.Printf("Interphone ppt msg json unmarshal fail with error :%+v", err)
+				log.Log.Printf("Interphone ppt msg json unmarshal fail with error :%+v", err)
 			}
 
 			if pttMsg != nil && pttMsg.Uid != "" && pttMsg.GId != "" {
@@ -133,18 +133,18 @@ func pttMsgDispatcher(dc *DataContext, pttMsg *interphoneMsg) {
 	uId, _ := strconv.ParseInt(pttMsg.Uid, 10, 64)
 	imU, err := tuc.GetUserFromCache(int32(uId))
 	if err != nil {
-		log.Printf("pttImMsgImpl Dispatcher GetUserFromCache error: %+v", err)
+		log.Log.Printf("pttImMsgImpl Dispatcher GetUserFromCache error: %+v", err)
 	}
 
 	gId, _ := strconv.ParseInt(pttMsg.GId, 10, 64)
 	imG, err := tgc.GetGroupInfoFromCache(int32(gId), cache.GetRedisClient())
 	if err != nil {
-		log.Printf("pttImMsgImpl Dispatcher GetGroupInfoFromCache error: %+v", err)
+		log.Log.Printf("pttImMsgImpl Dispatcher GetGroupInfoFromCache error: %+v", err)
 	}
 
 	if imU != nil && imG != nil && imU.Name != "" && imG.GroupName != "" && pttMsg.MsgType == "ptt" {
 		fType, fTStr := utils.GetImFileType(pttMsg.FilePath)
-		log.Printf("Get ptt file type:%d, %s", fType, fTStr)
+		log.Log.Printf("Get ptt file type:%d, %s", fType, fTStr)
 		fContext := &model.FileContext{
 			UserId:         int(uId),
 			FilePath:       cfgGs.FILE_BASE_URL + pttMsg.FilePath,
@@ -157,7 +157,7 @@ func pttMsgDispatcher(dc *DataContext, pttMsg *interphoneMsg) {
 		}
 		// 记录存储到mysql
 		if err := tfi.AddFileInfo(fContext); err != nil {
-			log.Printf("pttImMsgImpl Dispatcher Add file info to mysql error: %s", err.Error())
+			log.Log.Printf("pttImMsgImpl Dispatcher Add file info to mysql error: %s", err.Error())
 		}
 
 		imMessagePublishDispatcher(dc, &pb.ImMsgReqData{
@@ -209,7 +209,7 @@ func (tcs *TalkCloudServiceImpl) ImMessagePublish(ctx context.Context, req *pb.I
 		Cf:        simpleImClientFuncImpl{},
 	}
 	c.Run()
-	log.Printf("# %d im once done", req.Id)
+	log.Log.Printf("# %d im once done", req.Id)
 	return &pb.ImMsgRespData{Result: &pb.Result{Msg: "push data done", Code: 200}, MsgCode: req.MsgCode}, nil
 }
 
@@ -223,7 +223,7 @@ func (tcs *TalkCloudServiceImpl) ImSosPublish(ctx context.Context, req *pb.Repor
 		Cf:        sosImImpl{},
 	}
 	c.Run()
-	log.Printf("# %d im sos once done", req.Uid)
+	log.Log.Printf("# %d im sos once done", req.Uid)
 	return &pb.ImMsgRespData{Result: &pb.Result{Msg: "push data done", Code: 200}}, nil
 }
 

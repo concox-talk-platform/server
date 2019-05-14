@@ -9,7 +9,7 @@ package grpc_gateway
 
 import (
 	"github.com/go-ini/ini"
-	"log"
+	"server/grpc-server/log"
 	"os"
 )
 
@@ -21,7 +21,7 @@ var (
 func init() {
 	cfg, err := ini.Load("grpc_conf.ini") // 编译之后的执行文件所在位置的相对位置
 	if err != nil {
-		log.Printf("Fail to read file: %v", err)
+		log.Log.Printf("Fail to read file: %v", err)
 		os.Exit(1)
 	}
 

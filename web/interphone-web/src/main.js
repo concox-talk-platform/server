@@ -24,8 +24,8 @@ Vue.use(VueI18n)
 const i18n =new VueI18n({
     locale:'en-US',
     messages: {
-      'zh-CN': require('./components/common/lang/zh'),
-      'en-US': require('./components/common/lang/en')
+      'zh-CN': require('./components/web-api/lang/zh'),
+      'en-US': require('./components/web-api/lang/en')
     },
     silentTranslationWarn: true,
   })

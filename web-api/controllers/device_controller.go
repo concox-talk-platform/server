@@ -10,9 +10,9 @@ package controllers
 import (
 	"context"
 	"github.com/gin-gonic/gin"
-	"log"
+	"server/web-api/log"
 	"net/http"
-	"server/common/grpc_client_pool"
+	"server/web-api/grpc_client_pool"
 	pb "server/grpc-server/api/talk_cloud"
 	cfgWs "server/web-api/configs/web_server"
 	"server/web-api/model"
@@ -41,7 +41,7 @@ func ImportDeviceByRoot(c *gin.Context) {
 
 	aiDReq := &model.AccountImportDeviceReq{}
 	if err := c.BindJSON(aiDReq); err != nil {
-		log.Printf("%s", err)
+		log.Log.Printf("%s", err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error":      "Request body is not correct.",
 			"error_code": "001",
@@ -49,19 +49,19 @@ func ImportDeviceByRoot(c *gin.Context) {
 		return
 	}
 
-	log.Println("ImportDeviceByRoot start rpc")
+	log.Log.Println("ImportDeviceByRoot start rpc")
 	conn, err := grpc_client_pool.GetConn(cfgWs.GrpcAddr)
 	if err != nil {
-		log.Printf("grpc.Dial err : %v", err)
+		log.Log.Printf("grpc.Dial err : %v", err)
 	}
-	log.Printf("%+v", aiDReq)
+	log.Log.Printf("%+v", aiDReq)
 	webCli := pb.NewWebServiceClient(conn)
 	res, err := webCli.ImportDeviceByRoot(context.Background(), &pb.ImportDeviceReq{
 		AccountId: 1,
 		Devices:   aiDReq.Devices,
 	})
 	if err != nil {
-		log.Println("Import device error : ", err)
+		log.Log.Println("Import device error : ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":      "Import device error, Please try again later.",
 			"error_code": "500",
@@ -77,7 +77,7 @@ func ImportDeviceByRoot(c *gin.Context) {
 func UpdateDeviceInfo(c *gin.Context) {
 	d := &pb.DeviceUpdate{}
 	if err := c.BindJSON(d); err != nil {
-		log.Printf("%s", err)
+		log.Log.Printf("%s", err)
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"error":      "Request body is not correct.",
 			"error_code": "001",
@@ -87,7 +87,7 @@ func UpdateDeviceInfo(c *gin.Context) {
 
 	// 校验参数信息 ：校首先必须要有id，其次是每个参数的合法性，首先都不允许为空
 	if d.LoginId == 0 {
-		log.Printf("account id is nil")
+		log.Log.Printf("account id is nil")
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"error":      "The account id cannot be empty",
 			"error_code": "003",
@@ -104,18 +104,18 @@ func UpdateDeviceInfo(c *gin.Context) {
 		return
 	}
 
-	log.Println("ImportDeviceByRoot start rpc")
+	log.Log.Println("ImportDeviceByRoot start rpc")
 	conn, err := grpc_client_pool.GetConn(cfgWs.GrpcAddr)
 	if err != nil {
-		log.Printf("grpc.Dial err : %v", err)
+		log.Log.Printf("grpc.Dial err : %v", err)
 	}
-	log.Printf("%+v", d)
+	log.Log.Printf("%+v", d)
 	webCli := pb.NewWebServiceClient(conn)
 	res, err := webCli.UpdateDeviceInfo(context.Background(), &pb.UpdDInfoReq{
 		DeviceInfo: d,
 	})
 	if err != nil {
-		log.Println("Import device error : ", err)
+		log.Log.Println("Import device error : ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error":      "Import device error, Please try again later.",
 			"error_code": "500",

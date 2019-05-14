@@ -236,7 +236,7 @@ Janus.init = function(options) {
 					case "vdebug":
 						Janus.vdebug = console.debug.bind(console);
 						break;
-					case "log":
+					case "server/web-api/log":
 						Janus.log = console.log.bind(console);
 						break;
 					case "warn":

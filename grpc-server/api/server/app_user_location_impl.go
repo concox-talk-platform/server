@@ -10,12 +10,12 @@ package server
 
 import (
 	"context"
-	"log"
+	"server/grpc-server/log"
 	"net/http"
-	"server/common/cache"
-	tl "server/common/dao/location"
-	"server/common/db"
-	"server/common/grpc_client_pool"
+	"server/grpc-server/cache"
+	tl "server/grpc-server/dao/location"
+	"server/grpc-server/db"
+	"server/grpc-server/grpc_client_pool"
 	pb "server/grpc-server/api/talk_cloud"
 	"server/grpc-server/configs/grpc_server"
 )
@@ -35,10 +35,10 @@ type TalkCloudLocationServiceImpl struct {
 }
 
 func (tcs *TalkCloudLocationServiceImpl) GetGpsData(ctx context.Context, req *pb.GPSHttpReq) (*pb.GPSHttpResp, error) {
-	log.Printf("GetGpsData req : %v", req.Uid)
+	log.Log.Printf("GetGpsData req : %v", req.Uid)
 	res, _, err := tl.GetUserLocationInCache(req.Uid, cache.GetRedisClient())
 	if err != nil {
-		log.Printf("GetGpsData error: %+v", err)
+		log.Log.Printf("GetGpsData error: %+v", err)
 	}
 	return res, nil
 }
@@ -59,7 +59,7 @@ func (tcs *TalkCloudLocationServiceImpl) ReportGPSData(ctx context.Context, req 
 		return &pb.ReportDataResp{Res: &pb.Result{Msg: "parmas is not correct", Code: http.StatusUnprocessableEntity}}, err
 	}
 
-	log.Printf("receiver type: %+d data: %+v", req.DataType, req)
+	log.Log.Printf("receiver type: %+d data: %+v", req.DataType, req)
 
 	// 2. 存储到mysql中
 	storeReportData(req, gpsWorker)
@@ -82,7 +82,7 @@ func (tcs *TalkCloudLocationServiceImpl) ReportGPSData(ctx context.Context, req 
 // 存储到mysql上报数据
 func storeReportData(req *pb.ReportDataReq, gw *worker) {
 	if err := tl.InsertLocationData(req, db.DBHandler); err != nil {
-		log.Printf("store data to mysql fail with error: %v", err)
+		log.Log.Printf("store data to mysql fail with error: %v", err)
 		gw.dataStoreState = MYSQL_STORE_FAIL
 	} else {
 		gw.dataStoreState = MYSQL_STORE_SUCCESS
@@ -96,7 +96,7 @@ func updateGPSDataByReq(req *pb.ReportDataReq, gw *worker) {
 	if mysqlState == MYSQL_STORE_SUCCESS {
 		// 更新数据
 		if err := tl.UpdateUserLocationInCache(req, cache.GetRedisClient()); err != nil {
-			log.Printf("redis update data fail with error: %v", err)
+			log.Log.Printf("redis update data fail with error: %v", err)
 			gw.updateRedisState = REDIS_UPDATE_FAIL
 		} else {
 			gw.updateRedisState = REDIS_UPDATE_SUCCESS
@@ -127,10 +127,10 @@ func reportSosMsg(req *pb.ReportDataReq) {
 	// 调用调用GRPC接口，转发数据
 	conn, err := grpc_client_pool.GetConn("127.0.0.1:" + grpc_server.GrpcSPort)
 	if err != nil {
-		log.Printf("grpc.Dial err : %v", err)
+		log.Log.Printf("grpc.Dial err : %v", err)
 	}
 	webCli := pb.NewTalkCloudClient(conn)
 
 	res, err := webCli.ImSosPublish(context.Background(), req)
-	log.Printf("sos!!! res: %+v", res)
+	log.Log.Printf("sos!!! res: %+v", res)
 }

@@ -18,12 +18,12 @@ import (
 	"github.com/gorilla/websocket"
 	"google.golang.org/grpc"
 	"io/ioutil"
-	"log"
+	"server/web-api/log"
 	"net/http"
-	cfgComm "server/common/configs/common"
-	tfi "server/common/dao/file_info"
-	"server/common/grpc_client_pool"
-	"server/common/utils"
+	cfgComm "server/web-api/configs/common"
+	tfi "server/web-api/dao/file_info"
+	"server/web-api/grpc_client_pool"
+	"server/web-api/utils"
 	pb "server/grpc-server/api/talk_cloud"
 	cfgWs "server/web-api/configs/web_server"
 	"server/web-api/model"
@@ -70,10 +70,10 @@ type worker struct {
 }
 
 func UploadFile(c *gin.Context) {
-	log.Println("start upload file.")
+	log.Log.Println("start upload file.")
 	err := uploadFilePre(c)
 	if err != nil {
-		log.Println("uploadFilePre error: ", err)
+		log.Log.Println("uploadFilePre error: ", err)
 		c.JSON(http.StatusUnprocessableEntity, gin.H{"msg": "Uploaded File params error, please try again later.", "code": 001})
 		return
 	}
@@ -81,16 +81,16 @@ func UploadFile(c *gin.Context) {
 	// 保存文件
 	fContext, err := fileStore(c)
 	if err != nil {
-		log.Println("fileStore", err)
+		log.Log.Println("fileStore", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"msg": "Upload File fail, please try again later.", "code": 002})
 		return
 	}
 
-	log.Println("url: ", fContext.FilePath, "fParams: ", fContext.FileParams)
+	log.Log.Println("url: ", fContext.FilePath, "fParams: ", fContext.FileParams)
 	// 调用调用GRPC接口，转发数据
 	conn, err := grpc_client_pool.GetConn(cfgWs.GrpcAddr)
 	if err != nil {
-		log.Printf("grpc.Dial err : %v", err)
+		log.Log.Printf("grpc.Dial err : %v", err)
 	}
 	webCli := pb.NewTalkCloudClient(conn)
 
@@ -109,7 +109,7 @@ func UploadFile(c *gin.Context) {
 		c.JSON(http.StatusCreated, gin.H{"msg": "Uploaded File, please try again later.", "code": 001})
 		return
 	}
-	log.Printf("upload file success by grpc: %+v", res)
+	log.Log.Printf("upload file success by grpc: %+v", res)
 
 	c.JSON(http.StatusCreated, gin.H{
 		"msg":          "Uploaded successfully",
@@ -126,7 +126,7 @@ func uploadFilePre(c *gin.Context) error {
 	// 判断文件大小
 	r.Body = http.MaxBytesReader(c.Writer, r.Body, MAX_UPLOAD_SIZE)
 	if err := c.Request.ParseMultipartForm(MAX_UPLOAD_SIZE); err != nil {
-		log.Println("File is too big.")
+		log.Log.Println("File is too big.")
 		return err
 	}
 
@@ -138,7 +138,7 @@ func uploadFilePre(c *gin.Context) error {
 func fileStore(c *gin.Context) (*model.FileContext, error) {
 	file, header, err := c.Request.FormFile("file") // TODO 会报空针
 	if err != nil {
-		log.Println("fileStore err: ", err)
+		log.Log.Println("fileStore err: ", err)
 		return nil, err
 	}
 	uploadT := time.Now().Format(cfgComm.TimeLayout)
@@ -163,7 +163,7 @@ func fileStore(c *gin.Context) (*model.FileContext, error) {
 		ReceiverName: receiverName,
 		SendTime:     sTime,
 	}
-	log.Printf("file params: %+v", fParams)
+	log.Log.Printf("file params: %+v", fParams)
 
 	//写入文件
 	fName := strconv.FormatInt(int64(fParams.Id), 10) + "_" +
@@ -172,7 +172,7 @@ func fileStore(c *gin.Context) (*model.FileContext, error) {
 
 	fSrc, err := ioutil.ReadAll(file)
 	if err != nil {
-		log.Println("read file error: ", err)
+		log.Log.Println("read file error: ", err)
 		return nil, err
 	}
 	fileType, fExtName := utils.GetImFileType(header.Filename)
@@ -186,17 +186,17 @@ func fileStore(c *gin.Context) (*model.FileContext, error) {
 	// 存储文件到fastdfs
 	client, err := fdfs_client.NewClientWithConfig()
 	if err != nil {
-		log.Printf("Client: %+v NewClientWithConfig fastdfs error: %+v", client, err)
+		log.Log.Printf("Client: %+v NewClientWithConfig fastdfs error: %+v", client, err)
 		return nil, err
 	}
 	defer client.Destory()
 
 	fileId, err := client.UploadByBuffer(fSrc, fExtName)
 	if err != nil {
-		log.Println("UploadByBuffer to fastdfs error: ", err)
+		log.Log.Println("UploadByBuffer to fastdfs error: ", err)
 		return nil, err
 	}
-	log.Printf("file size: %d ", len(fSrc))
+	log.Log.Printf("file size: %d ", len(fSrc))
 
 	fContext := &model.FileContext{
 		UserId:         fParams.Id,
@@ -212,7 +212,7 @@ func fileStore(c *gin.Context) (*model.FileContext, error) {
 
 	// 记录存储到mysql
 	if err := tfi.AddFileInfo(fContext); err != nil {
-		log.Printf("Add file info to mysql error: %s", err.Error())
+		log.Log.Printf("Add file info to mysql error: %s", err.Error())
 		return nil, err
 	}
 
@@ -224,23 +224,23 @@ func ImPush(c *gin.Context) {
 	uidStr := c.Param("accountId")
 	uid, _ := strconv.Atoi(uidStr) // TODO 校验用户是否存在
 
-	log.Println("im push uid :", uid)
+	log.Log.Println("im push uid :", uid)
 
 	// 调用调用GRPC接口，转发数据
 	conn, err := grpc.Dial(cfgWs.GrpcAddr, grpc.WithInsecure())
 	if err != nil {
-		log.Printf("grpc.Dial err : %v", err)
+		log.Log.Printf("grpc.Dial err : %v", err)
 	}
 	webCliStream, err := pb.NewTalkCloudClient(conn).DataPublish(context.Background())
 	if err != nil {
-		log.Printf("connect grpc fail with error: %s", err.Error())
+		log.Log.Printf("connect grpc fail with error: %s", err.Error())
 		return
 	}
 
 	//升级get请求为webSocket协议
 	ws, err := upGrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		log.Printf("connect grpc fail with error: %s", err.Error())
+		log.Log.Printf("connect grpc fail with error: %s", err.Error())
 		return
 	}
 	defer func() {
@@ -260,7 +260,7 @@ func ImPush(c *gin.Context) {
 	// 1、web端主动关闭连接，grpc也就要不再接受数据，
 	// 2、web端重复登录，TODO 放在这里判断重复登录有点不妥当，不过如果前面的登录做得好，这里不会出现这种情况，以防万一吧。
 	//var wg sync.WaitGroup
-	log.Println(strconv.FormatInt(int64(imWorker.uId), 10) + " ws grpc start")
+	log.Log.Println(strconv.FormatInt(int64(imWorker.uId), 10) + " ws grpc start")
 	//wg.Add(1)
 	//go func(imWorker *worker, wg *sync.WaitGroup) {
 	// 接收web端的消息，转发给grpc
@@ -273,7 +273,7 @@ func ImPush(c *gin.Context) {
 		_ = imWorker.ws.WriteMessage(websocket.TextMessage,
 			[]byte("The connection with id:"+strconv.FormatInt(int64(imWorker.uId), 10)+
 				" has been disconnected, please reconnect"))
-		log.Println("break******************************")
+		log.Log.Println("break******************************")
 		//wg.Done()
 		return
 	} else {
@@ -290,7 +290,7 @@ func pushImMessage(imw *worker) {
 		DataType: OFFLINE_IM_MSG,
 	}); err != nil {
 		imw.WorkerDone <- IM_MSG_WORKWRONG
-		log.Println("im message send error: ", err)
+		log.Log.Println("im message send error: ", err)
 		return
 	}
 
@@ -300,15 +300,15 @@ func pushImMessage(imw *worker) {
 		imw.mt = mt
 		if err != nil {
 			// 客户端关闭连接时也会进入
-			log.Printf("%d WS message read error: %s", imw.uId, err.Error())
+			log.Log.Printf("%d WS message read error: %s", imw.uId, err.Error())
 			imw.WorkerDone <- IM_MSG_WORKWRONG // TODO
 			return
 		}
 
-		log.Println("ws receive msg: ", message)
+		log.Log.Println("ws receive msg: ", message)
 		wsImMsg := &model.ImMsgData{}
 		if err := json.Unmarshal(message, wsImMsg); err != nil {
-			log.Printf("json unmarshal fail with err :%v", err)
+			log.Log.Printf("json unmarshal fail with err :%v", err)
 			// TODO  暂时忽略这条消息
 			continue
 		}
@@ -316,7 +316,7 @@ func pushImMessage(imw *worker) {
 		// 暂时默认发过来的消息都是普通文本
 		wsImMsg.MsgType = IM_TEXT_MSG
 
-		log.Printf("ws will send to grpc: %+v", wsImMsg)
+		log.Log.Printf("ws will send to grpc: %+v", wsImMsg)
 		// 发送给GRPC
 		if err := (*imw.cliStream).Send(&pb.StreamRequest{
 			Uid:      int32(imw.uId),
@@ -333,7 +333,7 @@ func pushImMessage(imw *worker) {
 			},
 		}); err != nil {
 			imw.WorkerDone <- IM_MSG_WORKWRONG
-			log.Println("grpc im message send error: ", err)
+			log.Log.Println("grpc im message send error: ", err)
 			break
 		}
 	}
@@ -345,23 +345,23 @@ func sendImMessage(imw *worker) {
 		resp, err := (*imw.cliStream).Recv()
 		if err != nil {
 			imw.WorkerDone <- IM_MSG_WORKWRONG
-			log.Printf("%d grpc recv message error: %s", imw.uId, err.Error())
+			log.Log.Printf("%d grpc recv message error: %s", imw.uId, err.Error())
 			break
 		}
-		log.Printf("%d web grpc client receive : %+v", imw.uId, resp)
+		log.Log.Printf("%d web grpc client receive : %+v", imw.uId, resp)
 
 		// 写入ws数据 二进制返回
 		if resp.DataType == IM_MSG_FROM_UPLOAD_OR_WS_OR_APP {
 			// 把中文转换为utf-8
 			resp.ImMsgData.ResourcePath = utils.ConvertOctonaryUtf8(resp.ImMsgData.ResourcePath)
 
-			log.Printf("web grpc client receive : %+v", resp)
+			log.Log.Printf("web grpc client receive : %+v", resp)
 
 			// 返回JSON字符串
 			err = imw.ws.WriteJSON(resp)
 			if err != nil {
 				imw.WorkerDone <- IM_MSG_WORKWRONG
-				log.Println("WS message send error:", err)
+				log.Log.Println("WS message send error:", err)
 				//break
 			}
 		}
@@ -383,13 +383,13 @@ func sendImMessage(imw *worker) {
 				}
 			}
 
-			log.Printf("web grpc client receive : %+v", resp)
+			log.Log.Printf("web grpc client receive : %+v", resp)
 
 			// 返回JSON字符串
 			err = imw.ws.WriteJSON(resp)
 			if err != nil {
 				imw.WorkerDone <- IM_MSG_WORKWRONG
-				log.Println("WS message send error:", err)
+				log.Log.Println("WS message send error:", err)
 				//break
 			}
 		}
@@ -399,7 +399,7 @@ func sendImMessage(imw *worker) {
 			err = imw.ws.WriteJSON(resp)
 			if err != nil {
 				imw.WorkerDone <- IM_MSG_WORKWRONG
-				log.Println("WS message send error:", err)
+				log.Log.Println("WS message send error:", err)
 				//break
 			}
 		}

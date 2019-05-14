@@ -10,9 +10,9 @@ package server
 import (
 	"context"
 	"errors"
-	"log"
+	"server/grpc-server/log"
 	"net/http"
-	td "server/common/dao/device"
+	td "server/grpc-server/dao/device"
 	pb "server/grpc-server/api/talk_cloud"
 	"server/web-api/model"
 )
@@ -20,7 +20,7 @@ import (
 // 批量导入设备
 func (wssu *WebServiceServerImpl) ImportDeviceByRoot(ctx context.Context, req *pb.ImportDeviceReq) (*pb.ImportDeviceResp, error) {
 	// 设备串号和账户id进行校验
-	log.Println("start Import DeviceByRoot")
+	log.Log.Println("start Import DeviceByRoot")
 	for _, v := range req.Devices {
 		if v == nil || v.IMei == "" {
 			return &pb.ImportDeviceResp{

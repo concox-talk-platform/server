@@ -13,7 +13,7 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"log"
+	"server/grpc-server/log"
 	"net/http"
 	pb "server/grpc-server/api/talk_cloud"
 	cfgGgw "server/grpc-server/configs/grpc_gateway"
@@ -33,7 +33,7 @@ func run() error {
 		return err
 	}
 
-	log.Println("listening " + cfgGgw.GatewayPort + " ...")
+	log.Log.Println("listening " + cfgGgw.GatewayPort + " ...")
 	return http.ListenAndServe(":"+cfgGgw.GatewayPort, mux)
 }
 

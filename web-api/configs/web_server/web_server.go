@@ -10,8 +10,8 @@ package web_server
 import (
 	"flag"
 	"github.com/go-ini/ini"
-	"log"
 	"os"
+	"server/web-api/log"
 )
 
 var (
@@ -29,7 +29,7 @@ func init() {
 	flag.Parse()
 	cfg, err := ini.Load(*cfgFilePath) // 编译之后的执行文件所在位置的相对位置
 	if err != nil {
-		log.Printf("Fail to read file: %v", err)
+		log.Log.Printf("Fail to read file: %v", err)
 		os.Exit(1)
 	}
 	WebPort = cfg.Section("web_api").Key("port").String()

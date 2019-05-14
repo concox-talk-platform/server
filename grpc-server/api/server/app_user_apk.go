@@ -10,9 +10,9 @@ package server
 import (
 	"context"
 	"net/http"
-	tfi "server/common/dao/file_info"
 	pb "server/grpc-server/api/talk_cloud"
 	cfgGs "server/grpc-server/configs/grpc_server"
+	tfi "server/grpc-server/dao/file_info"
 )
 
 // 返回apk消息
