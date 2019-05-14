@@ -894,7 +894,7 @@ export default {
                             }
                             })
                             .then(() =>{
-                                this.import_show=false; 
+                                this.import_show=false;
                                 
                                 this.customer='';
                                 this.update_data();
