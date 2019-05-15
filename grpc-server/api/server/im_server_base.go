@@ -10,6 +10,7 @@ package server
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"net/http"
@@ -100,7 +101,7 @@ type DataSource interface{}
 var TQ = struct {
 	Tasks chan Task
 	m     sync.Mutex
-}{Tasks: make(chan Task, 10000000)}
+}{Tasks: make(chan Task, 100)}
 
 // 全局map，记录在线人 // TODO 后期修改
 var StreamMap = StreamMspSt{
@@ -116,7 +117,7 @@ func (ie ImEngine) Run() {
 	go ExcecScheduler()
 
 	// 根据时间间隔，检查stream map和redis
-	//go syncStreamWithRedis(cfgGs.Interval)
+	go syncStreamWithRedis(cfgGs.Interval)
 
 	// redis持续获取im数据，dispatcher
 	JanusPttMsgPublish()
@@ -125,16 +126,23 @@ func (ie ImEngine) Run() {
 //间隔interval 更新stream map
 func syncStreamWithRedis(Interval int) {
 	// 遍历map，检测redis是否
-	// 存在很严重的问题，比如，在这急短的时间内同步stream和redis
+	// TODO 存在很严重的问题，比如，在这急短的时间内同步stream和redis
 	for {
 		for k, v := range StreamMap.Streams {
 			log.Log.Printf("check %d, %+v", k, v)
 			res, _ := tuc.GetUserStatusFromCache(k, cache.GetRedisClient())
+			fmt.Printf("Get uid:%d status: %+v\n", k, res)
 			if res == USER_OFFLINE {
+				fmt.Printf("Will del uid: %d\n", k)
 				StreamMap.Del(k)
+				if err := tuc.UpdateOnlineInCache(&pb.Member{Id: k, Online: USER_OFFLINE}, cache.GetRedisClient()); err != nil {
+					log.Log.Println("Update user online state error:", err)
+				}
+				// 往q里面写离线通知
+				go notifyToOther(TQ.Tasks, k, LOGOUT_NOTIFY_MSG)
 			}
 		}
-		time.Sleep(time.Second * time.Duration(Interval))
+		time.Sleep(time.Second * time.Duration(Interval)*3)
 	}
 }
 
@@ -180,7 +188,7 @@ func NewImTask(senderId int32, receiver []int32, resp *pb.StreamResponse, ) *Tas
 func NewDataContent() *DataContext {
 	return &DataContext{
 		UId:  make(chan int32, 1),
-		Task: make(chan Task, 1000),
+		Task: make(chan Task, 100),
 	}
 }
 
@@ -346,10 +354,10 @@ func pushDataDispatcher(dc *DataContext, ds DataSource) {
 			dc.Task <- *NewImTask(data.Uid, append(re, data.Uid), res)
 
 			//// 如果连接存在，就3s往channel里面放一个数据
-			go sendHeartbeat(dc, data, cfgGs.Interval, srv)
+		//	go sendHeartbeat(dc, data, cfgGs.Interval, srv)
 
 			// 往dc里面写上线通知
-			go notifyToOther(dc, data.Uid, LOGIN_NOTIFY_MSG)
+			go notifyToOther(dc.Task, data.Uid, LOGIN_NOTIFY_MSG)
 
 		case IM_MSG_FROM_UPLOAD_OR_WS_OR_APP:
 			imMessagePublishDispatcher(dc, data.ImMsg)
@@ -786,7 +794,7 @@ func sendHeartbeat(dc *DataContext, data *pb.StreamRequest, interval int, srv pb
 						log.Log.Println("Update user online state error:", err)
 					}
 					// 往dc里面写掉线通知
-					go notifyToOther(dc, data.Uid, LOGOUT_NOTIFY_MSG)
+					go notifyToOther(dc.Task, data.Uid, LOGOUT_NOTIFY_MSG)
 					return
 					//}
 				}
@@ -798,11 +806,12 @@ func sendHeartbeat(dc *DataContext, data *pb.StreamRequest, interval int, srv pb
 }
 
 // 上线通知所有人，掉线通知所有人、sos通知
-func notifyToOther(dc *DataContext, uId int32, notifyType int32) {
+func notifyToOther(dcTask chan Task, uId int32, notifyType int32) {
 	var (
 		errMap      = &sync.Map{}
 		selfGList   = make(chan *pb.GroupListRsp, 1)
 		notifyTotal = int32(0)
+		notifyId    = make([]int32,0)
 	)
 	log.Log.Printf("notify root id :%d", uId)
 	uInfo, _ := tuc.GetUserFromCache(uId)
@@ -813,45 +822,62 @@ func notifyToOther(dc *DataContext, uId int32, notifyType int32) {
 	if gl != nil && uInfo != nil {
 		for _, g := range gl.GroupList {
 			for _, u := range g.UsrList {
-				if u.Uid == uId || u.Online == tuc.USER_ONLINE {
+				if u.Uid != uId && u.Online == tuc.USER_ONLINE {
 					//log.Log.Printf("will notify *******************------------------------------------------------%d", u.Uid)
 					notifyTotal++
+					notifyId = append(notifyId, u.Uid)
 				}
 			}
 		}
-		log.Log.Printf("notify total: %d", notifyTotal)
+		// add self or not add self
+		notifyTotal++
+		notifyId = append(notifyId, uId)
+
+		log.Log.Printf("notify total: %d and notify all id: %+v", notifyTotal, notifyId)
 		for _, g := range gl.GroupList {
 			for _, u := range g.UsrList {
-				if u.Uid == uId || u.Online == tuc.USER_ONLINE {
-					// 对于群里每一位都要通知到
-					recvId := make([]int32, 0)
-					recvId = append(recvId, u.Uid)
-
-					gList := make(chan *pb.GroupListRsp, 1)
-					getGroupList(u.Uid, gList, errMap, nil)
-					//if gList != nil {
-					resp := &pb.StreamResponse{
-						DataType:    notifyType,
-						NotifyTotal: notifyTotal,
-						Notify: &pb.LoginOrLogoutNotify{
-							UserInfo:     uInfo,
-							UserLocation: uLocation,
-							GroupList:    (<-gList).GroupList,
-						},
-						Res: &pb.Result{Code: 200, Msg: strconv.FormatInt(int64(u.Uid), 10) + " notify successful"},
-					}
-					if notifyType == SOS_MSG {
-						resp.Notify.GroupList = nil
-					}
-					log.Log.Printf("will send %d notify to %+v", notifyType, recvId)
-					dc.Task <- *NewImTask(uId, recvId, resp)
-					//}
+				if u.Uid != uId && u.Online == tuc.USER_ONLINE {
+					doNotify(u, errMap, notifyType,
+						notifyTotal,
+						uInfo,
+						uLocation,
+						dcTask,
+						uId)
 
 				}
 			}
 		}
+		// send to self
+		doNotify(uInfo, errMap, notifyType, notifyTotal, uInfo, uLocation, dcTask, uId)
 	}
 	log.Log.Printf("cant load notify self info %v----------%v", gl, uInfo)
+}
+
+func doNotify(u *pb.UserRecord, errMap *sync.Map, notifyType int32, notifyTotal int32,
+	uInfo *pb.UserRecord, uLocation *pb.GPS, dcTask chan Task, uId int32) {
+	// 对于群里每一位都要通知到
+	recvId := make([]int32, 0)
+	recvId = append(recvId, u.Uid)
+
+	gList := make(chan *pb.GroupListRsp, 1)
+	getGroupList(u.Uid, gList, errMap, nil)
+	//if gList != nil {
+	resp := &pb.StreamResponse{
+		DataType:    notifyType,
+		NotifyTotal: notifyTotal,
+		Notify: &pb.LoginOrLogoutNotify{
+			UserInfo:     uInfo,
+			UserLocation: uLocation,
+			GroupList:    (<-gList).GroupList,
+		},
+		Res: &pb.Result{Code: 200, Msg: strconv.FormatInt(int64(u.Uid), 10) + " notify successful"},
+	}
+	if notifyType == SOS_MSG {
+		resp.Notify.GroupList = nil
+	}
+	log.Log.Printf("will send %d notify to %+v", notifyType, recvId)
+	dcTask <- *NewImTask(uId, recvId, resp)
+	//}
 }
 
 // 心跳数据

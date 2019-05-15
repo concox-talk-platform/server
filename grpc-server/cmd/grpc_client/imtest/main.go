@@ -24,7 +24,8 @@ type interphoneMsg struct {
 }
 
 func main() {
-	for i := 0; i < 100; i++ {
+	r := cache.GetRedisClient()
+	for i := 0; i < 10000; i++ {
 		//go func(i int) {
 		m := &interphoneMsg{
 			Uid:       "8", //strconv.FormatInt(int64(i),10),
@@ -39,7 +40,7 @@ func main() {
 		if e != nil {
 
 		}
-		_, err := cache.GetRedisClient().Do("lpush", "janusImUrlList", v)
+		_, err := r.Do("lpush", "janusImUrlList", v)
 		if err != nil {
 			log.Log.Printf("push redis data with error: %+v", err)
 			return

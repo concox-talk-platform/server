@@ -224,7 +224,7 @@ func main() {
 
 	// TODO 服务端 客户端 双向流
 	allStr, _ := userClient.DataPublish(context.Background())
-	i := 334
+	i := 8
 	//for ; i < 1500 ; i++ {
 	go func(i int) {
 		log.Log.Printf("%d start send get offline msg", i)
@@ -241,12 +241,12 @@ func main() {
 		for {
 			log.Log.Println("start send heartbeat")
 			if err := allStr.Send(&pb.StreamRequest{
-				Uid:      334,
+				Uid:      8,
 				DataType: 4,
 			}); err != nil {
 			}
 
-			time.Sleep(time.Second * 3)
+			time.Sleep(time.Second * 5)
 		}
 	}()
 

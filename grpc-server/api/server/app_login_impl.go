@@ -52,7 +52,7 @@ func (tcs *TalkCloudServiceImpl) Login(ctx context.Context, req *pb.LoginReq) (*
 	}
 
 	if res.PassWord != req.Passwd {
-		log.Log.Printf("App login error : %s", err)
+		log.Log.Printf("App login pwd error : %s", err)
 		loginRsp := &pb.LoginRsp{
 			Res: &pb.Result{
 				Code: 500,

@@ -366,8 +366,8 @@ func UpdateOnlineInCache(m *pb.Member, redisCli redis.Conn) error {
 	}
 	defer redisCli.Close()
 
-	//if _, err := redisCli.Do("SET", MakeUserStatusKey(m.Id), m.Online, "ex", 5); err != nil {
-	if _, err := redisCli.Do("SET", MakeUserStatusKey(m.Id), m.Online); err != nil {
+	if _, err := redisCli.Do("SET", MakeUserStatusKey(m.Id), m.Online, "ex", 30); err != nil {
+	//if _, err := redisCli.Do("SET", MakeUserStatusKey(m.Id), m.Online); err != nil {
 		return errors.New("UpdateOnlineInCache hSet failed with error:" + err.Error())
 	}
 	return nil
@@ -380,9 +380,9 @@ func GetUserStatusFromCache(uId int32, redisCli redis.Conn) (int32, error) {
 	}
 	defer redisCli.Close()
 
-	value, err := redisCli.Do("GET", MakeUserDataKey(uId))
+	value, err := redisCli.Do("GET", MakeUserStatusKey(uId))
 	if err != nil {
-		log.Log.Println("get failed", err.Error())
+		log.Log.Println("Get user online status fail with err", err.Error())
 		return USER_OFFLINE, err
 	}
 

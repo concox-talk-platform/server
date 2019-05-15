@@ -4,15 +4,15 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"server/grpc-server/log"
 	"net/http"
+	pb "server/grpc-server/api/talk_cloud"
 	"server/grpc-server/cache"
 	"server/grpc-server/dao/group"
 	tg "server/grpc-server/dao/group"        // table group
 	tgc "server/grpc-server/dao/group_cache" // table group cache
 	tuc "server/grpc-server/dao/user_cache"
 	"server/grpc-server/db"
-	pb "server/grpc-server/api/talk_cloud"
+	"server/grpc-server/log"
 	"server/web-api/model"
 	"strconv"
 	"strings"
@@ -67,7 +67,7 @@ func (serv *TalkCloudServiceImpl) CreateGroup(ctx context.Context, req *pb.Creat
 		userType = CREATE_GROUP_BY_USER // 普通app用户创建
 	}
 
-	log.Log.Printf("Create group is name: %s", gl.GroupInfo.GroupName)
+	log.Log.Infof("Create group is name: %s. the GroupInfos: %+v", gl.GroupInfo.GroupName, gl)
 	if gid, err := tg.CreateGroup(gl, userType);
 		err != nil {
 		log.Log.Println("create group error :", err)

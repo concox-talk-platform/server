@@ -18,16 +18,16 @@ import (
 	"github.com/gorilla/websocket"
 	"google.golang.org/grpc"
 	"io/ioutil"
-	"server/web-api/log"
 	"net/http"
+	pb "server/grpc-server/api/talk_cloud"
 	cfgComm "server/web-api/configs/common"
+	cfgWs "server/web-api/configs/web_server"
 	tfi "server/web-api/dao/file_info"
 	"server/web-api/grpc_client_pool"
-	"server/web-api/utils"
-	pb "server/grpc-server/api/talk_cloud"
-	cfgWs "server/web-api/configs/web_server"
+	"server/web-api/log"
 	"server/web-api/model"
 	"server/web-api/service/fdfs_client"
+	"server/web-api/utils"
 	"strconv"
 	"time"
 )
@@ -47,7 +47,7 @@ const (
 	KEEP_ALIVE_MSG                  = 4 // 用户登录后，每隔interval秒向stream发送一个消息，测试能不能连通
 	LOGOUT_NOTIFY_MSG               = 5 // 用户掉线之后，通知和他在一个组的其他成员
 	LOGIN_NOTIFY_MSG                = 6 // 用户上线之后，通知和他在一个组的其他成员
-	IM_SOS_MSG                      = 7
+	IM_SOS_MSG                      = 7 // 版本不同，暂定这里
 
 	IM_MSG_WORKDONE  = 1
 	IM_MSG_WORKWRONG = -1
@@ -69,6 +69,24 @@ type worker struct {
 	WorkerDone chan int
 }
 
+var conn *grpc.ClientConn
+var client *fdfs_client.Client
+
+func init() {
+	// 调用调用GRPC接口，转发数据
+	var err error
+	conn, err = grpc_client_pool.GetConn(cfgWs.GrpcAddr)
+	if err != nil {
+		log.Log.Printf("grpc.Dial err : %v", err)
+	}
+
+	client, err = fdfs_client.NewClientWithConfig()
+	if err != nil {
+		log.Log.Printf("Client: %+v NewClientWithConfig fastdfs error: %+v", client, err)
+	}
+	// defer client.Destory() TODO destory?
+}
+
 func UploadFile(c *gin.Context) {
 	log.Log.Println("start upload file.")
 	err := uploadFilePre(c)
@@ -87,11 +105,7 @@ func UploadFile(c *gin.Context) {
 	}
 
 	log.Log.Println("url: ", fContext.FilePath, "fParams: ", fContext.FileParams)
-	// 调用调用GRPC接口，转发数据
-	conn, err := grpc_client_pool.GetConn(cfgWs.GrpcAddr)
-	if err != nil {
-		log.Log.Printf("grpc.Dial err : %v", err)
-	}
+
 	webCli := pb.NewTalkCloudClient(conn)
 
 	res, err := webCli.ImMessagePublish(context.Background(), &pb.ImMsgReqData{
@@ -184,12 +198,6 @@ func fileStore(c *gin.Context) (*model.FileContext, error) {
 	fmt.Printf("this file md5: %s\n", hex.EncodeToString(md5h.Sum([]byte("")))) //md5
 
 	// 存储文件到fastdfs
-	client, err := fdfs_client.NewClientWithConfig()
-	if err != nil {
-		log.Log.Printf("Client: %+v NewClientWithConfig fastdfs error: %+v", client, err)
-		return nil, err
-	}
-	defer client.Destory()
 
 	fileId, err := client.UploadByBuffer(fSrc, fExtName)
 	if err != nil {
@@ -227,10 +235,6 @@ func ImPush(c *gin.Context) {
 	log.Log.Println("im push uid :", uid)
 
 	// 调用调用GRPC接口，转发数据
-	conn, err := grpc.Dial(cfgWs.GrpcAddr, grpc.WithInsecure())
-	if err != nil {
-		log.Log.Printf("grpc.Dial err : %v", err)
-	}
 	webCliStream, err := pb.NewTalkCloudClient(conn).DataPublish(context.Background())
 	if err != nil {
 		log.Log.Printf("connect grpc fail with error: %s", err.Error())
@@ -245,7 +249,7 @@ func ImPush(c *gin.Context) {
 	}
 	defer func() {
 		ws.Close()
-		conn.Close()
+		//conn.Close()
 	}()
 
 	imWorker := &worker{
@@ -259,22 +263,22 @@ func ImPush(c *gin.Context) {
 	// 有两种跳出循环的情况：
 	// 1、web端主动关闭连接，grpc也就要不再接受数据，
 	// 2、web端重复登录，TODO 放在这里判断重复登录有点不妥当，不过如果前面的登录做得好，这里不会出现这种情况，以防万一吧。
-	//var wg sync.WaitGroup
 	log.Log.Println(strconv.FormatInt(int64(imWorker.uId), 10) + " ws grpc start")
-	//wg.Add(1)
-	//go func(imWorker *worker, wg *sync.WaitGroup) {
+
+	ctx, cancel := context.WithCancel(context.Background())
+
 	// 接收web端的消息，转发给grpc
-	go pushImMessage(imWorker)
+	go pushImMessage(imWorker, ctx)
 
 	// 发送ws消息
-	go sendImMessage(imWorker)
+	go sendImMessage(imWorker, ctx)
 
 	if wd := <-imWorker.WorkerDone; wd == IM_MSG_WORKWRONG {
 		_ = imWorker.ws.WriteMessage(websocket.TextMessage,
 			[]byte("The connection with id:"+strconv.FormatInt(int64(imWorker.uId), 10)+
 				" has been disconnected, please reconnect"))
 		log.Log.Println("break******************************")
-		//wg.Done()
+		cancel()
 		return
 	} else {
 		// TODO grpc服务主动拒绝连接（重复登录）
@@ -283,7 +287,7 @@ func ImPush(c *gin.Context) {
 	//wg.Wait()
 }
 
-func pushImMessage(imw *worker) {
+func pushImMessage(imw *worker, ctx context.Context) {
 	// 发送给GRPC
 	if err := (*imw.cliStream).Send(&pb.StreamRequest{
 		Uid:      imw.uId,
@@ -294,115 +298,150 @@ func pushImMessage(imw *worker) {
 		return
 	}
 
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				// 读取ws中的数据，这里的数据，默认只有文本数据
+				mt, message, err := imw.ws.ReadMessage()
+				imw.mt = mt
+				if err != nil {
+					// 客户端关闭连接时也会进入
+					log.Log.Printf("%d WS message read error: %s", imw.uId, err.Error())
+					imw.WorkerDone <- IM_MSG_WORKWRONG // TODO
+					return
+				}
+
+				log.Log.Println("ws receive msg: ", message)
+				wsImMsg := &model.ImMsgData{}
+				if err := json.Unmarshal(message, wsImMsg); err != nil {
+					log.Log.Printf("json unmarshal fail with err :%v", err)
+					// TODO  暂时忽略这条消息
+					continue
+				}
+
+				// 暂时默认发过来的消息都是普通文本
+				wsImMsg.MsgType = IM_TEXT_MSG
+
+				// 发送给GRPC
+				log.Log.Printf("ws will send to grpc: %+v", wsImMsg)
+				if err := sendToGrpc(imw, wsImMsg); err != nil {
+					imw.WorkerDone <- IM_MSG_WORKWRONG
+					log.Log.Println("grpc im message send error: ", err)
+					return
+				}
+			}
+		}
+	}()
+
+	// 发送心跳
+	tick := time.NewTicker(time.Second * time.Duration(5))
 	for {
-		// 读取ws中的数据，这里的数据，默认只有文本数据
-		mt, message, err := imw.ws.ReadMessage()
-		imw.mt = mt
-		if err != nil {
-			// 客户端关闭连接时也会进入
-			log.Log.Printf("%d WS message read error: %s", imw.uId, err.Error())
-			imw.WorkerDone <- IM_MSG_WORKWRONG // TODO
+		select {
+		case <-ctx.Done():
 			return
-		}
-
-		log.Log.Println("ws receive msg: ", message)
-		wsImMsg := &model.ImMsgData{}
-		if err := json.Unmarshal(message, wsImMsg); err != nil {
-			log.Log.Printf("json unmarshal fail with err :%v", err)
-			// TODO  暂时忽略这条消息
-			continue
-		}
-
-		// 暂时默认发过来的消息都是普通文本
-		wsImMsg.MsgType = IM_TEXT_MSG
-
-		log.Log.Printf("ws will send to grpc: %+v", wsImMsg)
-		// 发送给GRPC
-		if err := (*imw.cliStream).Send(&pb.StreamRequest{
-			Uid:      int32(imw.uId),
-			DataType: IM_MSG_FROM_UPLOAD_OR_WS_OR_APP,
-			ImMsg: &pb.ImMsgReqData{
-				Id:           int32(wsImMsg.Id),
-				SenderName:   wsImMsg.SenderName,
-				ReceiverId:   int32(wsImMsg.ReceiverId),
-				ReceiverName: wsImMsg.ReceiverName,
-				SendTime:     wsImMsg.SendTime,
-				ReceiverType: int32(wsImMsg.ReceiverType),
-				ResourcePath: wsImMsg.ResourcePath, // 文本消息直接放路劲这个字段
-				MsgType:      int32(wsImMsg.MsgType),
-			},
-		}); err != nil {
-			imw.WorkerDone <- IM_MSG_WORKWRONG
-			log.Log.Println("grpc im message send error: ", err)
-			break
+		case <-tick.C:
+			if err := (*imw.cliStream).Send(&pb.StreamRequest{
+				Uid:      int32(imw.uId),
+				DataType: KEEP_ALIVE_MSG,
+			}); err != nil {
+				imw.WorkerDone <- IM_MSG_WORKWRONG
+				log.Log.Println("grpc im heartbeat message send error: ", err)
+				return
+			}
 		}
 	}
-
+}
+func sendToGrpc(imw *worker, wsImMsg *model.ImMsgData) error {
+	if err := (*imw.cliStream).Send(&pb.StreamRequest{
+		Uid:      int32(imw.uId),
+		DataType: IM_MSG_FROM_UPLOAD_OR_WS_OR_APP,
+		ImMsg: &pb.ImMsgReqData{
+			Id:           int32(wsImMsg.Id),
+			SenderName:   wsImMsg.SenderName,
+			ReceiverId:   int32(wsImMsg.ReceiverId),
+			ReceiverName: wsImMsg.ReceiverName,
+			SendTime:     wsImMsg.SendTime,
+			ReceiverType: int32(wsImMsg.ReceiverType),
+			ResourcePath: wsImMsg.ResourcePath, // 文本消息直接放路劲这个字段
+			MsgType:      int32(wsImMsg.MsgType),
+		},
+	}); err != nil {
+		return err
+	}
+	return nil
 }
 
-func sendImMessage(imw *worker) {
+// 从grpc stream中接收数据通过ws转发给web
+func sendImMessage(imw *worker, ctx context.Context) {
 	for {
-		resp, err := (*imw.cliStream).Recv()
-		if err != nil {
-			imw.WorkerDone <- IM_MSG_WORKWRONG
-			log.Log.Printf("%d grpc recv message error: %s", imw.uId, err.Error())
-			break
-		}
-		log.Log.Printf("%d web grpc client receive : %+v", imw.uId, resp)
-
-		// 写入ws数据 二进制返回
-		if resp.DataType == IM_MSG_FROM_UPLOAD_OR_WS_OR_APP {
-			// 把中文转换为utf-8
-			resp.ImMsgData.ResourcePath = utils.ConvertOctonaryUtf8(resp.ImMsgData.ResourcePath)
-
-			log.Log.Printf("web grpc client receive : %+v", resp)
-
-			// 返回JSON字符串
-			err = imw.ws.WriteJSON(resp)
+		select {
+		case <-ctx.Done():
+			return
+		default:
+			resp, err := (*imw.cliStream).Recv()
 			if err != nil {
 				imw.WorkerDone <- IM_MSG_WORKWRONG
-				log.Log.Println("WS message send error:", err)
-				//break
+				log.Log.Printf("%d grpc recv message error: %s", imw.uId, err.Error())
+				break
 			}
-		}
+			log.Log.Printf("%d web grpc client receive : %+v", imw.uId, resp)
 
-		if resp.DataType == OFFLINE_IM_MSG {
-			// 把中文转换为utf-8
-			for _, msg := range resp.OfflineImMsgResp.OfflineGroupImMsgs {
-				if msg.ImMsgData != nil {
-					for _, userMsg := range msg.ImMsgData {
-						userMsg.ResourcePath = utils.ConvertOctonaryUtf8(userMsg.ResourcePath)
-					}
-				}
-			}
-			for _, msg := range resp.OfflineImMsgResp.OfflineSingleImMsgs {
-				if msg.ImMsgData != nil {
-					for _, userMsg := range msg.ImMsgData {
-						userMsg.ResourcePath = utils.ConvertOctonaryUtf8(userMsg.ResourcePath)
-					}
+			// 写入ws数据 二进制返回
+			if resp.DataType == IM_MSG_FROM_UPLOAD_OR_WS_OR_APP {
+				// 把中文转换为utf-8
+				resp.ImMsgData.ResourcePath = utils.ConvertOctonaryUtf8(resp.ImMsgData.ResourcePath)
+
+				log.Log.Printf("web grpc client receive : %+v", resp)
+
+				// 返回JSON字符串
+				err = imw.ws.WriteJSON(resp)
+				if err != nil {
+					imw.WorkerDone <- IM_MSG_WORKWRONG
+					log.Log.Println("WS message send error:", err)
+					//break
 				}
 			}
 
-			log.Log.Printf("web grpc client receive : %+v", resp)
+			if resp.DataType == OFFLINE_IM_MSG {
+				// 把中文转换为utf-8
+				for _, msg := range resp.OfflineImMsgResp.OfflineGroupImMsgs {
+					if msg.ImMsgData != nil {
+						for _, userMsg := range msg.ImMsgData {
+							userMsg.ResourcePath = utils.ConvertOctonaryUtf8(userMsg.ResourcePath)
+						}
+					}
+				}
+				for _, msg := range resp.OfflineImMsgResp.OfflineSingleImMsgs {
+					if msg.ImMsgData != nil {
+						for _, userMsg := range msg.ImMsgData {
+							userMsg.ResourcePath = utils.ConvertOctonaryUtf8(userMsg.ResourcePath)
+						}
+					}
+				}
 
-			// 返回JSON字符串
-			err = imw.ws.WriteJSON(resp)
-			if err != nil {
-				imw.WorkerDone <- IM_MSG_WORKWRONG
-				log.Log.Println("WS message send error:", err)
-				//break
+				log.Log.Printf("web grpc client receive : %+v", resp)
+
+				// 返回JSON字符串
+				err = imw.ws.WriteJSON(resp)
+				if err != nil {
+					imw.WorkerDone <- IM_MSG_WORKWRONG
+					log.Log.Println("WS message send error:", err)
+					//break
+				}
+			}
+
+			// 掉线通知
+			if resp.DataType == LOGOUT_NOTIFY_MSG || resp.DataType == LOGIN_NOTIFY_MSG || resp.DataType == IM_SOS_MSG {
+				err = imw.ws.WriteJSON(resp)
+				if err != nil {
+					imw.WorkerDone <- IM_MSG_WORKWRONG
+					log.Log.Println("WS message send error:", err)
+					//break
+				}
 			}
 		}
-
-		// 掉线通知
-		if resp.DataType == LOGOUT_NOTIFY_MSG || resp.DataType == LOGIN_NOTIFY_MSG || resp.DataType == IM_SOS_MSG {
-			err = imw.ws.WriteJSON(resp)
-			if err != nil {
-				imw.WorkerDone <- IM_MSG_WORKWRONG
-				log.Log.Println("WS message send error:", err)
-				//break
-			}
-		}
-
 	}
 }

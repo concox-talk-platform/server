@@ -40,7 +40,7 @@ func (simpleImClientFuncImpl) DispatcherScheduler(dc *DataContext, longLived boo
 type sosImImpl struct{}
 
 func (sosImImpl) Dispatcher(dc *DataContext, ds DataSource) {
-	notifyToOther(dc, ds.(*pb.ReportDataReq).DeviceInfo.Id, SOS_MSG)
+	notifyToOther(dc.Task, ds.(*pb.ReportDataReq).DeviceInfo.Id, SOS_MSG)
 }
 func (sosImImpl) DispatcherScheduler(dc *DataContext, longLived bool) {
 	dispatcherScheduler(dc, longLived)

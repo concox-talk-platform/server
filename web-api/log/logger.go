@@ -39,7 +39,9 @@ func init() {
 		logrus.InfoLevel:  logWriter,
 		logrus.FatalLevel: logWriter,
 	}
-	lfHook := lfshook.NewHook(writeMap, &logrus.JSONFormatter{})
+	lfHook := lfshook.NewHook(writeMap, &logrus.TextFormatter{
+		FullTimestamp:true,
+	})
 	Log.AddHook(lfHook)
 }
 

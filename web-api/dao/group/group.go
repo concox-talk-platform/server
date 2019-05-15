@@ -271,7 +271,7 @@ func getUserStatusFromCache(uId int32, redisCli redis.Conn) (int32, error) {
 
 	value, err := redis.Int(redisCli.Do("GET", MakeUserStatusKey(uId)))
 	if err != nil {
-		log.Log.Println("get failed", err.Error())
+		log.Log.Println("Get user online status fail with err: ", err.Error())
 		return USER_OFFLINE, err
 	}
 
