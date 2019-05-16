@@ -10,6 +10,8 @@ package server
 import (
 	"database/sql"
 	"errors"
+	"fmt"
+	"github.com/panjf2000/ants"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"net/http"
@@ -20,16 +22,15 @@ import (
 	tgc "server/grpc-server/dao/group_cache"
 	tgm "server/grpc-server/dao/group_member"
 	tlc "server/grpc-server/dao/location"
-	"server/grpc-server/log"
-	"server/web-api/model"
-	//tlc "server/web-api/dao/location"
 	tm "server/grpc-server/dao/msg"
 	s "server/grpc-server/dao/session"
 	tu "server/grpc-server/dao/user"
 	tuc "server/grpc-server/dao/user_cache"
 	tuf "server/grpc-server/dao/user_friend"
 	"server/grpc-server/db"
+	"server/grpc-server/log"
 	"server/grpc-server/utils"
+	"server/web-api/model"
 	"strconv"
 	"sync"
 	"time"
@@ -107,44 +108,6 @@ var StreamMap = StreamMspSt{
 	Streams: make(map[int32]interface{}),
 }
 
-func init() {
-	ImEngine{}.Run()
-}
-
-func (ie ImEngine) Run() {
-	// 消息推送exec TODO 暂时只用一个scher
-	go ExcecScheduler()
-
-	// 根据时间间隔，检查stream map和redis
-	go syncStreamWithRedis(cfgGs.Interval)
-
-	// redis持续获取im数据，dispatcher
-	JanusPttMsgPublish()
-}
-
-//间隔interval 更新stream map
-func syncStreamWithRedis(Interval int) {
-	// 遍历map，检测redis是否
-	// TODO 存在很严重的问题，比如，在这急短的时间内同步stream和redis
-	for {
-		for k, v := range StreamMap.Streams {
-			log.Log.Printf("check %d, %+v", k, v)
-			res, _ := tuc.GetUserStatusFromCache(k, cache.GetRedisClient())
-			log.Log.Printf("Get uid:%d status: %+v\n", k, res)
-			if res == USER_OFFLINE {
-				log.Log.Printf("Will del uid: %d\n", k)
-				StreamMap.Del(k)
-				if err := tuc.UpdateOnlineInCache(&pb.Member{Id: k, Online: USER_OFFLINE}, cache.GetRedisClient()); err != nil {
-					log.Log.Println("Update user online state error:", err)
-				}
-				// 往q里面写离线通知
-				go notifyToOther(TQ.Tasks, k, LOGOUT_NOTIFY_MSG)
-			}
-		}
-		time.Sleep(time.Second * time.Duration(cfgGs.Interval))
-	}
-}
-
 type StreamMspSt struct {
 	Streams map[int32]interface{}
 	Lock    sync.RWMutex
@@ -172,6 +135,44 @@ func (s StreamMspSt) Del(k int32) {
 	s.Lock.Lock()
 	defer s.Lock.Unlock()
 	delete(s.Streams, k)
+}
+
+func init() {
+	ImEngine{}.Run()
+}
+
+func (ie ImEngine) Run() {
+	// 消息推送exec
+	go ExcecScheduler()
+
+	// 根据时间间隔，检查stream map和redis
+	go syncStreamWithRedis(cfgGs.Interval)
+
+	// redis持续获取im数据，dispatcher
+	JanusPttMsgPublish()
+}
+
+//间隔interval 更新stream map
+func syncStreamWithRedis(Interval int) {
+	// 遍历map，检测redis stream是否过期
+	// TODO 存在很严重的问题，比如，在这急短的时间内stream和redis
+	for {
+		for k, v := range StreamMap.Streams {
+			log.Log.Printf("check %d, %+v", k, v)
+			res, _ := tuc.GetUserStatusFromCache(k, cache.GetRedisClient())
+			log.Log.Printf("Get uid:%d status: %+v\n", k, res)
+			if res == USER_OFFLINE {
+				log.Log.Printf("Will del uid: %d\n", k)
+				StreamMap.Del(k)
+				if err := tuc.UpdateOnlineInCache(&pb.Member{Id: k, Online: USER_OFFLINE}, cache.GetRedisClient()); err != nil {
+					log.Log.Println("Update user online state error:", err)
+				}
+				// 往q里面写离线通知
+				go notifyToOther(TQ.Tasks, k, LOGOUT_NOTIFY_MSG)
+			}
+		}
+		time.Sleep(time.Second * time.Duration(cfgGs.Interval))
+	}
 }
 
 // gen im task
@@ -203,6 +204,7 @@ func (c *Client) Run() {
 	}
 }
 
+// 调度从全局chan里取出的task
 func ExcecScheduler() {
 	var tasks []Task
 	var executor = CreateExecutor()
@@ -225,7 +227,9 @@ func ExcecScheduler() {
 	}
 }
 
+// 创建executor负责分发消息
 func CreateExecutor() chan Task {
+	fmt.Printf("will create executor")
 	tc := make(chan Task)
 	go pushDataExecutor(tc)
 	return tc
@@ -353,7 +357,7 @@ func pushDataDispatcher(dc *DataContext, ds DataSource) {
 			dc.Task <- *NewImTask(data.Uid, append(re, data.Uid), res)
 
 			//// 如果连接存在，就3s往channel里面放一个数据
-		//	go sendHeartbeat(dc, data, cfgGs.Interval, srv)
+			//	go sendHeartbeat(dc, data, cfgGs.Interval, srv)
 
 			// 往dc里面写上线通知
 			go notifyToOther(dc.Task, data.Uid, LOGIN_NOTIFY_MSG)
@@ -369,7 +373,7 @@ func pushDataDispatcher(dc *DataContext, ds DataSource) {
 	}
 }
 
-// temp  临时用一下，后期统统会改用RabbitMQ
+// 临时用一下，后期统统会改用RabbitMQ
 func dispatcherScheduler(dContent *DataContext, multiSend bool) {
 	log.Log.Printf("start Scheduler im msg")
 	var notify int32
@@ -397,33 +401,36 @@ func dispatcherScheduler(dContent *DataContext, multiSend bool) {
 	}
 }
 
-// Executor 推送登录返回数据、IM离线数据、IM离线数据、Heartbeat
+// Executor 推送、IM离线数据、IM离线数据
 func pushDataExecutor(ct chan Task) {
-	var wg sync.WaitGroup
+	p, _ := ants.NewPool(200)
 	for {
 		select {
 		case task := <-ct:
-			log.Log.Println("global executor receiver: ", task.Receiver)
-			for _, receiverId := range task.Receiver {
-				wg.Add(1)
-				go pushData(task, receiverId, task.Data, &wg)
-				log.Log.Println("will send to ", receiverId)
-			}
-			wg.Wait()
+			_ = p.Submit(func() {
+				var wg sync.WaitGroup
+				log.Log.Println("executor pool work receiver: ", task.Receiver)
+				for _, receiverId := range task.Receiver {
+					//wg.Add(1)
+					go pushData(task, receiverId, task.Data, &wg)
+					log.Log.Println("will send to ", receiverId)
+				}
+				//wg.Wait()
+			})
 		}
 	}
 }
 
 // 推送数据
 func pushData(task Task, receiverId int32, resp *pb.StreamResponse, wg *sync.WaitGroup) {
-	defer wg.Done()
+	//defer wg.Done()
 	log.Log.Printf("the stream map have: %+v", StreamMap)
 	if value := StreamMap.Get(receiverId); value != nil {
 		srv := value.(pb.TalkCloud_DataPublishServer)
 		log.Log.Printf("# %d receiver response: %+v", receiverId, resp)
 		if err := srv.Send(resp); err != nil {
-			// 发送失败处理
-			processErrorSendMsg(err, task, receiverId, resp)
+			// 发送失败处理 mysql的io速度太慢了
+			 processErrorSendMsg(err, task, receiverId, resp)
 		} else {
 			// 发送成功如果是离线数据（接收者等于stream id自己）就去更新状态
 			log.Log.Printf("send success. dc.senderId: %d, receiverId: %d", task.SenderId, receiverId)
@@ -810,7 +817,7 @@ func notifyToOther(dcTask chan Task, uId int32, notifyType int32) {
 		errMap      = &sync.Map{}
 		selfGList   = make(chan *pb.GroupListRsp, 1)
 		notifyTotal = int32(0)
-		notifyId    = make([]int32,0)
+		notifyId    = make([]int32, 0)
 	)
 	log.Log.Printf("notify root id :%d", uId)
 	uInfo, _ := tuc.GetUserFromCache(uId)

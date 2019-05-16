@@ -20,14 +20,12 @@ import (
 
 func main() {
 	engine := Prepare()
-	httpWay := flag.String("w", "https", "server listen way")
-	flag.Parse()
-	if *httpWay == "https" {
+	if cfgWs.HttpWay == "https" {
 		engine.Use(TlsHandler())
 		if err := engine.RunTLS(":"+cfgWs.WebPort, cfgWs.CertFile, cfgWs.KeyFile); err != nil {
 			log.Log.Printf("Read pem key file error: %+v", err)
 		}
-	} else if *httpWay == "http" {
+	} else if cfgWs.HttpWay == "http" {
 		if err := engine.Run(":" + cfgWs.WebPort); err != nil {
 			log.Log.Println("listen is error", err)
 		}

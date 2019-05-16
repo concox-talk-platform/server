@@ -23,11 +23,12 @@ var (
 	CertFile          string // https pem文件名
 	KeyFile           string // https key文件
 	Interval          int    // 发送心跳的时间间隔
+	HttpWay           string
 )
 
 func init() {
 	cfgFilePath := flag.String("d", "web_conf.ini", "web api configuration file path")
-	//flag.Parse()
+	flag.Parse()
 	cfg, err := ini.Load(*cfgFilePath) // 编译之后的执行文件所在位置的相对位置
 	if err != nil {
 		log.Log.Printf("Fail to read file: %v", err)
@@ -49,5 +50,5 @@ func init() {
 
 	Interval, _ = cfg.Section("im").Key("interval").Int()
 
-
+	HttpWay = cfg.Section("http_way").Key("way").String()
 }
