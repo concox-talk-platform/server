@@ -6,8 +6,8 @@
 package model
 
 import (
-	pb "server/grpc-server/api/talk_cloud"
 	"database/sql"
+	pb "server/grpc-server/api/talk_cloud"
 )
 
 // request
@@ -143,6 +143,7 @@ type GroupInfo struct {
 	AccountId int    `json:"account_id"`
 	Status    string `json:"status"`
 	CTime     string `json:"c_time"`
+	OnlineNum int    `json:"online_num"`
 }
 
 type Account struct {

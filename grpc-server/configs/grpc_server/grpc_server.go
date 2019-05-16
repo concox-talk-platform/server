@@ -22,6 +22,7 @@ var (
 	PttMsgKey     string // ptt音视频数据在redis中的key
 	PttWaitTime   int    // ptt音视频获取时阻塞等待的时间
 	PprofAddr     string // pprof监听的地址
+	ExpireTime    int
 )
 
 func init() {
@@ -46,4 +47,5 @@ func init() {
 
 	PttWaitTime, _ = cfg.Section("ptt").Key("wait_time").Int()
 
+	ExpireTime, _ = cfg.Section("im").Key("expire_time").Int()
 }

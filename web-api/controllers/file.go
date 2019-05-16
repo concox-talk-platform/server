@@ -33,6 +33,7 @@ import (
 )
 
 var upGrader = websocket.Upgrader{
+	HandshakeTimeout: time.Duration(600),
 	CheckOrigin: func(r *http.Request) bool {
 		return true
 	},
@@ -337,7 +338,7 @@ func pushImMessage(imw *worker, ctx context.Context) {
 	}()
 
 	// 发送心跳
-	tick := time.NewTicker(time.Second * time.Duration(5))
+	tick := time.NewTicker(time.Second * time.Duration(cfgWs.Interval))
 	for {
 		select {
 		case <-ctx.Done():

@@ -7,7 +7,6 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
-	"server/web-api/log"
 	"net/http"
 	"server/web-api/cache"
 	tc "server/web-api/dao/customer" // table customer
@@ -17,8 +16,9 @@ import (
 	tlc "server/web-api/dao/location"
 	tu "server/web-api/dao/user"
 	tuc "server/web-api/dao/user_cache"
-	"server/web-api/utils"
+	"server/web-api/log"
 	"server/web-api/model"
+	"server/web-api/utils"
 
 	"server/web-api/service"
 	"strconv"
@@ -191,20 +191,21 @@ func GetAccountInfo(c *gin.Context) {
 	groups, err := tg.SelectGroupsByAccountId(ai.Id)
 	var gList []*model.GroupList
 	for i := 0; i < len(groups); i++ {
-		us, err := tgc.SelectDevicesByGroupId((*groups[i]).Id)
+		us, err := tgc.SelectDevicesByGroupId((groups[i]).Id)
 		if err != nil {
 			log.Log.Printf("Error in Get Group devices: %s", err)
 		}
 		groupMember := make([]interface{}, 0)
 		groupOfflineMember := make([]interface{}, 0)
 		groupMember = append(groupMember, ai)
-
+		onlineNum := 0
 		for _, u := range us {
 			// 获取该设备在线状态
 			online, err := tuc.GetUserStatusFromCache(int32(u.Id), cache.GetRedisClient())
 			if err != nil || online != tuc.USER_ONLINE {
 				continue
 			}
+			onlineNum++
 			groupMember = append(groupMember, &model.User{
 				Id:         u.Id,
 				IMei:       u.IMei,
@@ -251,6 +252,7 @@ func GetAccountInfo(c *gin.Context) {
 			})
 			return
 		}
+		groups[i].OnlineNum = onlineNum
 		gListEle := &model.GroupList{DeviceInfo: groupMember, DeviceIds: ids, GroupInfo: groups[i]}
 		gList = append(gList, gListEle)
 	}

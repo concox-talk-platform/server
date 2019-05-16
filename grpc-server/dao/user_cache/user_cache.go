@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	pb "server/grpc-server/api/talk_cloud"
 	"server/grpc-server/cache"
+	cfgGs "server/grpc-server/configs/grpc_server"
 	"server/grpc-server/db"
 	"server/web-api/model"
 	"strconv"
@@ -366,8 +367,8 @@ func UpdateOnlineInCache(m *pb.Member, redisCli redis.Conn) error {
 	}
 	defer redisCli.Close()
 
-	if _, err := redisCli.Do("SET", MakeUserStatusKey(m.Id), m.Online, "ex", 30); err != nil {
-	//if _, err := redisCli.Do("SET", MakeUserStatusKey(m.Id), m.Online); err != nil {
+	if _, err := redisCli.Do("SET", MakeUserStatusKey(m.Id), m.Online, "ex", cfgGs.ExpireTime); err != nil {
+		//if _, err := redisCli.Do("SET", MakeUserStatusKey(m.Id), m.Online); err != nil {
 		return errors.New("UpdateOnlineInCache hSet failed with error:" + err.Error())
 	}
 	return nil

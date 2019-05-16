@@ -20,13 +20,13 @@ import (
 
 func main() {
 	engine := Prepare()
-	//engine.Use(TlsHandler())
-	//if err := engine.RunTLS(":"+cfgWs.WebPort, cfgWs.CertFile, cfgWs.KeyFile); err != nil {
-	//	log.Log.Printf("Read pem key file error: %+v", err)
-	//}
-	if err := engine.Run(":" + cfgWs.WebPort); err != nil {
-		log.Log.Println("listen is error", err)
+	engine.Use(TlsHandler())
+	if err := engine.RunTLS(":"+cfgWs.WebPort, cfgWs.CertFile, cfgWs.KeyFile); err != nil {
+		log.Log.Printf("Read pem key file error: %+v", err)
 	}
+	//if err := engine.Run(":" + cfgWs.WebPort); err != nil {
+	//	log.Log.Println("listen is error", err)
+	//}
 }
 
 func Prepare() *gin.Engine {
@@ -120,7 +120,6 @@ func Cors() gin.HandlerFunc {
 		c.Next() //  处理请求
 	}
 }
-
 
 
 func TlsHandler() gin.HandlerFunc {

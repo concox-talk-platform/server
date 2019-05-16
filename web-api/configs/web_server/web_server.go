@@ -22,6 +22,7 @@ var (
 	MaxConn           int    // fastdfs上传文件的最大连接数
 	CertFile          string // https pem文件名
 	KeyFile           string // https key文件
+	Interval          int    // 发送心跳的时间间隔
 )
 
 func init() {
@@ -45,4 +46,8 @@ func init() {
 	// https
 	CertFile = cfg.Section("https").Key("cert_file").String()
 	KeyFile = cfg.Section("https").Key("key_file").String()
+
+	Interval, _ = cfg.Section("im").Key("interval").Int()
+
+
 }

@@ -10,7 +10,6 @@ package server
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"net/http"
@@ -131,9 +130,9 @@ func syncStreamWithRedis(Interval int) {
 		for k, v := range StreamMap.Streams {
 			log.Log.Printf("check %d, %+v", k, v)
 			res, _ := tuc.GetUserStatusFromCache(k, cache.GetRedisClient())
-			fmt.Printf("Get uid:%d status: %+v\n", k, res)
+			log.Log.Printf("Get uid:%d status: %+v\n", k, res)
 			if res == USER_OFFLINE {
-				fmt.Printf("Will del uid: %d\n", k)
+				log.Log.Printf("Will del uid: %d\n", k)
 				StreamMap.Del(k)
 				if err := tuc.UpdateOnlineInCache(&pb.Member{Id: k, Online: USER_OFFLINE}, cache.GetRedisClient()); err != nil {
 					log.Log.Println("Update user online state error:", err)
@@ -142,7 +141,7 @@ func syncStreamWithRedis(Interval int) {
 				go notifyToOther(TQ.Tasks, k, LOGOUT_NOTIFY_MSG)
 			}
 		}
-		time.Sleep(time.Second * time.Duration(Interval)*3)
+		time.Sleep(time.Second * time.Duration(cfgGs.Interval))
 	}
 }
 
