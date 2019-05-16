@@ -84,9 +84,11 @@
                                             <span class="interphonefamily groupicon">&#xe71b;</span>
                                             <div class="members_num" >
                                                 <span class="members_name">{{item.group_info.group_name}}</span>
-                                                <!-- <span class="members_on">  3 </span>
+                                                <span>(</span>
+                                                <span class="members_on"> {{item.group_info.online_num + 1}}</span>
                                                 <span >  / </span>
-                                                <span class="members_totalnum">{{item.device_infos.length}}</span> -->
+                                                <span class="members_totalnum">{{item.device_infos.length}}</span>
+                                                <span>)</span>
                                             </div>  
                                             <div class="editorial_group" v-show="editorial_show === index">
                                                 <div class="ungroup" @click.stop="dissolve" >{{$t('group.dissolve')}}</div>
@@ -261,20 +263,26 @@
                             </div>
                             <div class="im_send">
                                 <!-- <div    class="im_send_message"  contenteditable="true"  ></div> -->
-                                <textarea class="im_send_message" v-model="im_send_news" v-if="im_box_show"></textarea>
+                                <textarea class="im_send_message" v-model="im_send_news" v-if="im_box_show" @keyup.enter="im_send_subimt" ></textarea>
     
                                 <div class="upload_file" v-show="upload_show">
                                     <form id="im_formid">
-                                    <input type="file" id="im_resource" name="resource" ref="resource" @change="filechange" style="display: none">
-                                    <span >{{file_name}}</span>
+                                    <input type="file" id="im_resource" name="resource"       ref="resource" @change="filechange"  style="display: none">
+                                    <!-- <span >{{file_name}}</span> -->
                                     <!-- <div class="dele_file">删除文件</div> -->
-                                    <button type="button" @click="dele_file">删除文件</button>
+                                    
+                                        <img src=""  id="preview_img" alt="">
+                                        <textarea id="dele_area"  @keyup.delete="dele_file" readonly="readonly"></textarea>
+                                    
+                                    <!-- <button type="button" @click="dele_file">删除文件</button> -->
+                                    
                                 </form> 
                                 </div>
-    
                                 <!-- <input v-show="fileupView" id="fileSelect" name="fileSelect"  ref="inputer"  type="file"/> -->
                                 <div class="im_send_button">
                                     <span class="im_send_close" @click="im_send_close">{{ $t("im.close") }}</span>
+                                    <!-- <span @click="duankai">   断开</span>
+                                    <span @click="lianjie">lianjie</span> -->
                                     <span class="im_send_subimt" @click="im_send_subimt">{{ $t("im.send") }}</span>
                                 </div>
                             </div>
@@ -367,18 +375,9 @@
                                                         </div>
                                                         <!-- <div class="im_history_comtent">{{item.ResourcePath}}</div> -->
                                             </div>
-    
-                                
                                </div>                          
-     
-    
-    
-    
                             </div>
-    
                         </div>
-    
-                        
                     </div>
                     <!-- 创建组 -->
                     <el-dialog :title="$t('group.add_group')" :visible.sync="group_div" :show-close="false">
@@ -638,6 +637,7 @@
                     videocall : null,
                     audio_answer:false,
                     video_hang:'',
+                    audio_bridge:'',
                     audio_hang:'',
                     audio_logo:true,
                     // calling_Visible:false,
@@ -1098,13 +1098,17 @@
                     // "/janus"
                     // ];
                     // var server = [
-                    // "wss://" + "ptt.jimilab.com" + ":9188",
+                    // "ws://" + "ptt.jimilab.com" + ":9188",
                     // "/janus"
                     // ];       
+                    // var server = [
+                    // "wss://" + "ptt.jimilab.com" + ":8989",
+                    // "/janus"
+                    // ];   
                     var server = [
                     "wss://" + "test.jimilab.com" + ":8989",
                     "/janus"
-                    ];                         
+                    ];                       
                     // var server = "https://" + "ptt.jimilab.com" + ":8089/janus"
                     var janus = null;
                     var opaqueId = "videocalltest-"+Janus.randomString(12);
@@ -1424,8 +1428,9 @@
                             window.console.log('````````````````````````22')
                             Janus.error(error);
                             alert(error, function() {
-                            // window.location.reload();
+                            window.location.reload();
                             });
+                            self.$router.go(0)
                         },
                         mycallmessage:function(e){
                             window.console.log('````````````````````````23')
@@ -1507,158 +1512,157 @@
                     // audio_self.videocall.send({'user_call':body})
                     this.videocall.send({'user_call':body})
                 },
-            //    对讲服务拉起
+                 //    对讲服务拉起
                 audiobridge_serve(){
                     var bridge =this;
                     var server = [
                     "wss://" + "test.jimilab.com" + ":8989",
                     "/janus"
                     ];    
-                var janus = null;
-                // var mixertest = null;
-                var opaqueId = "audiobridgetest-"+Janus.randomString(12);
-                var spinner = null;
-                var myroom = 999;	// Demo room
-                var myusername = null;
-                var myid = null;
-                var webrtcUp = false;
-                var audioenabled = false;
-                Janus.init({debug: "all", callback: function() {
-		// Use a button to start the demo
-			// Make sure the browser supports WebRTC
-			if(!Janus.isWebrtcSupported()) {
-				alert("No WebRTC support... ");
-				return;
-			}
-			// Create session
-			janus = new Janus(
-				{
-					server: server,
-					success: function() {
-						// Attach to Audio Bridge test plugin
-						janus.attach(
-							{
-								plugin: "janus.plugin.audiobridge",
-								opaqueId: opaqueId,
-								success: function(pluginHandle) {
-									bridge.mixertest = pluginHandle;
-									Janus.log("Plugin attached! (" + bridge.mixertest.getPlugin() + ", id=" + bridge.mixertest.getId() + ")");
-								},
-								error: function(error) {
-									Janus.error("  -- Error attaching plugin...", error);
-								alert("Error attaching plugin... " + error);
-								},
-								consentDialog: function(on) {
-									Janus.debug("Consent dialog should be " + (on ? "on" : "off") + " now");
-								},
-								onmessage: function(msg, jsep) {
-									Janus.debug(" ::: Got a message :::");
-									Janus.debug(msg);
-									var event = msg["audiobridge"];
-									Janus.debug("Event: " + event);
-									if(event != undefined && event != null) {
-										if(event === "joined") {
-											// Successfully joined, negotiate WebRTC now
-											myid = msg["id"];
-											Janus.log("Successfully joined room " + msg["room"] + " with ID " + myid);
-											if(!webrtcUp) {
-												webrtcUp = true;
-												// Publish our stream
-												bridge.mixertest.createOffer(
-													{
-														media: { video: false},	// This is an audio only room
-														success: function(jsep) {
-															Janus.debug("Got SDP!");
-															Janus.debug(jsep);
-															var publish = { "request": "configure", "muted": false };
-															bridge.mixertest.send({"message": publish, "jsep": jsep});
-														},
-														error: function(error) {
-															Janus.error("WebRTC error:", error);
-														alert("WebRTC error... " + JSON.stringify(error));
-														}
-													});
-											}
-											// Any room participant?
-											if(msg["participants"] !== undefined && msg["participants"] !== null) {
-												var lists = msg["participants"];
-												Janus.debug("Got a list of participants:");
-												Janus.debug(lists);
-											}
-										} else if(event === "roomchanged") {
-											// The user switched to a different room
-											myid = msg["id"];
-											Janus.log("Moved to room " + msg["room"] + ", new ID: " + myid);
-											// Any room participant?
-											if(msg["participants"] !== undefined && msg["participants"] !== null) {
-												var listss = msg["participants"];
-												Janus.debug("Got a list of participants:");
-												Janus.debug(listss);
-											}
-										} else if(event === "destroyed") {
-											// The room has been destroyed
-											Janus.warn("The room has been destroyed!");
-											alert("The room has been destroyed", function() {
-												window.location.reload();
-											});
-										} else if(event === "event") {
-											if(msg["participants"] !== undefined && msg["participants"] !== null) {
-												var listsss = msg["participants"];
-												Janus.debug("Got a list of participants:");
-												Janus.debug(listsss);
-		
-											} else if(msg["error"] !== undefined && msg["error"] !== null) {
-												if(msg["error_code"] === 485) {
-													// This is a "no such room" error: give a more meaningful description
-												alert(
-														"<p>Apparently room <code>" + myroom + "</code> (the one this demo uses as a test room) " +
-														"does not exist...</p><p>Do you have an updated <code>janus.plugin.audiobridge.cfg</code> " +
-														"configuration file? If not, make sure you copy the details of room <code>" + myroom + "</code> " +
-														"from that sample in your current configuration file, then restart Janus and try again."
-													);
-												} else {
-													alert(msg["error"]);
-												}
-												return;
-											}
-											// Any new feed to attach to?
-										}
-								}
-									if(jsep !== undefined && jsep !== null) {
-										Janus.debug("Handling SDP as well...");
-										Janus.debug(jsep);
-										bridge.mixertest.handleRemoteJsep({jsep: jsep});
-									}
-								},
-								onlocalstream: function(stream) {
-									Janus.debug(" ::: Got a local stream :::");
-									Janus.debug(stream);
-								},
-								onremotestream: function(stream) {
-							
-									// Mute button
-									audioenabled = true;
-								},
-								oncleanup: function() {
-									webrtcUp = false;
-									Janus.log(" ::: Got a cleanup notification :::");
-								}
-							});
-					},
-					error: function(error) {
-						Janus.error(error);
-						alert(error, function() {
-							window.location.reload();
-						});
-					},
-					destroyed: function() {
-						window.location.reload();
-					}
-				});
-	
-	}});
+                    var janus = null;
+                    // var mixertest = null;
+                    var opaqueId = "audiobridgetest-"+Janus.randomString(12);
+                    var spinner = null;
+                    var myroom = '';	// Demo room
+                    var myusername = null;
+                    var myid = null;
+                    var webrtcUp = false;
+                    var audioenabled = false;
+                    Janus.init({debug: "all", callback: function() {
+                        // Use a button to start the demo
+                        // Make sure the browser supports WebRTC
+                        if(!Janus.isWebrtcSupported()) {
+                            alert("No WebRTC support... ");
+                            return;
+                        }
+                        // Create session
+                        janus = new Janus(
+                            {
+                                server: server,
+                                success: function() {
+                                    // Attach to Audio Bridge test plugin
+                                    janus.attach(
+                                        {
+                                            plugin: "janus.plugin.audiobridge",
+                                            opaqueId: opaqueId,
+                                            success: function(pluginHandle) {
+                                                bridge.mixertest = pluginHandle;
+                                                Janus.log("Plugin attached! (" + bridge.mixertest.getPlugin() + ", id=" + bridge.mixertest.getId() + ")");
+                                            },
+                                            error: function(error) {
+                                                Janus.error("  -- Error attaching plugin...", error);
+                                            alert("Error attaching plugin... " + error);
+                                            },
+                                            consentDialog: function(on) {
+                                                Janus.debug("Consent dialog should be " + (on ? "on" : "off") + " now");
+                                            },
+                                            onmessage: function(msg, jsep) {
+                                                Janus.debug(" ::: Got a message :::");
+                                                Janus.debug(msg);
+                                                var event = msg["audiobridge"];
+                                                Janus.debug("Event: " + event);
+                                                if(event != undefined && event != null) {
+                                                    if(event === "joined") {
+                                                        // Successfully joined, negotiate WebRTC now
+                                                        myid = msg["id"];
+                                                        Janus.log("Successfully joined room " + msg["room"] + " with ID " + myid);
+                                                        if(!webrtcUp) {
+                                                            webrtcUp = true;
+                                                            // Publish our stream
+                                                            bridge.mixertest.createOffer(
+                                                                {
+                                                                    media: { video: false},	// This is an audio only room
+                                                                    success: function(jsep) {
+                                                                        Janus.debug("Got SDP!");
+                                                                        Janus.debug(jsep);
+                                                                        var publish = { "request": "configure", "muted": false };
+                                                                        bridge.mixertest.send({"message": publish, "jsep": jsep});
+                                                                    },
+                                                                    error: function(error) {
+                                                                        Janus.error("WebRTC error:", error);
+                                                                    alert("WebRTC error... " + JSON.stringify(error));
+                                                                    }
+                                                                });
+                                                        }
+                                                        // Any room participant?
+                                                        if(msg["participants"] !== undefined && msg["participants"] !== null) {
+                                                            var lists = msg["participants"];
+                                                            Janus.debug("Got a list of participants:");
+                                                            Janus.debug(lists);
+                                                        }
+                                                    } else if(event === "roomchanged") {
+                                                        // The user switched to a different room
+                                                        myid = msg["id"];
+                                                        Janus.log("Moved to room " + msg["room"] + ", new ID: " + myid);
+                                                        // Any room participant?
+                                                        if(msg["participants"] !== undefined && msg["participants"] !== null) {
+                                                            var listss = msg["participants"];
+                                                            Janus.debug("Got a list of participants:");
+                                                            Janus.debug(listss);
+                                                        }
+                                                    } else if(event === "destroyed") {
+                                                        // The room has been destroyed
+                                                        Janus.warn("The room has been destroyed!");
+                                                        alert("The room has been destroyed", function() {
+                                                            window.location.reload();
+                                                        });
+                                                    } else if(event === "event") {
+                                                        if(msg["participants"] !== undefined && msg["participants"] !== null) {
+                                                            var listsss = msg["participants"];
+                                                            Janus.debug("Got a list of participants:");
+                                                            Janus.debug(listsss);
+                                                        } else if(msg["error"] !== undefined && msg["error"] !== null) {
+                                                            if(msg["error_code"] === 485) {
+                                                                // This is a "no such room" error: give a more meaningful description
+                                                            alert(
+                                                                    "<p>Apparently room <code>" + myroom + "</code> (the one this demo uses as a test room) " +
+                                                                    "does not exist...</p><p>Do you have an updated <code>janus.plugin.audiobridge.cfg</code> " +
+                                                                    "configuration file? If not, make sure you copy the details of room <code>" + myroom + "</code> " +
+                                                                    "from that sample in your current configuration file, then restart Janus and try again."
+                                                                );
+                                                            } else {
+                                                                alert(msg["error"]);
+                                                            }
+                                                            return;
+                                                        }
+                                                        // Any new feed to attach to?
+                                                    }
+                                            }
+                                                if(jsep !== undefined && jsep !== null) {
+                                                    Janus.debug("Handling SDP as well...");
+                                                    Janus.debug(jsep);
+                                                    bridge.mixertest.handleRemoteJsep({jsep: jsep});
+                                                }
+                                            },
+                                            onlocalstream: function(stream) {
+                                                Janus.debug(" ::: Got a local stream :::");
+                                                Janus.debug(stream);
+                                            },
+                                            onremotestream: function(stream) {
+                                        
+                                                // Mute button
+                                                audioenabled = true;
+                                            },
+                                            oncleanup: function() {
+                                                webrtcUp = false;
+                                                Janus.log(" ::: Got a cleanup notification :::");
+                                            }
+                                        });
+                                },
+                                error: function(error) {
+                                    Janus.error(error);
+                                    alert(error, function() {
+                                        window.location.reload();
+                                    });
+                                    bridge.$router.go(0)
 
-
+                                },
+                                destroyed: function() {
+                                    window.location.reload();
+                                }
+                            }); 
+}});
+                this.audio_bridge=janus
             },
 
                 // 即时链接
@@ -2187,11 +2191,25 @@
                     })
                 },
                 im_send_close(){
-                    // this.im_show = false;
-                    
-                    window.console.log('111')
-                    window.console.log(this.mixertest)
+                    this.im_show = false;
+                    window.console.log('111');
+                    // var audio_poc = { "request": "join", "room":369, "display": '1687' };
+ // this.mixertest.send({"message": audio_poc});
+                  
                 },
+                // duankai(){
+                //     window.console.log('duankai')
+                //     var leave_room ={"request": "leave"}
+
+                //     this.mixertest.send({"message": leave_room});
+
+
+                // },
+                // lianjie(){
+                //     window.console.log('lianjie');
+                //     var audio_poc2 = { "request": "join", "room":368, "display": '1687' };
+		//     this.mixertest.send({"message": audio_poc2});
+                // },
                 im_close(){
                     this.im_show = false;
                     // this.mapshow=true
@@ -2219,6 +2237,19 @@
                  }else{
                     this.file_type = 5
                  }
+                 if(this.file_type == 2){
+                     window.console.log(111)
+                     var preview_image=document.getElementById('preview_img')
+                     var reader =new FileReader()
+                     reader.readAsDataURL(this.$refs.resource.files[0])
+                     reader.onload =function(e){
+                         window.console.log(e);
+                         preview_image.src=e.target.result
+
+                     }
+
+                 }
+             
                  
                 },
                 // 判断文件类型
@@ -2231,6 +2262,23 @@
                 dele_file(){
                     this.upload_show = false,
                     this.im_box_show = true;
+                },
+                setOnopenMessage(e){
+                    window.console.log('....................连接了') 
+                    // this.$axios.get('/account/'+sessionStorage.getItem('loginName'),
+                    //             { headers: 
+                    //             {
+                    //             "Authorization" : sessionStorage.getItem('setSession_id')
+                    //             }
+                    //             })
+                    //             .then((response) =>{
+                    //              window.console.log(response);
+                    //             localStorage.setItem('group_list', JSON.stringify(response.data.group_list));  
+                    //             this.local_group_list = response.data.group_list    
+                    //             })
+                    //             .catch( (error) => {
+                    //             window.console.log(error);
+                    //             });  
                 },
                 setOncloseMessage(e){
                     window.console.log('....................关闭了')
@@ -2271,8 +2319,9 @@
                             }
                             if(redata.ReceiverType ==1){
                                 window.console.log(sessionStorage.getItem('id'))
+                                var your_local_name =''
                                 if(redata.id == this.receiver_id ||redata.id == parseInt(sessionStorage.getItem('id'))){
-                                      var your_local_name =''
+                                      
                                        if(redata.id == parseInt(sessionStorage.getItem('id'))){
                                         redata.im_send_obj = 1;
                                         your_local_name=redata.ReceiverType+'.'+redata.id+'_'+redata.ReceiverId;
@@ -2292,6 +2341,9 @@
                                         }
                                         localStorage.setItem(your_local_name, JSON.stringify(this.local_mynews));                       
                                 }else{
+                                    your_local_name=redata.ReceiverType+'.'+redata.ReceiverId+'_'+redata.id;
+                                    window.console.log(redata.id)
+                                    window.console.log(redata.ReceiverId)
                                         redata.im_send_obj = 2;
                                         window.console.log(888888888888888888)
                                         window.console.log(redata);
@@ -2505,7 +2557,6 @@
                     this.refresh_show = false;
                     this.$router.go(0)
                 },
-    
                 // 时间
                 im_create_time(){
                     let timeStamp= new Date();
@@ -2692,8 +2743,9 @@
                
         },
         mounted(){ 
-            // this.video_server();    
             this.audiobridge_serve(); 
+            window.console.log( JSON.parse(localStorage.getItem('group_list')))
+            this.video_server();    
             this.createWebSocket()
             window.console.log(this.group_list)
         },
@@ -2956,10 +3008,10 @@
         background-color: white;
         position: absolute;
         border: 1px solid #c4c4c4;
-        height: 100px;
-        width: 93px;
-        top: 58px;
-        left: 41px;
+        height: 87px;
+        width: 78px;
+        top: 45px;
+        left: 27px;
         z-index: 6;
         
     }
@@ -3235,6 +3287,17 @@
         resize: none;
         outline: none;
         border: none;  
+    }
+    #preview_img{
+        height: 52px;
+        width: 150px;
+    }
+    #dele_area{
+        height: 15px;
+        border: none;
+        resize: none;
+        outline: none;
+
     }
     .im_send_button{
        float: right; 
@@ -3536,7 +3599,6 @@
     .v-modal{
         /* display: none */
     }
-    
     
     </style>
     
