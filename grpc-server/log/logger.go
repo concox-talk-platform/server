@@ -17,6 +17,8 @@ import (
 
 var Log *logrus.Logger
 
+const Time_Layout = "2006-01-02 15:04:05.000000000"
+
 func init() {
 	Log = logrus.New()
 
@@ -36,7 +38,7 @@ func init() {
 	logWriter, err := rotatelogs.New(
 		apiLogPath+".%Y-%m-%d-%H-%M.log",
 		rotatelogs.WithLinkName(apiLogPath),       // 生成软链，指向最新日志文件
-		rotatelogs.WithMaxAge(7*24*time.Hour),        // 文件最大保存时间
+		rotatelogs.WithMaxAge(7*24*time.Hour),     // 文件最大保存时间
 		rotatelogs.WithRotationTime(24*time.Hour), // 日志切割时间间隔
 	)
 	writeMap := lfshook.WriterMap{
@@ -46,7 +48,8 @@ func init() {
 		logrus.FatalLevel: logWriter,
 	}
 	lfHook := lfshook.NewHook(writeMap, &logrus.TextFormatter{
-		FullTimestamp: true,
+		FullTimestamp:   true,
+		TimestampFormat: Time_Layout,
 	})
 	Log.AddHook(lfHook)
 }

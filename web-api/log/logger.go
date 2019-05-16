@@ -19,6 +19,8 @@ import (
 
 var Log *logrus.Logger
 
+const Time_Layout = "2006-01-02 15:04:05.000000000"
+
 func init() {
 	Log = logrus.New()
 	//禁止logrus的输出
@@ -41,6 +43,7 @@ func init() {
 	}
 	lfHook := lfshook.NewHook(writeMap, &logrus.TextFormatter{
 		FullTimestamp:true,
+		TimestampFormat: Time_Layout,
 	})
 	Log.AddHook(lfHook)
 }

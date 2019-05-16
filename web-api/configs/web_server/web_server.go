@@ -27,7 +27,7 @@ var (
 
 func init() {
 	cfgFilePath := flag.String("d", "web_conf.ini", "web api configuration file path")
-	flag.Parse()
+	//flag.Parse()
 	cfg, err := ini.Load(*cfgFilePath) // 编译之后的执行文件所在位置的相对位置
 	if err != nil {
 		log.Log.Printf("Fail to read file: %v", err)

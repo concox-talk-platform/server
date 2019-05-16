@@ -822,7 +822,7 @@ func notifyToOther(dcTask chan Task, uId int32, notifyType int32) {
 		for _, g := range gl.GroupList {
 			for _, u := range g.UsrList {
 				if u.Uid != uId && u.Online == tuc.USER_ONLINE {
-					//log.Log.Printf("will notify *******************------------------------------------------------%d", u.Uid)
+					log.Log.Printf("will notify *******************------------------------------------------------%d", u.Uid)
 					notifyTotal++
 					notifyId = append(notifyId, u.Uid)
 				}
