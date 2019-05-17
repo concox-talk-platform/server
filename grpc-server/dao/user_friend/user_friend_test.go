@@ -1,5 +1,5 @@
 /*
-@Time : 2019/4/3 18:02 
+@Time : 2019/4/3 18:02
 @Author : yanKoo
 @File : user_friend_test
 @Software: GoLand
@@ -13,7 +13,7 @@ import (
 )
 
 func testSearchUserByName(t *testing.T) {
-	res, err := SearchUserByName(333,"44", db.DBHandler)
+	res, err := SearchUserByName(333, "44", db.DBHandler)
 	if err != nil {
 		t.Logf("error: %v", err)
 	} else {
@@ -22,7 +22,7 @@ func testSearchUserByName(t *testing.T) {
 }
 
 func TestAddFriend(t *testing.T) {
-	if res, err := AddFriend(333,336, db.DBHandler); err != nil {
+	if res, err := AddFriend(333, 336, db.DBHandler); err != nil {
 		t.Logf("Add friend error: %v", err)
 	} else {
 		t.Log(res)

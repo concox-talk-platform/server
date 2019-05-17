@@ -1,5 +1,5 @@
 /*
-@Time : 2019/5/9 14:33 
+@Time : 2019/5/9 14:33
 @Author : yanKoo
 @File : im_file
 @Software: GoLand
@@ -12,6 +12,7 @@ import (
 	"strings"
 	"sync"
 )
+
 var imFileMap sync.Map
 
 const (
@@ -47,6 +48,7 @@ func init() {
 
 	imFileMap.Store("pdf", IM_PDF_MSG) //Adobe Acrobat (pdf)
 }
+
 // 获取Im上传文件类型
 func GetImFileType(headerFileHeader string) (int32, string) {
 	// 判断文件类型

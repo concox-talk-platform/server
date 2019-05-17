@@ -1,5 +1,5 @@
 /*
-@Time : 2019/4/19 14:02 
+@Time : 2019/4/19 14:02
 @Author : yanKoo
 @File : encoding_convert
 @Software: GoLand
@@ -23,4 +23,3 @@ func ConvertOctonaryUtf8(in string) string {
 		})
 	return string(out)
 }
-

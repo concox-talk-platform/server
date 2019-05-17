@@ -28,8 +28,8 @@ const (
 	GROUP_MEMBER  = 1
 	GROUP_MANAGER = 2
 
-	USR_DATA_KEY_FMT = "usr:%d:data"
-	USR_STATUS_KEY_FMT  = "usr:%d:stat"
+	USR_DATA_KEY_FMT   = "usr:%d:data"
+	USR_STATUS_KEY_FMT = "usr:%d:stat"
 )
 
 var dbConn = db.DBHandler
@@ -250,7 +250,7 @@ func GetGruopMembers(gid int32, db *sql.DB) ([]*pb.UserRecord, error) {
 		gm.Online = res
 		if gm.Online == USER_ONLINE {
 			grpMems = append(grpMems, gm)
-		}  else {
+		} else {
 			grpMemsOffline = append(grpMemsOffline, gm)
 		}
 	}
@@ -601,6 +601,5 @@ func GetGroupInfoFromDB(gId, uId int32) (*pb.GroupInfo, error) {
 		}
 	}
 	gInfo.UsrList = gMembers
-	return gInfo,nil
+	return gInfo, nil
 }
-

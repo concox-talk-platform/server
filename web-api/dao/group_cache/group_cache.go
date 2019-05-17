@@ -19,10 +19,10 @@ import (
 
 // Before when you change these constants
 const (
-	GRP_MEM_KEY_FMT   = "grp:%d:mem"
-	GRP_DATA_KEY_FMT  = "grp:%d:data"
-	USR_STATUS_KEY_FMT  = "usr:%d:stat"
-	USR_GROUP_KEY_FMT = "usr:%d:grps"
+	GRP_MEM_KEY_FMT    = "grp:%d:mem"
+	GRP_DATA_KEY_FMT   = "grp:%d:data"
+	USR_STATUS_KEY_FMT = "usr:%d:stat"
+	USR_GROUP_KEY_FMT  = "usr:%d:grps"
 
 	USER_OFFLINE = 1 // 用户离线
 	USER_ONLINE  = 2 // 用户在线

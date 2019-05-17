@@ -1,5 +1,5 @@
 /*
-@Time : 2019/4/16 17:47 
+@Time : 2019/4/16 17:47
 @Author : yanKoo
 @File : redisMap
 @Software: GoLand
@@ -12,9 +12,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gomodule/redigo/redis"
-	"server/grpc-server/log"
-	"server/grpc-server/cache"
 	pb "server/grpc-server/api/talk_cloud"
+	"server/grpc-server/cache"
+	"server/grpc-server/log"
 	"strconv"
 )
 

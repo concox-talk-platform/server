@@ -163,18 +163,18 @@ func (this *storageDownloadTask) recvFile(conn net.Conn) error {
 
 func (this *storageDownloadTask) recvBuffer(conn net.Conn) error {
 	var (
-		err				error
+		err error
 	)
 	//buffer allocate by user
 	if this.buffer != nil {
 		if int64(len(this.buffer)) < this.pkgLen {
 			return fmt.Errorf("StorageDownloadTask buffer < pkgLen can't recv")
-        }
+		}
 		if err = writeFromConnToBuffer(conn, this.buffer, this.pkgLen); err != nil {
 			return fmt.Errorf("StorageDownloadTask writeFromConnToBuffer %s", err)
-        }
+		}
 		return nil
-    }
+	}
 	writer := new(bytes.Buffer)
 
 	if err = writeFromConn(conn, writer, this.pkgLen); err != nil {

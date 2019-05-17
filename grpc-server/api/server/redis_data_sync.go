@@ -1,5 +1,5 @@
 /*
-@Time : 2019/5/4 13:48 
+@Time : 2019/5/4 13:48
 @Author : yanKoo
 @File : redis_data_sync
 @Software: GoLand
@@ -9,14 +9,14 @@ package server
 
 import (
 	"database/sql"
-	"server/grpc-server/log"
+	pb "server/grpc-server/api/talk_cloud"
 	"server/grpc-server/cache"
 	tg "server/grpc-server/dao/group"
 	tgc "server/grpc-server/dao/group_cache"
 	tu "server/grpc-server/dao/user"
 	tuc "server/grpc-server/dao/user_cache"
 	"server/grpc-server/db"
-	pb "server/grpc-server/api/talk_cloud"
+	"server/grpc-server/log"
 	"sync"
 )
 

@@ -20,7 +20,7 @@ var fileTypeMap sync.Map
 
 func init() {
 	fileTypeMap.Store("ffd8ffe000104a464946", "jpg")  //JPEG (jpg)
-	fileTypeMap.Store("ffd8ffe", "jpg")  //JPEG (jpg)
+	fileTypeMap.Store("ffd8ffe", "jpg")               //JPEG (jpg)
 	fileTypeMap.Store("89504e470d0a1a0a0000", "png")  //PNG (png)
 	fileTypeMap.Store("47494638396126026f01", "gif")  //GIF (gif)
 	fileTypeMap.Store("49492a00227105008037", "tif")  //TIFF (tif)
@@ -105,7 +105,7 @@ func bytesToHexString(src []byte) string {
 func GetFileType(fSrc []byte) string {
 	var fileType string
 	fileCode := bytesToHexString(fSrc)
-	log.Log.Printf("%s",fileCode)
+	log.Log.Printf("%s", fileCode)
 	fileTypeMap.Range(func(key, value interface{}) bool {
 		k := key.(string)
 		v := value.(string)

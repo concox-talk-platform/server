@@ -1,10 +1,10 @@
 package db
 
 import (
-	"server/web-api/config"
 	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
+	"server/web-api/config"
 )
 
 const (
@@ -13,7 +13,7 @@ const (
 
 // db 包装类
 type SDBManager struct {
-	DB *sql.DB
+	DB    *sql.DB
 	DBCfg config.DBConfig
 }
 
@@ -22,11 +22,10 @@ type SDBContainer struct {
 }
 
 var (
-	DBC SDBContainer
+	DBC       SDBContainer
 	DBHandler *sql.DB
-	Err error
+	Err       error
 )
-
 
 func init() {
 	if DBHandler != nil {

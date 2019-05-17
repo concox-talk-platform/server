@@ -1,5 +1,5 @@
 /*
-@Time : 2019/4/10 14:16 
+@Time : 2019/4/10 14:16
 @Author : yanKoo
 @File : deviceTest
 @Software: GoLand
@@ -15,12 +15,12 @@ import (
 func TestMultiUpdateDevice(t *testing.T) {
 	devices := make([]*model.Device, 0)
 	devices = append(devices, &model.Device{
-		IMei:"123456789111111",
+		IMei: "123456789111111",
 	})
 	_ = MultiUpdateDevice(&model.AccountDeviceTransReq{
 		Devices: devices,
-		Receiver:model.DeviceReceiver{
-			AccountId:31,
+		Receiver: model.DeviceReceiver{
+			AccountId: 31,
 		},
 	})
 }

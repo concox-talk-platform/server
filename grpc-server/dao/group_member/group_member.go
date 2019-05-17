@@ -6,8 +6,8 @@
 package group_member
 
 import (
-	"server/grpc-server/log"
 	"server/grpc-server/db"
+	"server/grpc-server/log"
 	"server/web-api/model"
 )
 

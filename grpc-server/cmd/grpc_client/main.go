@@ -1,15 +1,15 @@
 /**
 * @Author: yanKoo
 * @Date: 2019/3/25 14:57
-* @Description: 
-*/
+* @Description:
+ */
 package main
 
 import (
 	"context"
 	"google.golang.org/grpc"
-	"server/web-api/log"
 	pb "server/grpc-server/api/talk_cloud"
+	"server/web-api/log"
 	"sync"
 	"time"
 )
@@ -283,7 +283,5 @@ func main() {
 			//}
 		}
 	}(&allStr)*/
-	select {
-
-	}
+	select {}
 }

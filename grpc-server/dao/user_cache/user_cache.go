@@ -1,5 +1,5 @@
 /*
-@Time : 2019/4/3 14:35 
+@Time : 2019/4/3 14:35
 @Author : yanKoo
 @File : user_cache
 @Software: GoLand
@@ -135,7 +135,7 @@ func GetGroupMemDataFromCache(gid int32, rd redis.Conn) ([]*pb.UserRecord, error
 
 	memKeys := make([]interface{}, 0)
 	for i := 0; i < sz; i++ {
-		memKeys = append(memKeys, )
+		memKeys = append(memKeys)
 	}
 
 	// 获取缓存中某个群成员信息

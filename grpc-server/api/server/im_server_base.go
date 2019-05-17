@@ -1,5 +1,5 @@
 /*
-@Time : 2019/4/12 19:29 
+@Time : 2019/4/12 19:29
 @Author : yanKoo
 @File : talk_cloud_app_login_impl
 @Software: GoLand
@@ -153,8 +153,8 @@ func (ie ImEngine) Run() {
 }
 
 //间隔interval 更新stream map
-func syncStreamWithRedis(Interval int) {
-	// 遍历map，检测redis stream是否过期
+func syncStreamWithRedis(interval int) {
+	// 遍历map，检测redis,stream map中的stream是否过期
 	// TODO 存在很严重的问题，比如，在这急短的时间内stream和redis
 	for {
 		for k, v := range StreamMap.Streams {
@@ -171,12 +171,12 @@ func syncStreamWithRedis(Interval int) {
 				go notifyToOther(TQ.Tasks, k, LOGOUT_NOTIFY_MSG)
 			}
 		}
-		time.Sleep(time.Second * time.Duration(cfgGs.Interval))
+		time.Sleep(time.Second * time.Duration(interval))
 	}
 }
 
 // gen im task
-func NewImTask(senderId int32, receiver []int32, resp *pb.StreamResponse, ) *Task {
+func NewImTask(senderId int32, receiver []int32, resp *pb.StreamResponse) *Task {
 	return &Task{
 		SenderId: senderId,
 		Receiver: receiver,
@@ -338,15 +338,15 @@ func pushDataDispatcher(dc *DataContext, ds DataSource) {
 			}
 		}
 
-		log.Log.Printf(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start gen data for dispatcher")
+		//log.Log.Printf(" start gen data for dispatcher")
 		switch data.DataType {
 		/*case FIRST_LOGIN_DATA:
-			res, err := firstLoginData(dc, data, srv)
-			if err != nil {
-				errMap.Store(data.Uid, err)
-			}
-			re := make([]int32, 0)
-			dc.Task <- *NewImTask(data.Uid, append(re, data.Uid), res)*/
+		res, err := firstLoginData(dc, data, srv)
+		if err != nil {
+			errMap.Store(data.Uid, err)
+		}
+		re := make([]int32, 0)
+		dc.Task <- *NewImTask(data.Uid, append(re, data.Uid), res)*/
 		case OFFLINE_IM_MSG:
 			res, err := GetOfflineImMsgFromDB(data)
 			if err != nil {
@@ -430,7 +430,7 @@ func pushData(task Task, receiverId int32, resp *pb.StreamResponse, wg *sync.Wai
 		log.Log.Printf("# %d receiver response: %+v", receiverId, resp)
 		if err := srv.Send(resp); err != nil {
 			// 发送失败处理 mysql的io速度太慢了
-			 processErrorSendMsg(err, task, receiverId, resp)
+			processErrorSendMsg(err, task, receiverId, resp)
 		} else {
 			// 发送成功如果是离线数据（接收者等于stream id自己）就去更新状态
 			log.Log.Printf("send success. dc.senderId: %d, receiverId: %d", task.SenderId, receiverId)
@@ -829,7 +829,7 @@ func notifyToOther(dcTask chan Task, uId int32, notifyType int32) {
 		for _, g := range gl.GroupList {
 			for _, u := range g.UsrList {
 				if u.Uid != uId && u.Online == tuc.USER_ONLINE {
-					log.Log.Printf("will notify *******************------------------------------------------------%d", u.Uid)
+					log.Log.Printf("will notify - - - - - - - - - - - >%d", u.Uid)
 					notifyTotal++
 					notifyId = append(notifyId, u.Uid)
 				}
@@ -855,8 +855,9 @@ func notifyToOther(dcTask chan Task, uId int32, notifyType int32) {
 		}
 		// send to self
 		doNotify(uInfo, errMap, notifyType, notifyTotal, uInfo, uLocation, dcTask, uId)
+	} else {
+		log.Log.Printf("cant load notify self info %v----------%v", gl, uInfo)
 	}
-	log.Log.Printf("cant load notify self info %v----------%v", gl, uInfo)
 }
 
 func doNotify(u *pb.UserRecord, errMap *sync.Map, notifyType int32, notifyTotal int32,

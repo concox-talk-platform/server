@@ -6,8 +6,8 @@
 package group_member
 
 import (
-	"server/web-api/log"
 	"server/web-api/db"
+	"server/web-api/log"
 	"server/web-api/model"
 )
 

@@ -1,5 +1,5 @@
 /*
-@Time : 2019/4/29 10:36 
+@Time : 2019/4/29 10:36
 @Author : yanKoo
 @File : grpc_gateway
 @Software: GoLand
@@ -9,8 +9,8 @@ package grpc_gateway
 
 import (
 	"github.com/go-ini/ini"
-	"server/grpc-server/log"
 	"os"
+	"server/grpc-server/log"
 )
 
 var (

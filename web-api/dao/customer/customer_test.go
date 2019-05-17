@@ -34,13 +34,13 @@ func testGetAccount(t *testing.T) {
 
 func testUpdateAccount(t *testing.T) {
 	if err := UpdateAccount(&model.AccountUpdate{
-		LoginId:     "9",
-		Id: "31",
-		NickName:    "ZZZZZZZZ",
-		Email:       "948162@qq.com",
-		Phone:       "123456789",
-		Address:     "株洲",
-		Remark:      "",
+		LoginId:  "9",
+		Id:       "31",
+		NickName: "ZZZZZZZZ",
+		Email:    "948162@qq.com",
+		Phone:    "123456789",
+		Address:  "株洲",
+		Remark:   "",
 	}); err != nil {
 		t.Log("Test add account error : ", err)
 	}

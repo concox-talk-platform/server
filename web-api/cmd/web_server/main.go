@@ -17,7 +17,6 @@ import (
 	"strings"
 )
 
-
 func main() {
 	engine := Prepare()
 	if cfgWs.HttpWay == "https" {
@@ -37,9 +36,6 @@ func Prepare() *gin.Engine {
 
 	// 禁用控制台颜色
 	gin.DisableConsoleColor()
-	// 创建记录日志的文件
-	//f, _ := os.Create("backend-web.log")
-	//gin.DefaultWriter = io.MultiWriter(f)
 
 	engine := gin.Default()
 
@@ -124,7 +120,6 @@ func Cors() gin.HandlerFunc {
 		c.Next() //  处理请求
 	}
 }
-
 
 func TlsHandler() gin.HandlerFunc {
 	addr := flag.String("a", "localhost", "ssl 默认主机")

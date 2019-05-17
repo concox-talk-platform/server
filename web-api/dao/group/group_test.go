@@ -8,11 +8,9 @@ import (
 	"testing"
 )
 
-
-
-func testDeleteGroup(t *testing.T)  {
+func testDeleteGroup(t *testing.T) {
 	if err := DeleteGroup(&model.GroupInfo{
-		Id:101,
+		Id: 101,
 	}); err != nil {
 		t.Logf("Test Delete Group error : %v", err)
 	} else {
@@ -55,9 +53,9 @@ func testAddGroupCache(t *testing.T) {
 
 	for i := 1; i < 101; i++ {
 		ds = append(ds, map[string]interface{}{
-			"id": i,
-			"UserName":  "123466",
-			"PassWord":  "123456",
+			"id":       i,
+			"UserName": "123466",
+			"PassWord": "123456",
 			//AccountId"": 0, // TODO 默认给谁  普通用户默认是0
 			//IMei:      "123467894512365",
 			//UserType: 1,
@@ -65,7 +63,7 @@ func testAddGroupCache(t *testing.T) {
 	}
 
 	g := &model.GroupInfo{GroupName: "天津组2", AccountId: 2, Id: 101} // 用户id
-	gl := &model.GroupList{DeviceIds: nums, GroupInfo: g, DeviceInfo:ds}
+	gl := &model.GroupList{DeviceIds: nums, GroupInfo: g, DeviceInfo: ds}
 	if err := AddGroupAndUserInCache(gl, cache.GetRedisClient()); err != nil {
 		t.Logf("Add GroupCache error: %v", err)
 	} else {
@@ -83,7 +81,6 @@ func testGetGroupList(t *testing.T) {
 	//	t.Logf("find group list:%-v", res)
 	//}
 }
-
 
 func testSearchGroup(t *testing.T) {
 	res, err := SearchGroup("雷坤", db.DBHandler)

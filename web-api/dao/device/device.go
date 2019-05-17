@@ -6,9 +6,9 @@
 package device
 
 import (
+	"github.com/smartwalle/dbs"
 	cfgComm "server/web-api/configs/common"
 	"server/web-api/db"
-	"github.com/smartwalle/dbs"
 	"server/web-api/log"
 	"server/web-api/model"
 	"time"

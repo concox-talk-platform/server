@@ -46,7 +46,7 @@ func (this *trackerTask) SendReq(conn net.Conn) error {
 	return nil
 }
 
-func (this *trackerTask)RecvRes(conn net.Conn) error {
+func (this *trackerTask) RecvRes(conn net.Conn) error {
 	if err := this.RecvHeader(conn); err != nil {
 		return fmt.Errorf("TrackerTask RecvHeader %v", err)
 	}

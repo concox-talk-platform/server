@@ -1,5 +1,5 @@
 /*
-@Time : 2019/4/15 17:53 
+@Time : 2019/4/15 17:53
 @Author : yanKoo
 @File : message_test
 @Software: GoLand
@@ -8,9 +8,9 @@
 package msg
 
 import (
-	"server/grpc-server/log"
-	"server/grpc-server/db"
 	pb "server/grpc-server/api/talk_cloud"
+	"server/grpc-server/db"
+	"server/grpc-server/log"
 	"testing"
 )
 

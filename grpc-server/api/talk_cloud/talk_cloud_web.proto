@@ -13,6 +13,17 @@ service WebService {
     };
     rpc UpdateDeviceInfo (UpdDInfoReq) returns (UpdDInfoResp) {
     };
+    rpc SelectDeviceByImei(ImeiReq) returns (ImeiResp) {
+
+    } ;
+}
+message ImeiReq {
+  string  Imei = 1;
+}
+
+message ImeiResp {
+    int32 id = 1;
+    Result Res= 2;
 }
 message UpdDInfoReq {
     DeviceUpdate deviceInfo = 1;

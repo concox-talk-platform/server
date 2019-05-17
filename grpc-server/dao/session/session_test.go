@@ -1,5 +1,5 @@
 /*
-@Time : 2019/4/9 17:28 
+@Time : 2019/4/9 17:28
 @Author : yanKoo
 @File : session_test
 @Software: GoLand
@@ -24,7 +24,6 @@ func testUpdateSession(t *testing.T) {
 	}
 
 }
-
 
 func TestGetRedisKey(t *testing.T) {
 	t.Log(getRedisKey(int(2), "dsgasg"))

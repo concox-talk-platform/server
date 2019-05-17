@@ -9,12 +9,12 @@ import (
 	"database/sql"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
-	"server/web-api/log"
 	"net/http"
 	tc "server/web-api/dao/customer"
-	"server/web-api/utils"
+	"server/web-api/log"
 	"server/web-api/model"
 	ss "server/web-api/service"
+	"server/web-api/utils"
 )
 
 // 登录

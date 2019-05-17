@@ -68,8 +68,7 @@ func (serv *TalkCloudServiceImpl) CreateGroup(ctx context.Context, req *pb.Creat
 	}
 
 	log.Log.Infof("Create group is name: %s. the GroupInfos: %+v", gl.GroupInfo.GroupName, gl)
-	if gid, err := tg.CreateGroup(gl, userType);
-		err != nil {
+	if gid, err := tg.CreateGroup(gl, userType); err != nil {
 		log.Log.Println("create group error :", err)
 		return &pb.CreateGroupResp{Res: &pb.Result{Msg: "create group unsuccessful, please try again later", Code: 422}}, err
 	} else {
@@ -116,7 +115,7 @@ func (serv *TalkCloudServiceImpl) CreateGroup(ctx context.Context, req *pb.Creat
 	}
 
 	return &pb.CreateGroupResp{
-		GroupInfo: &pb.GroupInfo{Gid: int32(gl.GroupInfo.Id), GroupName: gl.GroupInfo.GroupName,},
+		GroupInfo: &pb.GroupInfo{Gid: int32(gl.GroupInfo.Id), GroupName: gl.GroupInfo.GroupName},
 		Res:       &pb.Result{Msg: "create group successful.", Code: 200},
 	}, nil
 }

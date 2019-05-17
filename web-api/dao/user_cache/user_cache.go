@@ -1,5 +1,5 @@
 /*
-@Time : 2019/4/3 14:35 
+@Time : 2019/4/3 14:35
 @Author : yanKoo
 @File : user_cache
 @Software: GoLand
@@ -8,12 +8,12 @@
 package user_cache
 
 import (
-	pb "server/grpc-server/api/talk_cloud"
 	"database/sql"
 	"encoding/json"
-	"server/web-api/model"
+	pb "server/grpc-server/api/talk_cloud"
 	"server/web-api/cache"
 	"server/web-api/db"
+	"server/web-api/model"
 	"strconv"
 	//"encoding/json"
 	"errors"
@@ -24,11 +24,11 @@ import (
 
 // Before when you change these constants
 const (
-	GRP_MEM_KEY_FMT   = "grp:%d:mem"
-	GRP_DATA_KEY_FMT  = "grp:%d:data"
-	USR_DATA_KEY_FMT  = "usr:%d:data"
-	USR_STATUS_KEY_FMT  = "usr:%d:stat"
-	USR_GROUP_KEY_FMT = "usr:%d:grps"
+	GRP_MEM_KEY_FMT    = "grp:%d:mem"
+	GRP_DATA_KEY_FMT   = "grp:%d:data"
+	USR_DATA_KEY_FMT   = "usr:%d:data"
+	USR_STATUS_KEY_FMT = "usr:%d:stat"
+	USR_GROUP_KEY_FMT  = "usr:%d:grps"
 
 	USER_OFFLINE = 1 // 用户离线
 	USER_ONLINE  = 2 // 用户在线
@@ -49,7 +49,6 @@ func MakeUserDataKey(uid int32) string {
 func MakeUserStatusKey(uid int32) string {
 	return fmt.Sprintf(USR_STATUS_KEY_FMT, uid)
 }
-
 
 func MakeUserGroupKey(uid int32) string {
 	return fmt.Sprintf(USR_GROUP_KEY_FMT, uid)
@@ -135,7 +134,7 @@ func GetGroupMemDataFromCache(gid int32, rd redis.Conn) ([]*pb.UserRecord, error
 
 	memKeys := make([]interface{}, 0)
 	for i := 0; i < sz; i++ {
-		memKeys = append(memKeys, )
+		memKeys = append(memKeys)
 	}
 
 	// 获取缓存中某个群成员信息
@@ -339,7 +338,7 @@ func AddUserDataInCache(m *pb.Member, redisCli redis.Conn) error {
 	//log.Log.Printf(">>>>> start AddUserDataInCache")
 	if _, err := redisCli.Do("HMSET", MakeUserDataKey(m.Id),
 		"id", m.Id, "imei", m.IMei, "username", m.UserName, "nickname", m.NickName, "online", m.Online, "lock_gid", m.LockGroupId); err != nil {
-			//log.Log.Printf("AddUserDataInCache HMSET error: %+v",err)
+		//log.Log.Printf("AddUserDataInCache HMSET error: %+v",err)
 		return errors.New("hSet failed with error: " + err.Error())
 	}
 	//log.Log.Printf(">>>>> done AddUserDataInCache")

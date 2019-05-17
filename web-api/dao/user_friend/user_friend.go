@@ -10,8 +10,8 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"server/web-api/log"
 	pb "server/grpc-server/api/talk_cloud"
+	"server/web-api/log"
 )
 
 func CheckFriendExist(uid, fuid int32, db *sql.DB) (bool, error) {

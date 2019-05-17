@@ -2,7 +2,7 @@
 * @Author: yanKoo
 * @Date: 2019/3/11 16:55
 * @Description: 生成uuid和token
-*/
+ */
 package utils
 
 import (

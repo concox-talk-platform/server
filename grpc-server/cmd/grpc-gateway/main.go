@@ -1,5 +1,5 @@
 /*
-@Time : 2019/4/19 18:25 
+@Time : 2019/4/19 18:25
 @Author : yanKoo
 @File : rest_gateway
 @Software: GoLand
@@ -13,10 +13,10 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"server/grpc-server/log"
 	"net/http"
 	pb "server/grpc-server/api/talk_cloud"
 	cfgGgw "server/grpc-server/configs/grpc_gateway"
+	"server/grpc-server/log"
 )
 
 func run() error {

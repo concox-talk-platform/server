@@ -6,13 +6,13 @@
 package service
 
 import (
-	"server/web-api/log"
-	"server/web-api/model"
 	"net/http"
 	s "server/web-api/dao/session"
+	"server/web-api/log"
+	"server/web-api/model"
+	"server/web-api/utils"
 	"strconv"
 	"time"
-	"server/web-api/utils"
 )
 
 var HEADER_FIELD_SESSION = "Authorization"
@@ -30,7 +30,7 @@ func ValidateAccountSession(r *http.Request, value interface{}) bool {
 	}
 
 	ifExist, err := IsExistsSession(sid, value)
-	if err != nil{
+	if err != nil {
 		log.Log.Printf("validateAccountSession err: %v", err)
 		return false
 	}
@@ -72,7 +72,7 @@ func IsExistsSession(sid string, value interface{}) (bool, error) {
 }
 
 // 删除session
-func DeleteSessionInfo(session string , aInfo *model.Account) error {
+func DeleteSessionInfo(session string, aInfo *model.Account) error {
 	if err := s.DeleteSession(session, aInfo); err != nil {
 		return err
 	}

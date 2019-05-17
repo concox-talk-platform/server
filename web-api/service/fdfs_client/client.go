@@ -2,8 +2,8 @@ package fdfs_client
 
 import (
 	"fmt"
-	"server/web-api/log"
 	"net"
+	"server/web-api/log"
 	"sync"
 )
 
@@ -145,7 +145,7 @@ func (this *Client) DownloadToBuffer(fileId string, offset int64, downloadBytes 
 	return task.buffer, nil
 }
 
-func (this *Client) DownloadToAllocatedBuffer(fileId string, buffer []byte,offset int64, downloadBytes int64) (error) {
+func (this *Client) DownloadToAllocatedBuffer(fileId string, buffer []byte, offset int64, downloadBytes int64) error {
 	groupName, remoteFilename, err := splitFileId(fileId)
 	if err != nil {
 		return err
@@ -161,7 +161,7 @@ func (this *Client) DownloadToAllocatedBuffer(fileId string, buffer []byte,offse
 	task.remoteFilename = remoteFilename
 	task.offset = offset
 	task.downloadBytes = downloadBytes
-	task.buffer = buffer					//allocate buffer by user
+	task.buffer = buffer //allocate buffer by user
 
 	//res
 	if err := this.doStorage(task, storageInfo); err != nil {
@@ -195,7 +195,7 @@ func (this *Client) doTracker(task task) error {
 		return err
 	}
 	defer trackerConn.Close()
-	
+
 	if err := task.SendReq(trackerConn); err != nil {
 		log.Log.Printf("doTracker SendReq err: %+v", err)
 		return err
@@ -215,7 +215,7 @@ func (this *Client) doStorage(task task, storageInfo *storageInfo) error {
 		return err
 	}
 	defer storageConn.Close()
-	
+
 	if err := task.SendReq(storageConn); err != nil {
 		log.Log.Printf("doStorage SendReq err: %+v", err)
 		return err

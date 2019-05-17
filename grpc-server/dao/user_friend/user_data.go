@@ -7,12 +7,12 @@
 package user_friend
 
 type FriendRecord struct {
-    UID uint64 `json:"uid"`
-    Name string `json:"name"`
-    IMEI string `json:"imei"`
+	UID  uint64 `json:"uid"`
+	Name string `json:"name"`
+	IMEI string `json:"imei"`
 }
 
 type UserFriendList struct {
-    UID uint64 `json:"uid"`
-    FriendList []*FriendRecord `json:"friend_list"`
+	UID        uint64          `json:"uid"`
+	FriendList []*FriendRecord `json:"friend_list"`
 }

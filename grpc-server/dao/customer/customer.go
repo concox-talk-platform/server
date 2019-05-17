@@ -16,9 +16,10 @@ import (
 )
 
 var dbConn = db.DBHandler
+
 // 增加用户
 func AddAccount(a *model.CreateAccount) (int, error) {
-	tx, err := dbConn.Begin();
+	tx, err := dbConn.Begin()
 	if err != nil {
 		log.Log.Println("事物开启失败")
 	}
@@ -60,7 +61,7 @@ func AddAccount(a *model.CreateAccount) (int, error) {
 		affUser, _ = userRes.RowsAffected()
 	}
 	if cusRes != nil {
-		affCus, _ = cusRes.RowsAffected();
+		affCus, _ = cusRes.RowsAffected()
 	}
 
 	if affUser == 1 && affCus == 1 {

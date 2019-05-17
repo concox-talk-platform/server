@@ -1,5 +1,5 @@
 /*
-@Time : 2019/4/12 16:24 
+@Time : 2019/4/12 16:24
 @Author : yanKoo
 @File : location
 @Software: GoLand
@@ -11,11 +11,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gomodule/redigo/redis"
-	"server/web-api/log"
 	"net/http"
-	cfgComm "server/web-api/configs/common"
-	"server/web-api/utils"
 	pb "server/grpc-server/api/talk_cloud"
+	cfgComm "server/web-api/configs/common"
+	"server/web-api/log"
+	"server/web-api/utils"
 	"strconv"
 	"time"
 )

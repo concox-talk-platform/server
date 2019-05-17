@@ -6,9 +6,10 @@
 package device
 
 import (
+	"database/sql"
+	"github.com/smartwalle/dbs"
 	cfgComm "server/grpc-server/configs/common"
 	"server/grpc-server/db"
-	"github.com/smartwalle/dbs"
 	"server/grpc-server/log"
 	"server/web-api/model"
 	"time"
@@ -71,5 +72,22 @@ func UpdateDeviceInfo(accountDevices *model.User) error {
 		return err
 	}
 	return nil
+}
 
+func SelectDeviceByImei(u *model.User) (int32, error) {
+	stmtOut, err := db.DBHandler.Prepare("SELECT id FROM `user` WHERE imei = ? LIMIT 1")
+	if err != nil {
+		return -1, err
+	}
+
+	var id int32
+	if err = stmtOut.QueryRow(u.IMei).Scan(&id); err != nil  && err != sql.ErrNoRows{
+		return -1, err
+	}
+
+	if err == sql.ErrNoRows {
+		return 0, nil
+	}
+	defer stmtOut.Close()
+	return id, nil
 }

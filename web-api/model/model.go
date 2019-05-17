@@ -7,7 +7,6 @@ package model
 
 import (
 	"database/sql"
-	pb "server/grpc-server/api/talk_cloud"
 )
 
 // request
@@ -26,7 +25,8 @@ type AccountDeviceTransReq struct {
 }
 
 type AccountImportDeviceReq struct {
-	Devices []*pb.DeviceInfo `json:"devices"`
+	Devices []*Device        `json:"devices"  binding:"required"`
+	DType   string           `json:"d_type"`
 }
 
 // validate

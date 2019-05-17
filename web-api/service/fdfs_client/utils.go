@@ -26,8 +26,8 @@ type writer interface {
 
 func writeFromConnToBuffer(conn net.Conn, buffer []byte, size int64) error {
 	var (
-		err  error
-		recv int
+		err      error
+		recv     int
 		needRecv int64
 	)
 	sizeRecv, sizeAll := int64(0), size
@@ -36,8 +36,8 @@ func writeFromConnToBuffer(conn net.Conn, buffer []byte, size int64) error {
 		needRecv = sizeAll - sizeRecv
 		if needRecv <= 0 {
 			break
-        }
-		recv, err = conn.Read(buffer[sizeRecv:sizeRecv + needRecv])
+		}
+		recv, err = conn.Read(buffer[sizeRecv : sizeRecv+needRecv])
 		if err != nil {
 			return err
 		}
@@ -48,8 +48,8 @@ func writeFromConnToBuffer(conn net.Conn, buffer []byte, size int64) error {
 
 func writeFromConn(conn net.Conn, writer writer, size int64) error {
 	var (
-		err  error
-		recv int
+		err      error
+		recv     int
 		needRecv int64
 	)
 	sizeRecv, sizeAll := int64(0), size
@@ -59,10 +59,10 @@ func writeFromConn(conn net.Conn, writer writer, size int64) error {
 		needRecv = sizeAll - sizeRecv
 		if needRecv <= 0 {
 			break
-        }
+		}
 		if needRecv > 4096 {
 			needRecv = 4096
-        }
+		}
 		recv, err = conn.Read(buf[:needRecv])
 		if err != nil {
 			return err

@@ -58,8 +58,7 @@ func (wssu *WebServiceServerImpl) UpdateGroup(ctx context.Context, req *pb.Updat
 	} else {
 		userType = 0 // 普通用户创建
 	}
-	if gid, err := tg.UpdateGroupMember(gl, userType);
-		err != nil {
+	if gid, err := tg.UpdateGroupMember(gl, userType); err != nil {
 		log.Log.Println("create group error :", err)
 		return &pb.UpdateGroupResp{ResultMsg: &pb.Result{Msg: "Update group unsuccessful, please try again later", Code: 422}}, err
 	} else {

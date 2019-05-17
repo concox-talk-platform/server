@@ -14,7 +14,6 @@ var (
 		"error_code": "001",
 	} // 不能解析消息体
 
-
 	ErrorDBError = gin.H{
 		"error":      "The process failed, please try again later.",
 		"error_code": "003",
@@ -26,7 +25,7 @@ var (
 	} // 账户不合法，不存在
 
 	ErrorCreateAccountError = gin.H{
-		"error": "You can only create accounts for junior users,",
+		"error":      "You can only create accounts for junior users,",
 		"error_code": "0001",
 	} // 创建用户等级不合法
 )

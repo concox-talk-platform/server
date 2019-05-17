@@ -1,5 +1,5 @@
 /*
-@Time : 2019/4/4 14:18 
+@Time : 2019/4/4 14:18
 @Author : yanKoo
 @File : web_device_impl
 @Software: GoLand
@@ -10,10 +10,10 @@ package server
 import (
 	"context"
 	"errors"
-	"server/grpc-server/log"
 	"net/http"
-	td "server/grpc-server/dao/device"
 	pb "server/grpc-server/api/talk_cloud"
+	td "server/grpc-server/dao/device"
+	"server/grpc-server/log"
 	"server/web-api/model"
 )
 
@@ -75,7 +75,7 @@ func (wssu *WebServiceServerImpl) ImportDeviceByRoot(ctx context.Context, req *p
 }
 
 func (wssu *WebServiceServerImpl) UpdateDeviceInfo(ctx context.Context, req *pb.UpdDInfoReq) (*pb.UpdDInfoResp, error) {
-	if err := td.UpdateDeviceInfo(&model.User{IMei: req.DeviceInfo.IMei, NickName: req.DeviceInfo.NickName,}); err != nil {
+	if err := td.UpdateDeviceInfo(&model.User{IMei: req.DeviceInfo.IMei, NickName: req.DeviceInfo.NickName}); err != nil {
 		return &pb.UpdDInfoResp{
 			Res: &pb.Result{
 				Msg:  "Update DeviceInfo device error, please try again later.",
@@ -89,4 +89,18 @@ func (wssu *WebServiceServerImpl) UpdateDeviceInfo(ctx context.Context, req *pb.
 			Code: http.StatusOK,
 		},
 	}, nil
+}
+func (wssu *WebServiceServerImpl) SelectDeviceByImei(ctx context.Context, req *pb.ImeiReq) (*pb.ImeiResp, error) {
+	id, err := td.SelectDeviceByImei(&model.User{IMei: req.Imei})
+	resp := &pb.ImeiResp{
+		Res: &pb.Result{
+			Msg:  "SelectDeviceByImei error, please try again later.",
+			Code: http.StatusInternalServerError,
+		},
+	}
+	resp.Id = id
+	if err != nil {
+		return resp, err
+	}
+	return resp, nil
 }

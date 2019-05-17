@@ -1,5 +1,5 @@
 /*
-@Time : 2019/4/28 19:51 
+@Time : 2019/4/28 19:51
 @Author : yanKoo
 @File : file_info
 @Software: GoLand

@@ -1,5 +1,5 @@
 /*
-@Time : 2019/5/13 17:27 
+@Time : 2019/5/13 17:27
 @Author : yanKoo
 @File : logger
 @Software: GoLand
@@ -42,7 +42,7 @@ func init() {
 		logrus.FatalLevel: logWriter,
 	}
 	lfHook := lfshook.NewHook(writeMap, &logrus.TextFormatter{
-		FullTimestamp:true,
+		FullTimestamp:   true,
 		TimestampFormat: Time_Layout,
 	})
 	Log.AddHook(lfHook)

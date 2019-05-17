@@ -1,5 +1,5 @@
 /*
-@Time : 2019/4/29 10:37 
+@Time : 2019/4/29 10:37
 @Author : yanKoo
 @File : common
 @Software: GoLand
@@ -9,12 +9,12 @@ package common
 
 import (
 	"github.com/go-ini/ini"
-	"server/web-api/log"
 	"os"
+	"server/web-api/log"
 )
 
 var (
-	TimeLayout        string // 时间模板
+	TimeLayout string // 时间模板
 )
 
 func init() {

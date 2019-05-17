@@ -85,7 +85,7 @@ func (pttImMsgImpl) Dispatcher(dc *DataContext, ds DataSource) {
 		}
 	}()
 
-	var tasks [] string
+	var tasks []string
 	var executor = CreatePttDispatcher(dc)
 	//tick := time.NewTicker(time.Second * time.Duration(5))
 	for {

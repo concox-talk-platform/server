@@ -1,5 +1,5 @@
 /*
-@Time : 2019/4/12 19:29 
+@Time : 2019/4/12 19:29
 @Author : yanKoo
 @File : talk_cloud_app_login_impl
 @Software: GoLand

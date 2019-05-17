@@ -13,34 +13,35 @@ import (
 )
 
 const (
-	DEFAULT_DB_PORT = 3306
-	DEFAULT_DB_MAX_CONN = 10
-	DEFAULT_REDIS_PORT = 6379
-	DEFAULT_REDIS_TIMEOUT = 10
-	DEFAULT_REDIS_DB = 0
-	DEFAULT_REDIS_MAX_IDLE = 100
+	DEFAULT_DB_PORT            = 3306
+	DEFAULT_DB_MAX_CONN        = 10
+	DEFAULT_REDIS_PORT         = 6379
+	DEFAULT_REDIS_TIMEOUT      = 10
+	DEFAULT_REDIS_DB           = 0
+	DEFAULT_REDIS_MAX_IDLE     = 100
 	DEFAULT_REDIS_IDLE_TIMEOUT = 0
-	DEFAULT_REDIS_MAX_ACTIVE = 500
+	DEFAULT_REDIS_MAX_ACTIVE   = 500
 )
+
 type DBConfig struct {
-	Host		string
-	Port		int
-	User 		string
-	Password	string
-	DB 			string
-	MaxConn		int
-	Driver 		string
+	Host     string
+	Port     int
+	User     string
+	Password string
+	DB       string
+	MaxConn  int
+	Driver   string
 }
 
 type RedisConfig struct {
-	Host		string
-	Port		int
-	Password	string
-	Timeout 	int
-	DB 			int
-	MaxIdle		int
+	Host        string
+	Port        int
+	Password    string
+	Timeout     int
+	DB          int
+	MaxIdle     int
 	IdleTimeout int
-	MaxActive	int
+	MaxActive   int
 }
 
 func NewDBConfig() *DBConfig {
