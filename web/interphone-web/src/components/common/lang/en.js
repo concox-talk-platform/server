@@ -141,12 +141,20 @@ module.exports = {
            new_device:'Thse import equipment',
            lead:'Are you sure to import?',
            no_data:"No data",
+           more:"Import multiple devices, IMEI separated by commas",
+           type:'Please select the device model',
+           imei:'Please enter the IMEI number',
         },
         failed:{
             transfer:'The operation failed. Please refresh the page and try again',
-            imei:'IMEI is a number with a length of 15, please enter again',
+            imei:'The entered IMEI number has an error,IMEI is a number with a length of 15, please enter again',
             export_success:'Successfully added device',
             transfer_success:'Successful transfer device',
+            title:"Device import prompt",
+            text:'Please confirm and re-import',
+            format:'IMEI format error',
+            import:'The following devices were not imported successfully',
+            unique:" IMEI number already exists"
         },
         login:{
             expired:'Login time expired, please login again',

@@ -57,7 +57,7 @@
         <intergooglemap v-if="!mapshow" ref="googlechild"></intergooglemap>
             <div id="monotor_content">
                     <el-aside>
-                    <div style="height:100%"  @click="hide">
+                    <div   id="group_sider" style="height:100%"  @click="hide">
                         <!-- 侧边栏 -->
                         <div class="homePage_sideGroup">
                             <div class="sideGroup_head" @click="unfold" >
@@ -908,6 +908,7 @@
                 dele_submit(){
                     let dele_mumber = this.dele_num;
                     let dele_info = this.group_list[dele_mumber].group_info;
+                    window.console.log(dele_info.id)
                     this.$axios.post('/group/delete',dele_info,
                     { headers: 
                     {"Authorization" : sessionStorage.getItem('setSession_id')}
@@ -919,6 +920,9 @@
                     }); 
                     this.dialogVisible = false;
                     this.get_new_group();
+                    var dele_id= dele_info.id
+                    var del_room={"request":"destroy","room":dele_id,"permanent":true,}
+                    this.mixertest.send({'message':del_room})
                 
                     })
                     .catch(function (error) {
@@ -2193,23 +2197,23 @@
                 im_send_close(){
                     this.im_show = false;
                     window.console.log('111');
-                    // var audio_poc = { "request": "join", "room":369, "display": '1687' };
- // this.mixertest.send({"message": audio_poc});
+//                     var audio_poc = { "request": "join", "room":371, "371": '1687' };
+//  this.mixertest.send({"message": audio_poc});
                   
                 },
-                // duankai(){
-                //     window.console.log('duankai')
-                //     var leave_room ={"request": "leave"}
+            //     duankai(){
+            //         window.console.log('duankai')
+            //         var leave_room ={"request": "leave"}
 
-                //     this.mixertest.send({"message": leave_room});
+            //         this.mixertest.send({"message": leave_room});
 
 
-                // },
-                // lianjie(){
-                //     window.console.log('lianjie');
-                //     var audio_poc2 = { "request": "join", "room":368, "display": '1687' };
-		//     this.mixertest.send({"message": audio_poc2});
-                // },
+            //     },
+            //     lianjie(){
+            //         window.console.log('lianjie');
+            //         var audio_poc2 = { "request": "join", "room":372, "display": '1687' };
+		    // this.mixertest.send({"message": audio_poc2});
+            //     },
                 im_close(){
                     this.im_show = false;
                     // this.mapshow=true
@@ -2605,7 +2609,7 @@
                 },
                 google_selected(){
                     this.mapshow=false;
-                }
+                },
     
         },
         computed:{

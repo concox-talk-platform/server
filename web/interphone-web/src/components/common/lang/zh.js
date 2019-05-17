@@ -145,12 +145,22 @@ module.exports = {
         new_device:'导入设备',
         lead:'确定导入?',
         no_data:"暂无数据",
+        more:"导入多台设备,IMEI请用英文逗号隔开",
+        type:'请选择设备型号',
+        imei:'请输入IMEI号',
+
      },
      failed:{
          transfer:'操作失败，请刷新页面重新操作',
-         imei:'IMEI号的长度为15位数字，请确定后提交',
+         imei:'输入的IMEI号存在错误,IMEI号的长度为15位数字，请确定后提交',
          export_success:'设备添加成功',
          transfer_success:'设备转移成功',
+         title:"设备导入提示",
+         text:'请确认后重新导入',
+         format:'IMEI格式错误',
+         import:'下列设备未导入成功',
+         unique:"IMEI号已存在"
+
 
      },
      login:{

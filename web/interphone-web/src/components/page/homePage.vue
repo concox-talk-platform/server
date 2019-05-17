@@ -152,6 +152,32 @@
             </el-tabs>
         </div>
     </div>
+     <!-- 超级管理员导入imei失败的提示 -->
+     <div class="fail_imei" v-if="fail_show" @mousedown.self="tip_move">
+         <span class="fail_title" style="font-size: 18px">{{$t('failed.title')}}</span>
+         <br>
+         <span style="font-size: 18px">{{$t('failed.import')}}</span>
+         <br>
+         <span class="fail_text" style="font-size: 18px" >{{$t('failed.text')}}</span>
+         <div class="format_imei" v-show="format_show">
+             <span>{{$t('failed.format')}}</span> 
+             <span>:</span>       
+             <ul v-for="(item) in err_format" :key=item.imei>
+                 <li>{{item.imei}}</li>
+                
+             </ul>
+         </div>
+         <div class="unique_imei" v-show="unique_show">
+                <span>{{$t('failed.unique')}}</span>
+                <span>:</span>
+                <ul v-for="(items) in err_unique" :key=items.imei>
+                        <li>{{items.imei}}</li>
+                    </ul>
+            </div>
+            <el-button type="primary" size="mini" id="err_button" @click="err_submit">{{$t('button_message.confirm')}}</el-button>
+
+     </div>
+      
   <!-- 注册 -->
         <el-dialog :title="$t('reg_message.title')" :visible.sync="registerVisible" :show-close="false" width="33%">
             <el-form ref="registerForm" :model="registerForm"  :rules="register_rules" label-width="136px" @submit.native.prevent>
@@ -212,12 +238,11 @@
             <el-button type="primary" @click="submit_transfer">{{$t('button_message.confirm')}}</el-button>
         </span>
         </el-dialog>
-      <!-- 超级管理员导入设备 -->
-      <el-dialog :title="$t('table.new_device')" :visible.sync="import_show" width="30%"  :show-close="false">
+      <!-- 超级管理员导入设备 add添加 -->
+      <!-- <el-dialog :title="$t('table.new_device')" :visible.sync="import_show" width="30%"  :show-close="false">
         <div class="imei_div">
             <el-button @click="add_imei">{{$t('group.add')}}</el-button>
             <el-table :data="imei_data" :empty-text="$t('table.no_data')">
-                   
                     <el-table-column prop="iemi" label="IMEI">
                     <template  slot-scope="scope">
                     <el-input v-model.number="imei_data[scope.$index].iemi"   ref="iemi_rule"></el-input>
@@ -240,8 +265,37 @@
                     <el-button @click="delete_imei(scope.$index)">{{$t('group.remove')}}</el-button>
                     </template>
                     </el-table-column>
-               
             </el-table>
+        </div>
+        <span slot="footer" class="dialog-footer">
+            <el-button @click="import_cancle">{{$t('button_message.cancel')}}</el-button>
+            <el-button type="primary" @click="import_submit">{{$t('button_message.confirm')}}</el-button>
+        </span>
+        </el-dialog> -->
+
+             <!-- 超级管理员导入设备 粘贴添加 -->
+      <el-dialog :title="$t('table.new_device')" :visible.sync="import_show" width="30%"  :show-close="false">
+        <div class="imei_div">
+             <table>
+                <tr>
+                    <th>IMEI</th>
+                    <th>{{$t('table.model')}}</th>
+                </tr>
+                <tr>
+                    <td> 
+                        <textarea style="width: 367px; height: 206px; resize: none; border-color:#dcdfe6" :placeholder="$t('table.more')"  v-model="more_imei" ></textarea></td>
+                    <td>                        
+                        <el-select  v-model="only_type"  :placeholder="$t('table.select')">
+                        <el-option
+                          v-for="item in version_type"
+                          :key="item.value"
+                          :label="item.label"
+                          :value="item.value">
+                        </el-option>
+                      </el-select></td>
+                </tr>
+
+             </table>
 
         </div>
         <span slot="footer" class="dialog-footer">
@@ -425,12 +479,20 @@ export default {
         // 管理员导入设备
         import_show:false,
         // 导入imei号
-        imei_data:[],  
+        // imei_data:[],  
         updata_list:[],
         version_type:[
             {value:'JW10',lable:'JW10'},{value:'T28',lable:'T28'}],
             // version_value:[],
+        only_type:'',
+        more_imei:[],
+        fail_show:false,
+        format_show:false,
+        unique_show:false,
+        err_unique:[],
+        err_format:[],
         }
+       
 
 
     },
@@ -846,63 +908,180 @@ export default {
             },
             import_cancle(){
                  this.import_show=false;
-                 this.imei_data=[];
+                 this.more_imei=[]
+                 this.only_type='';
+                //  this.imei_data=[];
             },
+            // import_submit(){
+            //     this.$confirm(this.$t('table.lead'),{
+            //        confirmButtonText: this.$t("button_message.confirm"),
+            //         cancelButtonText: this.$t("button_message.cancel")
+            //     })
+            //     .then(_ => {
+            //         window.console.log(this.imei_data);
+
+            //         var import_device =this.imei_data
+            //         var device =[]
+            //         if(import_device.length !=0){
+            //             window.console.log(import_device)
+            //              for(var i =0;i<import_device.length;i++){
+            //                  var import_data ={}
+            //                  import_data.IMei= import_device[i].iemi.toString();
+            //                  import_data.DeviceType= import_device[i].version_value;
+            //                  import_data.ActiveTime=(new Date()).getTime().toString();
+            //                  import_data.SaleTime=(new Date()).getTime().toString();
+            //                  device.push(import_data)
+            //              }
+            //         }
+            //         window.console.log(device)
+            //         // this.device_imei = this.imei_data.map(e =>{
+            //         //     if(e.hasOwnProperty('iemi')){
+            //         //         return e.iemi.toString()
+            //         //     }
+            //         // })
+            //         let imei_length=[];
+            //         for(var j=0;j<device.length;j++){
+            //                if(device[j].IMei.length !== 15){
+            //                     imei_length.push(device[j]); 
+            //                }
+            //         }
+            //         if(imei_length.length == 0){
+            //                 this.imei_data=[];
+            //                 // this.import_show=false;
+            //                 var import_object={}
+            //                 import_object.devices=device
+            //                 window.console.log(import_object)
+            //                 this.$axios.post('/device/import/SuperRoot',import_object,
+            //                 { headers: 
+            //                 {
+            //                 "Authorization" : sessionStorage.getItem('setSession_id')
+            //                 }
+            //                 })
+            //                 .then(() =>{
+            //                     this.import_show=false;
+                                
+            //                     this.customer='';
+            //                     this.update_data();
+            //                     this.reload();
+            //                     this.$message({
+            //                     message: this.$t('failed.export_success'),
+            //                     type: 'success'
+            //                     });
+            //                 })
+            //                 .catch(() => {
+            //                     this.$message({
+            //                     message: this.$t('failed.transfer'),
+            //                     type: 'warning'
+            //                     });
+            //                 }); 
+            //         }else{
+            //             this.$message({
+            //             message: this.$t('failed.imei'),
+            //             type: 'warning'
+            //             });
+            //         }
+                 
+            //         //  done();
+            //     })
+            //     .catch(_ => {
+            //         window.console.log(_)
+            //     });
+            // },
+            // 管理员add添加imei
+            // add_imei(){
+            //   this.imei_data.push({})
+            // },
+            // delete_imei(index){
+            //   this.imei_data.splice(index,1)
+            // },
+            // 粘贴导入
             import_submit(){
                 this.$confirm(this.$t('table.lead'),{
                    confirmButtonText: this.$t("button_message.confirm"),
                     cancelButtonText: this.$t("button_message.cancel")
                 })
                 .then(_ => {
-                    window.console.log(this.imei_data);
-
-                    var import_device =this.imei_data
-                    var device =[]
-                    if(import_device.length !=0){
-                        window.console.log(import_device)
-                         for(var i =0;i<import_device.length;i++){
-                             var import_data ={}
-                             import_data.IMei= import_device[i].iemi.toString();
-                             import_data.DeviceType= import_device[i].version_value;
-                             import_data.ActiveTime=(new Date()).getTime().toString();
-                             import_data.SaleTime=(new Date()).getTime().toString();
-                             device.push(import_data)
-                         }
+                    
+                    window.console.log(this.only_type)
+                    if(this.only_type ==''){
+                        this.$message({
+                        message: this.$t('table.type'),
+                        type: 'warning'
+                        });
+                        return
                     }
-                    window.console.log(device)
-                    // this.device_imei = this.imei_data.map(e =>{
-                    //     if(e.hasOwnProperty('iemi')){
-                    //         return e.iemi.toString()
-                    //     }
-                    // })
-                    let imei_length=[];
-                    for(var j=0;j<device.length;j++){
-                           if(device[j].IMei.length !== 15){
-                                imei_length.push(device[j]); 
-                           }
+                    if(this.more_imei ==''){
+                        this.$message({
+                        message: this.$t('table.imei'),
+                        type: 'warning'
+                        });
+                        return
                     }
-                    if(imei_length.length == 0){
-                            this.imei_data=[];
-                            // this.import_show=false;
-                            var import_object={}
-                            import_object.devices=device
-                            window.console.log(import_object)
-                            this.$axios.post('/device/import/SuperRoot',import_object,
+                    let more_text=this.more_imei;
+                    let imei_num=more_text.split(";")
+                    let imei_number = imei_num.filter(function (fil) {
+                            return fil && fil.trim(); 
+                        });
+                    let send_number =[]
+                    for (let k=0;k<imei_number.length;k++){
+                        send_number.push(imei_number[k]) 
+                    }
+                     var send_num =[]
+                     for(var i=0;i<send_number.length;i++){
+                        var send_obj={}
+                        send_obj.imei=send_number[i].trim()
+                         send_obj.device_type=this.only_type
+                         send_num.push(send_obj)
+                     }
+                     for(let j = 0;j<send_num.length;j++){
+                        window.console.log(send_num[j].imei.length)
+                          if(send_num[j].imei.length != 15){
+                             window.console.log('bushi15');
+                        this.$message({
+                        message: this.$t('failed.imei'),
+                        type: 'warning'
+                        });
+                             return
+                          }
+                     }
+                     window.console.log(send_num)
+                     var import_object={}
+                     import_object.devices=send_num;
+                     window.console.log(import_object);
+                     this.$axios.post('/device/import/SuperRoot',import_object,
                             { headers: 
                             {
                             "Authorization" : sessionStorage.getItem('setSession_id')
                             }
                             })
-                            .then(() =>{
+                            .then((response) =>{
                                 this.import_show=false;
-                                
-                                this.customer='';
+                                 this.more_imei=[]
+                                // this.customer='';
+                                this.only_type='';
                                 this.update_data();
                                 this.reload();
-                                this.$message({
-                                message: this.$t('failed.export_success'),
-                                type: 'success'
-                                });
+                                window.console.log(response);
+                                var data_error =response.data;
+                                window.console.log(data_error);
+                                window.console.log(data_error.deli_devices);
+                                window.console.log(data_error.err_devices);
+                                if(data_error.deli_devices == null && data_error.err_devices == null){
+                                        this.$message({
+                                        message: this.$t('failed.export_success'),
+                                        type: 'success'
+                                        });
+                                }else{
+                                    this.fail_show=true;
+                                    if(data_error.deli_devices != null){
+                                        this.unique_show=true
+                                        this.err_unique=data_error.deli_devices
+                                    }
+                                    if(data_error.err_devices != null){
+                                        this.format_show=true;
+                                        this.err_format=data_error.err_devices
+                                    }
+                                }
                             })
                             .catch(() => {
                                 this.$message({
@@ -910,27 +1089,38 @@ export default {
                                 type: 'warning'
                                 });
                             }); 
-                    }else{
-                        this.$message({
-                        message: this.$t('failed.imei'),
-                        type: 'warning'
-                        });
-                    }
-                 
-                    //  done();
                 })
                 .catch(_ => {
                     window.console.log(_)
                 });
             },
-            // 添加imei
-            add_imei(){
-              this.imei_data.push({})
-            },
-            delete_imei(index){
-              this.imei_data.splice(index,1)
-            },
-           // ztree操作
+           
+        //    移动
+           tip_move(e){
+                    let odiv = e.target;    //获取目标元素
+                    //算出鼠标相对元素的位置
+                    let disX = e.clientX - odiv.offsetLeft;
+                    let disY = e.clientY - odiv.offsetTop;
+                    document.onmousemove = (e)=>{    //鼠标按下并移动的事件
+                        //用鼠标的位置减去鼠标相对元素的位置，得到元素的位置
+                        let left = e.clientX - disX;  
+                        let top = e.clientY - disY;
+                        
+                        //绑定元素位置到positionX和positionY上面
+                        // this.positionX = top;
+                        // this.positionY = left;
+                        
+                        //移动当前元素
+                        odiv.style.left = left + 'px';
+                        odiv.style.top = top + 'px';
+                    };
+                    document.onmouseup = (e) => {
+                        document.onmousemove = null;
+                        document.onmouseup = null;
+                    };
+                },
+           
+            // ztree操作
              handleNodeClick(data) {
                  this.treeNode = data.$treeNodeId; 
                  this.nodeId = data.id;
@@ -1033,6 +1223,13 @@ export default {
                     this.rootShow=false
                 }
             },
+            err_submit(){
+                this.fail_show=false;
+                this.format_show=false;
+                this.unique_show=false;
+                this.err_unique=[];
+                this.err_format=[];
+            },
             // 更新左侧树
             ztree_updata(){
                 this.ztree_data = [];
@@ -1077,6 +1274,8 @@ export default {
             //     this.node.childNodes = [];
             //     this.loadNode(this.node,this.resolve)
             // },
+ 
+
             // 页面赋值公共方法
             update_data(){
               if(this.treeNode == 1){
@@ -1168,7 +1367,6 @@ export default {
     beforeCreate() {
     },
     created(){
-        this.apply_info();
         this.get_total_mumber();
         window.console.log(JSON.parse(localStorage.getItem('device_list')) )
 
@@ -1327,6 +1525,38 @@ background-color: white;
 .imei_div{
     max-height: 400px;
     overflow: auto;
+}
+.fail_imei{
+    width: 500px;
+    min-height: 200px;
+    background-color: white;
+    border: 1px solid #ccc;
+    text-align: center;
+    position: absolute;
+    top: 5%;
+    left: 36%;
+    z-index: 555;
+    cursor: pointer;
+}
+.fail_title{
+    display: inline-block;
+    margin-top: 20px
+}
+.format_imei,.unique_imei{
+    width: 211px;
+    margin: 0 auto;
+}
+.fail_imei li {
+    list-style-type:none;
+    }
+#err_button{
+    margin-top: 24px !important;
+    margin-bottom: 20px !important;
+    display: block;
+    margin: auto;
+}
+.el-dialog__footer{
+    text-align: center
 }
 </style>
 

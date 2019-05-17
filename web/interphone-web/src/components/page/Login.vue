@@ -109,27 +109,28 @@
                         sessionStorage.setItem('setSession_id', response.data.session_id);
                         window.console.log( sessionStorage.getItem('setSession_id'));
                         sessionStorage.setItem('loginName', this.ruleForm.username.trim());  
-                        this.$axios.get('/account/'+sessionStorage.getItem('loginName'),
-                            { headers: 
-                            {
-                            "Authorization" : sessionStorage.getItem('setSession_id')
-                            }
-                            })
-                            .then((response) =>{
-                             window.console.log(response);
-                            sessionStorage.setItem('id', response.data.account_info.id);
-                            sessionStorage.setItem('username', response.data.account_info.username);
-                            sessionStorage.setItem('lang', this.lang);
-                            sessionStorage.setItem('account_info', JSON.stringify(response.data.account_info));
-                            localStorage.setItem('device_list', JSON.stringify(response.data.device_list));
-                            localStorage.setItem('group_list', JSON.stringify(response.data.group_list));
-                            localStorage.setItem('children_list', JSON.stringify(response.data.tree_data));
-                            this.$router.push('/homePage');
+                        this.get_logininfo()
+                        // this.$axios.get('/account/'+sessionStorage.getItem('loginName'),
+                        //     { headers: 
+                        //     {
+                        //     "Authorization" : sessionStorage.getItem('setSession_id')
+                        //     }
+                        //     })
+                        //     .then((response) =>{
+                        //      window.console.log(response);
+                        //     sessionStorage.setItem('id', response.data.account_info.id);
+                        //     sessionStorage.setItem('username', response.data.account_info.username);
+                        //     sessionStorage.setItem('lang', this.lang);
+                        //     sessionStorage.setItem('account_info', JSON.stringify(response.data.account_info));
+                        //     localStorage.setItem('device_list', JSON.stringify(response.data.device_list));
+                        //     localStorage.setItem('group_list', JSON.stringify(response.data.group_list));
+                        //     localStorage.setItem('children_list', JSON.stringify(response.data.tree_data));
+                        //     this.$router.push('/homePage');
                             
-                            })
-                            .catch( (error) => {
-                            window.console.log(error);
-                            });          
+                        //     })
+                        //     .catch( (error) => {
+                        //     window.console.log(error);
+                        //     });          
                         //  this.$router.push('/homePage');
                         }.bind(this))
                         .catch( (error) => {
@@ -163,8 +164,35 @@
                     }
                 });
             },
+                       // 获取信息
+             get_logininfo(){
+                this.$axios.get('/account/'+sessionStorage.getItem('loginName'),
+                            { headers: 
+                            {
+                            "Authorization" : sessionStorage.getItem('setSession_id')
+                            }
+                            })
+                            .then((response) =>{
+                             window.console.log(response);
+                            sessionStorage.setItem('id', response.data.account_info.id);
+                            sessionStorage.setItem('username', response.data.account_info.username);
+                            sessionStorage.setItem('lang', this.lang);
+                            sessionStorage.setItem('account_info', JSON.stringify(response.data.account_info));
+                            localStorage.setItem('device_list', JSON.stringify(response.data.device_list));
+                            localStorage.setItem('group_list', JSON.stringify(response.data.group_list));
+                            localStorage.setItem('children_list', JSON.stringify(response.data.tree_data));
+                            this.$router.push('/homePage');
+                            
+                            })
+                            .catch( (error) => {
+                            window.console.log(error);
+                            });   
+            },
          
-        }
+        },
+        beforeDestroy() {
+            
+        },
     }
 </script>
 <style>
