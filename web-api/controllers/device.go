@@ -59,6 +59,8 @@ func ImportDeviceByRoot(c *gin.Context) {
 
 	var errDevices []*model.Device
 	var duliDevices []*model.Device
+	var errIdx int
+	var duliIdx int
 	dinfo := make([]*pb.DeviceInfo, 0)
 	for _, v := range aiDReq.Devices {
 		// 校验imei
@@ -68,7 +70,9 @@ func ImportDeviceByRoot(c *gin.Context) {
 				log.Log.Info("Select id by imei with error in web: ", err)
 			} else {
 				if r.Id > 0 {
+					v.Id = duliIdx
 					duliDevices = append(duliDevices, v)
+					duliIdx++
 					continue
 				}
 				dinfo = append(dinfo, &pb.DeviceInfo{
@@ -79,7 +83,9 @@ func ImportDeviceByRoot(c *gin.Context) {
 				})
 			}
 		} else {
+			v.Id = errIdx
 			errDevices = append(errDevices, v)
+			errIdx++
 		}
 
 	}
@@ -122,7 +128,9 @@ func ImportDeviceByRoot(c *gin.Context) {
 		}
 	} else {
 		c.JSON(int(res.Result.Code), gin.H{
-			"msg": res.Result.Msg,
+			"err_devices":  errDevices,
+			"deli_devices": duliDevices,
+			"msg":          res.Result.Msg,
 		})
 	}
 }
