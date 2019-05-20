@@ -182,8 +182,17 @@ module.exports = {
         audio:"是否发起语音通话?",
         audio_text:'语音通话',
         video_text:'视频通话',
+
         loding:'连接中......',
         call_message:'有视频呼叫来自'
+    },
+    talkback:{
+        audio_bridge:'对讲',
+        touch:'鼠标按下讲话',
+        talkback:'是否加入群对讲?',
+        down:"鼠标按下开始对讲",
+        up:"鼠标松开结束对讲",
+        out:"退出对讲"
     },
     im:{
         group_list:'群组列表',

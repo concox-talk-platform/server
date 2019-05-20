@@ -255,6 +255,7 @@
                                 <span class="interphonefamily im_media_icon" @click="map_show" >&#xe643;</span>
                                 <span class="interphonefamily im_media_icon" @click="im_audio" :title="$t('video.audio_text')"   v-show="im_self_show">&#xe621;</span>
                                 <span class="interphonefamily im_media_icon" @click="im_video" :title="$t('video.video_text')" v-show="im_self_show">&#xe616;</span>
+                                <span class="interphonefamily im_media_icon" @click="im_audio_bridge" :title="$t('talkback.audio_bridge')" v-show="!im_self_show">&#xe6a5;</span>
                                 <div class="im_record"  @click="im_unfold_history">
                                 <span class="interphonefamily im_record_icon" >&#xe60d;</span>
                                 <span>{{ $t("im.chat_history") }}</span>
@@ -267,13 +268,11 @@
     
                                 <div class="upload_file" v-show="upload_show">
                                     <form id="im_formid">
-                                    <input type="file" id="im_resource" name="resource"       ref="resource" @change="filechange"  style="display: none">
+                                    <input type="file" id="im_resource" name="resource" ref="resource" @change="filechange"  style="display: none">
                                     <!-- <span >{{file_name}}</span> -->
                                     <!-- <div class="dele_file">删除文件</div> -->
-                                    
                                         <img src=""  id="preview_img" alt="">
                                         <textarea id="dele_area"  @keyup.delete="dele_file" readonly="readonly"></textarea>
-                                    
                                     <!-- <button type="button" @click="dele_file">删除文件</button> -->
                                     
                                 </form> 
@@ -286,6 +285,17 @@
                                     <span class="im_send_subimt" @click="im_send_subimt">{{ $t("im.send") }}</span>
                                 </div>
                             </div>
+                        </div>
+                        <div class="im_talkback" v-if="im_talkback_show"> 
+                              <!-- <span>点击加入群对讲</span> -->
+                              <span class="out_talkback"  @click="out_talkback">{{ $t("talkback.out") }}</span>
+                              <div class="talkactive_tip" v-show="mouse_show">{{ $t("talkback.down") }}</div>
+                              <div class="talkactive_tip" v-show="!mouse_show">{{ $t("talkback.up") }}</div>
+                              <div class="talkback_div" @mousedown="talk_active" @mouseup="talk_actived" :class="{talkback_active:talkactive}" :title="$t('talkback.touch')">
+                                    <span class="interphonefamily talkback_icon">&#xe6a5;</span>
+                              </div>
+
+
                         </div>
                         <div class="im_history" :style="'right:'+history_right+';'+'z-index:'+history_index">
                             <div class="im_history_top">
@@ -516,10 +526,19 @@
                             <div class="select_add" @click="modified_add">{{$t("button_message.confirm")}}</div>
                             </div>
                     </el-dialog>
+                    <!-- 加入对讲弹出框 -->
+                    <el-dialog :title="$t('control.hint')" :visible.sync="talkbackVisible" width="30%" :show-close="false">
+                            <span>{{$t('talkback.talkback')}}</span>
+                            <span slot="footer" class="dialog-footer">
+                                <el-button @click="talkbackVisible = false">{{$t('button_message.cancel')}}</el-button>
+                                <el-button type="primary" @click="talkback_submit">{{$t('button_message.confirm')}}</el-button>
+                            </span>
+                        </el-dialog>
+
+        
              </div>
             <!-- 语音or视频请求 -->
         <!-- 背呼方 -->
-    
         <div v-show="video_apply" class="video_apply" >
             <div class="video_apply_title">
                 <span>{{your_callname}}</span> &nbsp;<span>{{$t('apply.request')}}</span>&nbsp;<span>{{your_calltype}}</span>&nbsp;<span>{{$t('apply.connection')}}</span>
@@ -597,6 +616,7 @@
                     media_show:false,
                     editorial_show:false,
                     dialogVisible: false,
+                    talkbackVisible:false,
                     select_group_nummber:'a' ,
                     group_div_show: false,
                     modified_member_show: false,
@@ -675,6 +695,7 @@
                     local_groupnews:[],
                     local_history:[],
                     im_content_show:true,
+                    im_talkback_show:false,
                     network_message:{
                     },
                     local_message:[
@@ -716,6 +737,9 @@
                     video_offline:false,
                     offline_span:false,
                     exist_span:false,
+                    talkback_id:'',
+                    talkactive:false,
+                    mouse_show:true,
                     // jiadata:'',
     
                     // sosGps
@@ -922,7 +946,8 @@
                     this.get_new_group();
                     var dele_id= dele_info.id
                     var del_room={"request":"destroy","room":dele_id,"permanent":true,}
-                    this.mixertest.send({'message':del_room})
+                    this.mixertest.send({'message':del_room});
+                    this.group_div_show=false
                 
                     })
                     .catch(function (error) {
@@ -1094,17 +1119,13 @@
                 video_server(){
                     var self =this;
                     // var server = [
-                    // "wss://" + "ptt.jimilab.com" + ":9188",
-                    // "/janus"
-                    // ];
-                    //                var server = [
                     // "ws://" + "113.105.153.240" + ":9188",
                     // "/janus"
                     // ];
                     // var server = [
                     // "ws://" + "ptt.jimilab.com" + ":9188",
                     // "/janus"
-                    // ];       
+                    // // ];       
                     // var server = [
                     // "wss://" + "ptt.jimilab.com" + ":8989",
                     // "/janus"
@@ -1522,7 +1543,11 @@
                     var server = [
                     "wss://" + "test.jimilab.com" + ":8989",
                     "/janus"
-                    ];    
+                    ];   
+                    // var server = [
+                    // "wss://" + "ptt.jimilab.com" + ":8989",
+                    // "/janus"
+                    // ];  
                     var janus = null;
                     // var mixertest = null;
                     var opaqueId = "audiobridgetest-"+Janus.randomString(12);
@@ -1902,6 +1927,7 @@
                     window.console.log(select_id);
                     window.console.log(this.group_list);
                     window.console.log(this.group_list[index].group_info.id);
+                    this.talkback_id=select_id;
                     this.talk_name = this.group_list[index].group_info.group_name;
                     this.talk_id = this.group_list[index].group_info.id;
                     this.receiver_id = this.talk_id
@@ -2196,7 +2222,7 @@
                 },
                 im_send_close(){
                     this.im_show = false;
-                    window.console.log('111');
+                    window.console.log('111'); 
 //                     var audio_poc = { "request": "join", "room":371, "371": '1687' };
 //  this.mixertest.send({"message": audio_poc});
                   
@@ -2598,9 +2624,48 @@
                             window.console.log(body)
                             // this.videocall.send({'user_call':body})                   
                     }
-    
-                
                 },
+                im_audio_bridge(){
+                    this.talkbackVisible=true
+                            // this.im_content_show=false;
+                            // this.im_talkback_show=true
+                },
+                talkback_submit(){
+                    window.console.log(this.talkback_id);
+                    var talkroom = this.talkback_id;
+                    var my_roomname = sessionStorage.getItem('id')
+                    var talk_request = { "request": "join", "room":talkroom, "display": my_roomname };
+                    window.console.log(talk_request);
+                    // this.mixertest.send({"message": talk_request}); 
+                    this.im_content_show=false;
+                    this.im_talkback_show=true;
+                    this.talkbackVisible=false;
+
+                },
+
+                out_talkback(){
+                    this.im_talkback_show=false;
+                    this.im_content_show=true;
+                    var out_talkroom ={"request": "leave"}
+                //  this.mixertest.send({"message": out_talkroom});
+                    this.talk_id = this.talkback_id;
+                    this.receiver_id = this.talk_id
+                    this.receiver_type = 2;
+                    var im_group_num= this.receiver_type+'.'+sessionStorage.getItem('id')+'_'+this.talk_id
+                    window.console.log(im_group_num);
+                    window.console.log(JSON.parse(localStorage.getItem(im_group_num)));
+                    this.local_groupnews =JSON.parse(localStorage.getItem(im_group_num));
+                },
+                talk_active(){
+                     this.talkactive=true;
+                    window.console.log(1)
+                    this.mouse_show=false;
+                },
+                talk_actived(){
+                     this.talkactive=false;
+                    window.console.log(2)
+                    this.mouse_show=true;
+                },                
                 map_show(){
                 },
                 // 地图切换
@@ -3205,6 +3270,13 @@
         float: right;
         margin-top: -1px;
     }
+    .im_talkback{
+        background-color: white;
+        height: 403px;
+        width: 437px;
+        float: right;
+        margin-top: -1px;    
+    }
     .im_aside_logo{
         margin-top: 10px;
         width: 40px;
@@ -3603,6 +3675,38 @@
     .v-modal{
         /* display: none */
     }
-    
+    .out_talkback{
+        float: right;
+        margin-top: 10px;
+        margin-right: 10px;
+        background-color: #409eff;
+        padding: 5px;
+        cursor: pointer;
+    }
+    .talkback_icon{
+        font-size: 100px;
+    margin-top: 12px;
+    display: inline-block;
+    margin-left: 12px;
+    }
+    .talkback_div{
+        display: inline-block;
+        width: 140px;
+        height: 140px;
+        background-color: #ccc;
+        text-align: center;
+        margin-left: 147px;
+        margin-top: 24px;
+        border-radius: 101px;
+        cursor: pointer;
+    }
+    .talkback_active{
+        background-color: #409eff !important;
+        color: white !important
+    }
+    .talkactive_tip{
+        margin-top: 174px;
+        text-align: center;
+    }
     </style>
     

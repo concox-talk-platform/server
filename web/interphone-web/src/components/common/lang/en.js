@@ -179,6 +179,14 @@ module.exports = {
             loding:'Connecting......',
             call_message:'Incoming call from'
         },
+        talkback:{
+            audio_bridge:'talkback',
+            touch:'Mouse down to talk',
+            talkback:'Do you join the group talk?',
+            down:"Mouse press to start intercom",
+            up:"Mouse release to end the intercom",
+            out:"Exit the intercom"
+        },
         im:{
             group_list:'Group List',
             member_list:'Member List',
