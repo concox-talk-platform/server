@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
-	"server/web-api/config"
+	config "server/web-api/configs"
 )
 
 const (

@@ -17,7 +17,14 @@ import (
 	"server/web-api/utils"
 )
 
-// 登录
+// @Summary 登录
+// @Description login by account name and pwd
+// @Accept  json
+// @Produce  json
+// @Param account_name path string true "elephant"
+// @Param body body model.Account true "登录信息"
+// @Success 200 {string} json "{"success":"true","session_id": sId }"
+// @Router /account/login.do/{account_name} [post]
 func SignIn(c *gin.Context) {
 	// 1. 取出Post请求中的body内容
 	logrus.Info("logrous info")
@@ -105,7 +112,14 @@ func SignIn(c *gin.Context) {
 	})
 }
 
-// 退出登录
+// @Summary 退出
+// @Description logout by account name and pwd, 请求头中Authorization参数设置为登录时返回的sessionId
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "With the bearer started"
+// @Param username query string true "登录用户名"
+// @Param pwd query string true "登录用户密码"
+// @Router /account/logout.do/{account_name} [post]
 func SignOut(c *gin.Context) {
 	// 1. 取出body中的内容
 	signOutBody := &model.Account{}

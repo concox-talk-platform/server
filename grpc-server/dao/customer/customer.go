@@ -37,7 +37,7 @@ func AddAccount(a *model.CreateAccount) (int, error) {
 		CreateTime: ctime,
 	}
 
-	stmtQuery := "INSERT INTO user (imei, name, passwd, cid, pid, nick_name, user_type, last_login_time, create_time)	VALUES (?, ?, ?,?, ?, ?, ?, ?, ?)"
+	stmtQuery := "INSERT INTO `user` (imei, name, passwd, cid, pid, nick_name, user_type, last_login_time, create_time)	VALUES (?, ?, ?,?, ?, ?, ?, ?, ?)"
 	userRes, err := tx.Exec(stmtQuery, u.IMei, u.UserName, u.PassWord, u.AccountId, u.ParentId, u.NickName, u.UserType, ctime, ctime)
 	if err != nil {
 		return -1, err

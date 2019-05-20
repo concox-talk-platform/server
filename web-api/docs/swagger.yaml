@@ -1,0 +1,160 @@
+basePath: '{{.BasePath}}'
+definitions:
+  model.Account:
+    properties:
+      address:
+        type: string
+      c_time:
+        type: string
+      change_time:
+        type: string
+      contact:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      ll_time:
+        type: string
+      nick_name:
+        type: string
+      phone:
+        type: string
+      pid:
+        type: integer
+      privilege_id:
+        type: integer
+      pwd:
+        type: string
+      remark:
+        type: string
+      role_id:
+        type: integer
+      state:
+        type: string
+      username:
+        type: string
+    type: object
+host: '{{.Host}}'
+info:
+  contact: {}
+  description: jimi co ptt platform web api.
+  license: {}
+  title: JiMi Web API
+  version: 1.0.1
+paths:
+  /account:
+    post:
+      parameters:
+      - description: "123456"
+        in: query
+        name: confirm_pwd
+        required: true
+        type: string
+      - description: "5"
+        in: query
+        name: pid
+        required: true
+        type: integer
+      - description: liuyang06
+        in: query
+        name: username
+        required: true
+        type: string
+      - description: nana123
+        in: query
+        name: nick_name
+        required: true
+        type: string
+      - description: "123456"
+        in: query
+        name: pwd
+        required: true
+        type: string
+      - description: "3"
+        in: query
+        name: role_id
+        required: true
+        type: integer
+      - description: 123456789@qq.com
+        in: query
+        name: email
+        type: string
+      - description: "0"
+        in: query
+        name: privilege_id
+        type: string
+      - description: "1008611"
+        in: query
+        name: contact
+        type: string
+      - description: 中国
+        in: query
+        name: state
+        type: string
+      - description: "10086"
+        in: query
+        name: phone
+        type: string
+      - description: 无
+        in: query
+        name: remark
+        type: string
+      - description: 北京
+        in: query
+        name: address
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success": true,"account_id": 1430 }'
+          schema:
+            type: string
+      summary: 创建下级账户
+  /account/login.do/{account_name}:
+    post:
+      consumes:
+      - application/json
+      description: login by account name and pwd
+      parameters:
+      - description: elephant
+        in: path
+        name: account_name
+        required: true
+        type: string
+      - description: 登录信息
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.Account'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":"true","session_id": sId }'
+          schema:
+            type: string
+      summary: 登录
+  /account/logout.do/{account_name}:
+    post:
+      consumes:
+      - application/json
+      description: logout by account name and pwd, 请求头中Authorization参数设置为登录时返回的sessionId
+      parameters:
+      - description: 登录用户名
+        in: query
+        name: username
+        required: true
+        type: string
+      - description: 登录用户密码
+        in: query
+        name: pwd
+        required: true
+        type: string
+      produces:
+      - application/json
+      summary: 退出
+swagger: "2.0"

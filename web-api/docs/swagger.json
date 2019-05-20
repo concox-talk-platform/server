@@ -1,0 +1,238 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "jimi co ptt platform web api.",
+        "title": "JiMi Web API",
+        "contact": {},
+        "license": {},
+        "version": "1.0.1"
+    },
+    "host": "{{.Host}}",
+    "basePath": "{{.BasePath}}",
+    "paths": {
+        "/account": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "创建下级账户",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "123456",
+                        "name": "confirm_pwd",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "5",
+                        "name": "pid",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "liuyang06",
+                        "name": "username",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "nana123",
+                        "name": "nick_name",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "123456",
+                        "name": "pwd",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "3",
+                        "name": "role_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "123456789@qq.com",
+                        "name": "email",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "0",
+                        "name": "privilege_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "1008611",
+                        "name": "contact",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "中国",
+                        "name": "state",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "10086",
+                        "name": "phone",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "无",
+                        "name": "remark",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "北京",
+                        "name": "address",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\": true,\"account_id\": 1430 }",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/account/login.do/{account_name}": {
+            "post": {
+                "description": "login by account name and pwd",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "登录",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "elephant",
+                        "name": "account_name",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "登录信息",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/model.Account"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":\"true\",\"session_id\": sId }",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/account/logout.do/{account_name}": {
+            "post": {
+                "description": "logout by account name and pwd, 请求头中Authorization参数设置为登录时返回的sessionId",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "退出",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录用户名",
+                        "name": "username",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "登录用户密码",
+                        "name": "pwd",
+                        "in": "query",
+                        "required": true
+                    }
+                ]
+            }
+        }
+    },
+    "definitions": {
+        "model.Account": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "c_time": {
+                    "type": "string"
+                },
+                "change_time": {
+                    "type": "string"
+                },
+                "contact": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "ll_time": {
+                    "type": "string"
+                },
+                "nick_name": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "pid": {
+                    "type": "integer"
+                },
+                "privilege_id": {
+                    "type": "integer"
+                },
+                "pwd": {
+                    "type": "string"
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "role_id": {
+                    "type": "integer"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

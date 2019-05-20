@@ -149,7 +149,7 @@ type GroupInfo struct {
 type Account struct {
 	Id          int            `json:"id"`
 	Pid         int            `json:"pid"`
-	Username    string         `json:"username"`
+	Username    string         `json:"username" example:"elephant"`
 	NickName    string         `json:"nick_name"`
 	Pwd         string         `json:"pwd"`
 	Email       sql.NullString `json:"email"`

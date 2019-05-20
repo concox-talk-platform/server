@@ -253,13 +253,13 @@ func imMessagePublishDispatcher(dc *DataContext, ds DataSource) {
 		log.Log.Printf("now dc.StreamMap map have: %+v， %p", StreamMap, &StreamMap)
 		if v != nil {
 			log.Log.Println(req.ReceiverId, " is online")
+			onlineMem = append(onlineMem, req.ReceiverId)
+		} else {
+			log.Log.Println(req.ReceiverId, " is offline")
 			// 保存进数据库
 			if err := tm.AddMsg(req, db.DBHandler); err != nil {
 				log.Log.Errorf("Add offline msg with error: ", err)
 			}
-			onlineMem = append(onlineMem, req.ReceiverId)
-		} else {
-			log.Log.Println(req.ReceiverId, " is offline")
 			offlineMem = append(offlineMem, req.ReceiverId)
 		}
 		onlineMem = append(onlineMem, req.Id)
@@ -284,7 +284,6 @@ func imMessagePublishDispatcher(dc *DataContext, ds DataSource) {
 				offlineMem = append(offlineMem, int32(v))
 			}
 		}
-		//onlineMem = append(onlineMem, req.Id)
 		// 存储离线消息
 		log.Log.Printf("the offline: %+v， the length is %d", offlineMem, len(offlineMem))
 		if len(offlineMem) != 0 {

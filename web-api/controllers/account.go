@@ -24,7 +24,23 @@ import (
 	"strconv"
 )
 
-// 创建下级账户
+// @Summary 创建下级账户
+// @Produce  json
+// @Param confirm_pwd query string true "123456"
+// @Param pid query int true "5"
+// @Param username query string true "liuyang06"
+// @Param nick_name query string true "nana123"
+// @Param pwd query string true "123456"
+// @Param role_id query int true  "3"
+// @Param email query string  false "123456789@qq.com"
+// @Param privilege_id query string  false "0"
+// @Param contact query string false "1008611"
+// @Param state query string false "中国"
+// @Param phone query string false "10086"
+// @Param remark query string false  "无"
+// @Param address query string false  "北京"
+// @Success 200 {string} json "{"success": true,"account_id": 1430 }"
+// @Router /account [post]
 func CreateAccountBySuperior(c *gin.Context) {
 	// 1. 取出Post中的表单内容
 	uBody := &model.CreateAccount{}

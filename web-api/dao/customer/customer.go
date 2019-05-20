@@ -302,7 +302,7 @@ func UpdateAccountPwd(pwd string, id int) error {
 
 // 查找下级目录
 func SelectChildByPId(pId int) ([]*model.Account, error) {
-	stmtOut, err := dbConn.Prepare("SELECT id, `name` FROM `user` WHERE pid = ?")
+	stmtOut, err := dbConn.Prepare("SELECT id, `name` FROM `user` WHERE pid = ? AND user_type > 1")  // 1是普通用户
 	if err != nil {
 		return nil, err
 	}

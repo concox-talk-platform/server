@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gomodule/redigo/redis"
-	"server/web-api/config"
+	config "server/web-api/configs"
 	"server/web-api/log"
 	"time"
 )

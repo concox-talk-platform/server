@@ -5,7 +5,7 @@
  * Note:
  *		redis客户端配置受redis服务器配置影响
  */
-package config
+package configs
 
 import (
 	"fmt"
