@@ -146,12 +146,17 @@ type GroupInfo struct {
 	OnlineNum int    `json:"online_num"`
 }
 
+
+type AccountForSwag struct {
+	Username    string         `json:"username" binding:"required" example:"elephant"`
+	Pwd         string         `json:"pwd" example:"123456"`
+}
 type Account struct {
 	Id          int            `json:"id"`
 	Pid         int            `json:"pid"`
-	Username    string         `json:"username" example:"elephant"`
+	Username    string         `json:"username" binding:"required" example:"elephant"`
 	NickName    string         `json:"nick_name"`
-	Pwd         string         `json:"pwd"`
+	Pwd         string         `json:"pwd" example:"123456"`
 	Email       sql.NullString `json:"email"`
 	PrivilegeId int            `json:"privilege_id"`
 	Contact     sql.NullString `json:"contact"`
@@ -163,6 +168,15 @@ type Account struct {
 	Phone       sql.NullString `json:"phone"`
 	Remark      sql.NullString `json:"remark"`
 	Address     sql.NullString `json:"address"`
+}
+
+type CreateAccountForSwag struct {
+	ConfirmPwd  string `json:"confirm_pwd" example:"111111"`
+	Pid         int    `json:"pid" example:"13"`
+	Username    string `json:"username" example:"dis007"`
+	NickName    string `json:"nick_name" example:"nickDis001"`
+	Pwd         string `json:"pwd" example:"123456"`
+	RoleId      int    `json:"role_id" example:"3"`
 }
 
 type CreateAccount struct {

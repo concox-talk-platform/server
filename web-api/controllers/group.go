@@ -20,7 +20,14 @@ import (
 	"strconv"
 )
 
-// web更新群组中的设备
+// @Summary web更新群组中的设备
+// @Description logout by account name and pwd, 请求头中Authorization参数设置为登录时返回的sessionId
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "登录时返回的sessionId"
+// @Param body body model.GroupList true "更新群组中的设备"
+// @Success 200 {string} json "{"success":"true","msg": resUpd.ResultMsg.Msg}"
+// @Router /group/devices/update [post]
 func UpdateGroupDevice(c *gin.Context) {
 	gList := &model.GroupList{}
 	if err := c.BindJSON(gList); err != nil {
@@ -94,7 +101,14 @@ func UpdateGroupDevice(c *gin.Context) {
 	})
 }
 
-// 创建群组
+// @Summary web创建群组
+// @Description web创建群组, 请求头中Authorization参数设置为登录时返回的sessionId
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "登录时返回的sessionId"
+// @Param body body model.GroupList true "创建群组"
+// @Success 200 {string} json "{"success":"true","msg": resUpd.ResultMsg.Msg}"
+// @Router /group [post]
 func CreateGroup(c *gin.Context) {
 	gList := &model.GroupList{}
 	if err := c.BindJSON(gList); err != nil {
@@ -191,7 +205,15 @@ func CreateGroup(c *gin.Context) {
 	})
 }
 
-// 群组更新 目前web只用更新群组名字
+
+// @Summary web更新群组信息，目前只更新群组名字
+// @Description web创建群组, 请求头中Authorization参数设置为登录时返回的sessionId
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "登录时返回的sessionId"
+// @Param body body model.GroupInfo true "web更新群组"
+// @Success 200 {string} json "{"success":"true","msg": resUpd.ResultMsg.Msg}"
+// @Router /group/update [post]
 func UpdateGroup(c *gin.Context) {
 	gI := &model.GroupInfo{}
 	if err := c.BindJSON(gI); err != nil {
@@ -236,7 +258,14 @@ func UpdateGroup(c *gin.Context) {
 	})
 }
 
-// 群组删除
+// @Summary web群组删除，目前只更新群组名字
+// @Description web创建群组, 请求头中Authorization参数设置为登录时返回的sessionId
+// @Accept  json
+// @Produce  json
+// @Param Authorization header string true "登录时返回的sessionId"
+// @Param body body model.GroupInfo true "web更新群组"
+// @Success 200 {string} json "{"success":"true","msg": resUpd.ResultMsg.Msg}"
+// @Router /group/delete [post]
 func DeleteGroup(c *gin.Context) {
 	gI := &model.GroupInfo{}
 	if err := c.BindJSON(gI); err != nil {

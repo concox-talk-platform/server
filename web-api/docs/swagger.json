@@ -24,7 +24,7 @@
                         "required": true,
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/model.CreateAccount"
+                            "$ref": "#/definitions/model.CreateAccountForSwag"
                         }
                     }
                 ],
@@ -86,7 +86,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "elephant",
+                        "description": "登录的用户名，eg：elephant",
                         "name": "account_name",
                         "in": "path",
                         "required": true
@@ -98,13 +98,13 @@
                         "required": true,
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/model.Account"
+                            "$ref": "#/definitions/model.AccountForSwag"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "{\"success\":\"true\",\"session_id\": sId }",
+                        "description": "{\"session_id\": \"1c2c46b8-f44a-4073-b219-d93d22dd2a43\", \"success\": \"true\"}",
                         "schema": {
                             "type": "string"
                         }
@@ -125,7 +125,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "登录时返回的sessionId",
+                        "description": "登录时返回的sessionId eg:1c2c46b8-f44a-4073-b219-d93d22dd2a43",
                         "name": "Authorization",
                         "in": "header",
                         "required": true
@@ -137,7 +137,7 @@
                         "required": true,
                         "schema": {
                             "type": "object",
-                            "$ref": "#/definitions/model.Account"
+                            "$ref": "#/definitions/model.AccountForSwag"
                         }
                     }
                 ],
@@ -422,6 +422,162 @@
                 }
             }
         },
+        "/group": {
+            "post": {
+                "description": "web创建群组, 请求头中Authorization参数设置为登录时返回的sessionId",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "web创建群组",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录时返回的sessionId",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "创建群组",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/model.GroupList"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":\"true\",\"msg\": resUpd.ResultMsg.Msg}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/group/delete": {
+            "post": {
+                "description": "web创建群组, 请求头中Authorization参数设置为登录时返回的sessionId",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "web群组删除，目前只更新群组名字",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录时返回的sessionId",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "web更新群组",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/model.GroupInfo"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":\"true\",\"msg\": resUpd.ResultMsg.Msg}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/group/devices/update": {
+            "post": {
+                "description": "logout by account name and pwd, 请求头中Authorization参数设置为登录时返回的sessionId",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "web更新群组中的设备",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录时返回的sessionId",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "更新群组中的设备",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/model.GroupList"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":\"true\",\"msg\": resUpd.ResultMsg.Msg}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/group/update": {
+            "post": {
+                "description": "web创建群组, 请求头中Authorization参数设置为登录时返回的sessionId",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "web更新群组信息，目前只更新群组名字",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "登录时返回的sessionId",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "description": "web更新群组",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "$ref": "#/definitions/model.GroupInfo"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "{\"success\":\"true\",\"msg\": resUpd.ResultMsg.Msg}",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/im-server/": {
             "get": {
                 "produces": [
@@ -476,6 +632,9 @@
     "definitions": {
         "model.Account": {
             "type": "object",
+            "required": [
+                "username"
+            ],
             "properties": {
                 "address": {
                     "type": "string"
@@ -511,7 +670,8 @@
                     "type": "integer"
                 },
                 "pwd": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "123456"
                 },
                 "remark": {
                     "type": "string"
@@ -544,6 +704,22 @@
                 "sender": {
                     "type": "object",
                     "$ref": "#/definitions/model.Account"
+                }
+            }
+        },
+        "model.AccountForSwag": {
+            "type": "object",
+            "required": [
+                "username"
+            ],
+            "properties": {
+                "pwd": {
+                    "type": "string",
+                    "example": "123456"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "elephant"
                 }
             }
         },
@@ -613,61 +789,32 @@
                 }
             }
         },
-        "model.CreateAccount": {
+        "model.CreateAccountForSwag": {
             "type": "object",
             "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "c_time": {
-                    "type": "string"
-                },
-                "change_time": {
-                    "type": "string"
-                },
                 "confirm_pwd": {
                     "type": "string",
                     "example": "111111"
                 },
-                "contact": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer",
-                    "example": 5
-                },
-                "ll_time": {
-                    "type": "string"
-                },
                 "nick_name": {
-                    "type": "string"
-                },
-                "phone": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "nickDis001"
                 },
                 "pid": {
-                    "type": "integer"
-                },
-                "privilege_id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 13
                 },
                 "pwd": {
-                    "type": "string"
-                },
-                "remark": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "123456"
                 },
                 "role_id": {
-                    "type": "integer"
-                },
-                "state": {
-                    "type": "string"
+                    "type": "integer",
+                    "example": 3
                 },
                 "username": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "dis007"
                 }
             }
         },
@@ -782,6 +929,50 @@
                 },
                 "lng": {
                     "type": "number"
+                }
+            }
+        },
+        "model.GroupInfo": {
+            "type": "object",
+            "properties": {
+                "account_id": {
+                    "type": "integer"
+                },
+                "c_time": {
+                    "type": "string"
+                },
+                "group_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "online_num": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "model.GroupList": {
+            "type": "object",
+            "properties": {
+                "device_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "device_infos": {
+                    "type": "array",
+                    "items": {
+                        "type": "\u0026{%!s(token.Pos=1527) %!s(*ast.FieldList=\u0026{1536 [] 1537}) %!s(bool=false)}"
+                    }
+                },
+                "group_info": {
+                    "type": "object",
+                    "$ref": "#/definitions/model.GroupInfo"
                 }
             }
         }

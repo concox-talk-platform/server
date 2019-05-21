@@ -25,7 +25,7 @@ import (
 
 // @Summary 创建下级账户
 // @Produce  json
-// @Param Body body model.CreateAccount true "创建下级账户所用的信息"
+// @Param Body body model.CreateAccountForSwag true "创建下级账户所用的信息"
 // @Success 200 {string} json "{"success": true,"account_id": 1430 }"
 // @Router /account [post]
 func CreateAccountBySuperior(c *gin.Context) {

@@ -21,9 +21,9 @@ import (
 // @Description login by account name and pwd
 // @Accept  json
 // @Produce  json
-// @Param account_name path string true "elephant"
-// @Param body body model.Account true "登录信息，username和pwd必填"
-// @Success 200 {string} json "{"success":"true","session_id": sId }"
+// @Param account_name path string true "登录的用户名，eg：elephant"
+// @Param body body model.AccountForSwag true "登录信息，username和pwd必填"
+// @Success 200 {string} json "{"session_id": "1c2c46b8-f44a-4073-b219-d93d22dd2a43", "success": "true"}"
 // @Router /account/login.do/{account_name} [post]
 func SignIn(c *gin.Context) {
 	// 1. 取出Post请求中的body内容
@@ -116,8 +116,8 @@ func SignIn(c *gin.Context) {
 // @Description logout by account name and pwd, 请求头中Authorization参数设置为登录时返回的sessionId
 // @Accept  json
 // @Produce  json
-// @Param Authorization header string true "登录时返回的sessionId"
-// @Param body body model.Account true "登录信息，username和pwd必填"
+// @Param Authorization header string true "登录时返回的sessionId eg:1c2c46b8-f44a-4073-b219-d93d22dd2a43"
+// @Param body body model.AccountForSwag true "登录信息，username和pwd必填"
 // @Success 200 {string} json "{"success":"true","msg": "SignOut is successful"}"
 // @Router /account/logout.do/{account_name} [post]
 func SignOut(c *gin.Context) {
