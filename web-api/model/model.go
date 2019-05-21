@@ -154,7 +154,7 @@ type AccountForSwag struct {
 type Account struct {
 	Id          int            `json:"id"`
 	Pid         int            `json:"pid"`
-	Username    string         `json:"username" binding:"required" example:"elephant"`
+	Username    string         `json:"username" example:"elephant"`
 	NickName    string         `json:"nick_name"`
 	Pwd         string         `json:"pwd" example:"123456"`
 	Email       sql.NullString `json:"email"`
