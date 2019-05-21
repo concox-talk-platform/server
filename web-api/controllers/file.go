@@ -88,6 +88,11 @@ func init() {
 	// defer client.Destory() TODO destory?
 }
 
+// @Summary 上传文件
+// @Produce  json
+// @Param fileInfo formData model.ImMsgData true "上传文件携带的参数"
+// @Success 200 {string} json "{"message":"User information obtained successfully",	"account_info": ai,	"device_list" deviceAll,"group_list": gList,"tree_data":resp}"
+// @Router /upload [post]
 func UploadFile(c *gin.Context) {
 	log.Log.Println("start upload file.")
 	err := uploadFilePre(c)
@@ -228,7 +233,11 @@ func fileStore(c *gin.Context) (*model.FileContext, error) {
 	return fContext, nil
 }
 
-// websocket与grpc交换数据
+// @Summary websocket与grpc交换数据
+// @Produce  json
+// @Param accountId path string true "当前用户的账号Id"
+// @Success 200 {string} json "{"message":"User information obtained successfully",	"account_info": ai,	"device_list" deviceAll,"group_list": gList,"tree_data":resp}"
+// @Router /im-server/:accountId [get]
 func ImPush(c *gin.Context) {
 	uidStr := c.Param("accountId")
 	uid, _ := strconv.Atoi(uidStr) // TODO 校验用户是否存在

@@ -7,11 +7,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"google.golang.org/grpc"
 	pb "server/grpc-server/api/talk_cloud"
 	"server/web-api/log"
 	"sync"
-	"time"
 )
 
 const GROUP_PORT = "9999"
@@ -19,8 +19,8 @@ const GROUP_PORT = "9999"
 var maps sync.Map
 
 func main() {
-	//host := "113.105.153.240"
-	host := "127.0.0.1"
+	host := "113.105.153.240"
+	//host := "127.0.0.1"
 
 	conn, err := grpc.Dial(host+":9001", grpc.WithInsecure())
 	if err != nil {
@@ -84,13 +84,13 @@ func main() {
 		Fuid:500,
 	})*/
 
-	//log.Log.Println("---------------------------------------Login Start-------------------------------------------")
-	//res, err := userClient.Login(context.Background(), &pb.LoginReq{
-	//	Name:   "264333",
-	//	Passwd: "123456",
-	//})
-	//log.Log.Println(res.GroupList)
-	//
+	fmt.Println("---------------------------------------Login Start-------------------------------------------")
+	res, err := userClient.Login(context.Background(), &pb.LoginReq{
+		Name:   "00003878",
+		Passwd: "00003878",
+	})
+	fmt.Println(res.GroupList)
+
 	//time.Sleep(time.Second * 3)
 	/*
 		for _, v := range res.GroupList {
@@ -223,32 +223,32 @@ func main() {
 	//}
 
 	// TODO 服务端 客户端 双向流
-	allStr, _ := userClient.DataPublish(context.Background())
-	i := 8
-	//for ; i < 1500 ; i++ {
-	go func(i int) {
-		log.Log.Printf("%d start send get offline msg", i)
-		if err := allStr.Send(&pb.StreamRequest{
-			Uid:      int32(i),
-			DataType: 2,
-		}); err != nil {
-		}
-	}(i)
-
-	//}
-
-	go func() {
-		for {
-			log.Log.Println("start send heartbeat")
-			if err := allStr.Send(&pb.StreamRequest{
-				Uid:      8,
-				DataType: 4,
-			}); err != nil {
-			}
-
-			time.Sleep(time.Second * 5)
-		}
-	}()
+	//allStr, _ := userClient.DataPublish(context.Background())
+	//i := 8
+	////for ; i < 1500 ; i++ {
+	//go func(i int) {
+	//	log.Log.Printf("%d start send get offline msg", i)
+	//	if err := allStr.Send(&pb.StreamRequest{
+	//		Uid:      int32(i),
+	//		DataType: 2,
+	//	}); err != nil {
+	//	}
+	//}(i)
+	//
+	////}
+	//
+	//go func() {
+	//	for {
+	//		log.Log.Println("start send heartbeat")
+	//		if err := allStr.Send(&pb.StreamRequest{
+	//			Uid:      8,
+	//			DataType: 4,
+	//		}); err != nil {
+	//		}
+	//
+	//		time.Sleep(time.Second * 5)
+	//	}
+	//}()
 
 	const (
 		FIRST_LOGIN_DATA                = 1 // 初次登录返回的数据。比如用户列表，群组列表，该用户的个人信息
@@ -283,5 +283,5 @@ func main() {
 			//}
 		}
 	}(&allStr)*/
-	select {}
+	//select {}
 }

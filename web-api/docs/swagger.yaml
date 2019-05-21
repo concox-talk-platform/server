@@ -33,7 +33,178 @@ definitions:
       state:
         type: string
       username:
+        example: elephant
         type: string
+    type: object
+  model.AccountDeviceTransReq:
+    properties:
+      devices:
+        items:
+          $ref: '#/definitions/model.Device'
+        type: array
+      receiver:
+        $ref: '#/definitions/model.DeviceReceiver'
+        type: object
+      sender:
+        $ref: '#/definitions/model.Account'
+        type: object
+    type: object
+  model.AccountImportDeviceReq:
+    properties:
+      d_type:
+        type: string
+      devices:
+        items:
+          $ref: '#/definitions/model.Device'
+        type: array
+    type: object
+  model.AccountPwd:
+    properties:
+      confirm_pwd:
+        type: string
+      id:
+        type: string
+      new_pwd:
+        type: string
+      old_pwd:
+        type: string
+    type: object
+  model.AccountUpdate:
+    properties:
+      address:
+        type: string
+      contact:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      login_id:
+        type: string
+      nick_name:
+        type: string
+      phone:
+        type: string
+      remark:
+        type: string
+      type_id:
+        type: string
+      username:
+        type: string
+    type: object
+  model.CreateAccount:
+    properties:
+      address:
+        type: string
+      c_time:
+        type: string
+      change_time:
+        type: string
+      confirm_pwd:
+        example: "111111"
+        type: string
+      contact:
+        type: string
+      email:
+        type: string
+      id:
+        example: 5
+        type: integer
+      ll_time:
+        type: string
+      nick_name:
+        type: string
+      phone:
+        type: string
+      pid:
+        type: integer
+      privilege_id:
+        type: integer
+      pwd:
+        type: string
+      remark:
+        type: string
+      role_id:
+        type: integer
+      state:
+        type: string
+      username:
+        type: string
+    type: object
+  model.Device:
+    properties:
+      account_id:
+        type: integer
+      active_time:
+        type: string
+      change_time:
+        type: string
+      course:
+        type: number
+      create_time:
+        type: string
+      device_type:
+        type: string
+      gps_data:
+        $ref: '#/definitions/model.GPS'
+        type: object
+      id:
+        type: integer
+      imei:
+        type: string
+      last_login_time:
+        type: string
+      local_time:
+        type: integer
+      nick_name:
+        type: string
+      password:
+        type: string
+      sale_time:
+        type: string
+      speed:
+        type: number
+      user_name:
+        type: string
+    type: object
+  model.DeviceReceiver:
+    properties:
+      account_id:
+        type: integer
+      account_name:
+        type: string
+    type: object
+  model.DeviceUpdate:
+    properties:
+      ActiveTime:
+        type: string
+      ChangeTime:
+        type: string
+      CreateTime:
+        type: string
+      DeviceType:
+        type: string
+      IMei:
+        type: string
+      Id:
+        type: integer
+      LLTime:
+        type: string
+      LocalTime:
+        type: integer
+      LoginId:
+        type: integer
+      NickName:
+        type: string
+      SaleTime:
+        type: string
+    type: object
+  model.GPS:
+    properties:
+      lat:
+        type: number
+      lng:
+        type: number
     type: object
 host: '{{.Host}}'
 info:
@@ -46,64 +217,13 @@ paths:
   /account:
     post:
       parameters:
-      - description: "123456"
-        in: query
-        name: confirm_pwd
+      - description: 创建下级账户所用的信息
+        in: body
+        name: Body
         required: true
-        type: string
-      - description: "5"
-        in: query
-        name: pid
-        required: true
-        type: integer
-      - description: liuyang06
-        in: query
-        name: username
-        required: true
-        type: string
-      - description: nana123
-        in: query
-        name: nick_name
-        required: true
-        type: string
-      - description: "123456"
-        in: query
-        name: pwd
-        required: true
-        type: string
-      - description: "3"
-        in: query
-        name: role_id
-        required: true
-        type: integer
-      - description: 123456789@qq.com
-        in: query
-        name: email
-        type: string
-      - description: "0"
-        in: query
-        name: privilege_id
-        type: string
-      - description: "1008611"
-        in: query
-        name: contact
-        type: string
-      - description: 中国
-        in: query
-        name: state
-        type: string
-      - description: "10086"
-        in: query
-        name: phone
-        type: string
-      - description: 无
-        in: query
-        name: remark
-        type: string
-      - description: 北京
-        in: query
-        name: address
-        type: string
+        schema:
+          $ref: '#/definitions/model.CreateAccount'
+          type: object
       produces:
       - application/json
       responses:
@@ -112,6 +232,51 @@ paths:
           schema:
             type: string
       summary: 创建下级账户
+  /account/{account_name}:
+    get:
+      parameters:
+      - description: 当前用户的账号
+        in: path
+        name: account_name
+        required: true
+        type: string
+      - description: 登录时返回的sessionId
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: "{\"message\":\"User information obtained successfully\",\t\"account_info\":
+            ai,\t\"device_list\" deviceAll,\"group_list\": gList,\"tree_data\":resp}"
+          schema:
+            type: string
+      summary: 获取账户信息
+  /account/info/update:
+    post:
+      parameters:
+      - description: 登录时返回的sessionId
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: 更新下级账户的信息，其中id和loginId和NickName不能为空
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/model.AccountUpdate'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success": "true","msg":"update account success"}'
+          schema:
+            type: string
+      summary: 更新下级账户信息
   /account/login.do/{account_name}:
     post:
       consumes:
@@ -123,7 +288,7 @@ paths:
         name: account_name
         required: true
         type: string
-      - description: 登录信息
+      - description: 登录信息，username和pwd必填
         in: body
         name: body
         required: true
@@ -144,17 +309,219 @@ paths:
       - application/json
       description: logout by account name and pwd, 请求头中Authorization参数设置为登录时返回的sessionId
       parameters:
-      - description: 登录用户名
-        in: query
-        name: username
+      - description: 登录时返回的sessionId
+        in: header
+        name: Authorization
         required: true
         type: string
-      - description: 登录用户密码
-        in: query
-        name: pwd
+      - description: 登录信息，username和pwd必填
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/model.Account'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"success":"true","msg": "SignOut is successful"}'
+          schema:
+            type: string
+      summary: 退出
+  /account/pwd/update:
+    post:
+      parameters:
+      - description: 登录时返回的sessionId
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: 更新用户密码
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/model.AccountPwd'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"result": "success","msg":"Password changed successfully"}'
+          schema:
+            type: string
+      summary: 更新用户密码
+  /account_class/{accountId}/{searchId}:
+    get:
+      parameters:
+      - description: 当前用户的账号Id
+        in: path
+        name: accountId
+        required: true
+        type: string
+      - description: 获取用户下级目录的账号Id
+        in: path
+        name: searchId
+        required: true
+        type: string
+      - description: 登录时返回的sessionId
+        in: header
+        name: Authorization
         required: true
         type: string
       produces:
       - application/json
-      summary: 退出
+      responses:
+        "200":
+          description: "{\"message\":\"User information obtained successfully\",\t\"account_info\":
+            ai,\t\"device_list\" deviceAll,\"group_list\": gList,\"tree_data\":resp}"
+          schema:
+            type: string
+      summary: 获取账户下级目录
+  /account_device/{accountId}:
+    post:
+      parameters:
+      - description: 登录时返回的sessionId
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: 当前用户的账号Id
+        in: path
+        name: accountId
+        required: true
+        type: string
+      - description: 转移设备的model
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/model.AccountDeviceTransReq'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"result": "success","msg":"Password changed successfully"}'
+          schema:
+            type: string
+      summary: 转移设备
+  /account_device/{accountId}/{getAdviceId}:
+    get:
+      parameters:
+      - description: 当前用户的账号Id
+        in: path
+        name: accountId
+        required: true
+        type: string
+      - description: 获取用户设备信息的账号Id
+        in: path
+        name: getAdviceId
+        required: true
+        type: string
+      - description: 登录时返回的sessionId
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: "{\"message\":\"User information obtained successfully\",\t\"account_info\":
+            ai,\t\"device_list\" deviceAll,\"group_list\": gList,\"tree_data\":resp}"
+          schema:
+            type: string
+      summary: 获取账户的设备信息
+  /device/import/{account_name}:
+    post:
+      parameters:
+      - description: 登录时返回的sessionId
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: 当前用户的账号
+        in: path
+        name: account_name
+        required: true
+        type: string
+      - description: 导入设备的model
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/model.AccountImportDeviceReq'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"result": "success","msg":"Password changed successfully"}'
+          schema:
+            type: string
+      summary: 导入设备
+  /device/update:
+    post:
+      parameters:
+      - description: 登录时返回的sessionId
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: 当前用户的账号
+        in: path
+        name: account_name
+        required: true
+        type: string
+      - description: 更新设备信息的model
+        in: body
+        name: Body
+        required: true
+        schema:
+          $ref: '#/definitions/model.DeviceUpdate'
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: '{"result": "success","msg":"Password changed successfully"}'
+          schema:
+            type: string
+      summary: 更新设备信息
+  /im-server/:
+    get:
+      parameters:
+      - description: 当前用户的账号Id
+        in: path
+        name: accountId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: "{\"message\":\"User information obtained successfully\",\t\"account_info\":
+            ai,\t\"device_list\" deviceAll,\"group_list\": gList,\"tree_data\":resp}"
+          schema:
+            type: string
+      summary: websocket与grpc交换数据
+  /upload:
+    post:
+      parameters:
+      - description: 上传文件携带的参数
+        in: formData
+        name: fileInfo
+        required: true
+        type: model.ImMsgData
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: "{\"message\":\"User information obtained successfully\",\t\"account_info\":
+            ai,\t\"device_list\" deviceAll,\"group_list\": gList,\"tree_data\":resp}"
+          schema:
+            type: string
+      summary: 上传文件
 swagger: "2.0"

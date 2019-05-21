@@ -9,8 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"server/web-api/cache"
-	tc "server/web-api/dao/customer" // table customer
-	td "server/web-api/dao/device"
+	tc "server/web-api/dao/customer"      // table customer
 	tg "server/web-api/dao/group"         // table group
 	tgc "server/web-api/dao/group_member" // table group_device
 	tlc "server/web-api/dao/location"
@@ -26,19 +25,7 @@ import (
 
 // @Summary 创建下级账户
 // @Produce  json
-// @Param confirm_pwd query string true "123456"
-// @Param pid query int true "5"
-// @Param username query string true "liuyang06"
-// @Param nick_name query string true "nana123"
-// @Param pwd query string true "123456"
-// @Param role_id query int true  "3"
-// @Param email query string  false "123456789@qq.com"
-// @Param privilege_id query string  false "0"
-// @Param contact query string false "1008611"
-// @Param state query string false "中国"
-// @Param phone query string false "10086"
-// @Param remark query string false  "无"
-// @Param address query string false  "北京"
+// @Param Body body model.CreateAccount true "创建下级账户所用的信息"
 // @Success 200 {string} json "{"success": true,"account_id": 1430 }"
 // @Router /account [post]
 func CreateAccountBySuperior(c *gin.Context) {
@@ -146,7 +133,12 @@ func CreateAccountBySuperior(c *gin.Context) {
 	})
 }
 
-// 获取账户信息
+// @Summary 获取账户信息
+// @Produce  json
+// @Param account_name path string true "当前用户的账号"
+// @Param Authorization header string true "登录时返回的sessionId"
+// @Success 200 {string} json "{"message":"User information obtained successfully",	"account_info": ai,	"device_list" deviceAll,"group_list": gList,"tree_data":resp}"
+// @Router /account/{account_name} [get]
 func GetAccountInfo(c *gin.Context) {
 	aName := c.Param("account_name")
 	if aName == "" {
@@ -313,7 +305,12 @@ func GetAccountInfo(c *gin.Context) {
 	})
 }
 
-// 更新下级账户信息
+// @Summary 更新下级账户信息
+// @Produce  json
+// @Param Authorization header string true "登录时返回的sessionId"
+// @Param Body body model.AccountUpdate true "更新下级账户的信息，其中id和loginId和NickName不能为空"
+// @Success 200 {string} json "{"success": "true","msg":"update account success"}"
+// @Router /account/info/update [post]
 func UpdateAccountInfo(c *gin.Context) {
 	accInf := &model.AccountUpdate{}
 	if err := c.BindJSON(accInf); err != nil {
@@ -361,7 +358,12 @@ func UpdateAccountInfo(c *gin.Context) {
 	}
 }
 
-// 更新用户密码
+// @Summary 更新用户密码
+// @Produce  json
+// @Param Authorization header string true "登录时返回的sessionId"
+// @Param Body body model.AccountPwd true "更新用户密码"
+// @Success 200 {string} json "{"result": "success","msg":"Password changed successfully"}"
+// @Router /account/pwd/update [post]
 func UpdateAccountPwd(c *gin.Context) {
 	accPwd := &model.AccountPwd{}
 	if err := c.BindJSON(accPwd); err != nil {
@@ -445,7 +447,13 @@ func UpdateAccountPwd(c *gin.Context) {
 	}
 }
 
-// 获取账户下级目录
+// @Summary 获取账户下级目录
+// @Produce  json
+// @Param accountId path string true "当前用户的账号Id"
+// @Param searchId path string true "获取用户下级目录的账号Id"
+// @Param Authorization header string true "登录时返回的sessionId"
+// @Success 200 {string} json "{"message":"User information obtained successfully",	"account_info": ai,	"device_list" deviceAll,"group_list": gList,"tree_data":resp}"
+// @Router /account_class/{accountId}/{searchId} [get]
 func GetAccountClass(c *gin.Context) {
 	accountId := c.Param("accountId")
 	searchId := c.Param("searchId")
@@ -504,7 +512,13 @@ func GetAccountClass(c *gin.Context) {
 	})
 }
 
-// 获取账户的设备信息
+// @Summary 获取账户的设备信息
+// @Produce  json
+// @Param accountId path string true "当前用户的账号Id"
+// @Param getAdviceId path string true "获取用户设备信息的账号Id"
+// @Param Authorization header string true "登录时返回的sessionId"
+// @Success 200 {string} json "{"message":"User information obtained successfully",	"account_info": ai,	"device_list" deviceAll,"group_list": gList,"tree_data":resp}"
+// @Router /account_device/{accountId}/{getAdviceId} [get]
 func GetAccountDevice(c *gin.Context) {
 	accountId := c.Param("accountId")
 	getAdviceId := c.Param("getAdviceId")
@@ -540,54 +554,4 @@ func GetAccountDevice(c *gin.Context) {
 	})
 }
 
-// 转移设备
-func TransAccountDevice(c *gin.Context) {
-	aidStr := c.Param("accountId")
-	accountDevices := &model.AccountDeviceTransReq{}
-	if err := c.BindJSON(accountDevices); err != nil {
-		log.Log.Printf("json parse fail , error : %s", err)
-		c.JSON(http.StatusBadRequest, model.ErrorRequestBodyParseFailed)
-		return
-	}
 
-	// 使用session来校验用户
-	aid, _ := strconv.Atoi(aidStr)
-	if !service.ValidateAccountSession(c.Request, aid) {
-		c.JSON(http.StatusUnauthorized, model.ErrorNotAuthSession)
-		return
-	}
-
-	// IMEI号只能是15位数字
-	// 结构体为空
-	if accountDevices.Devices == nil {
-		c.JSON(http.StatusBadRequest, model.ErrorRequestBodyParseFailed)
-		return
-	}
-	for _, v := range accountDevices.Devices {
-		if v.IMei == "" {
-			c.JSON(http.StatusUnprocessableEntity, gin.H{
-				"error":      "Imei is not correct.",
-				"error_code": "001",
-			})
-			return
-		}
-	}
-	if accountDevices.Receiver.AccountId == 0 {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{
-			"error":      "receiver id can't be empty.",
-			"error_code": "001",
-		})
-		return
-	}
-
-	// 更新设备
-	if err := td.MultiUpdateDevice(accountDevices); err != nil {
-		log.Log.Printf("db error : %s", err)
-		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{
-		"result": "success",
-		"msg":    "trans successful",
-	})
-}

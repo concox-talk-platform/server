@@ -52,12 +52,8 @@ func (tcs *TalkCloudServiceImpl) Login(ctx context.Context, req *pb.LoginReq) (*
 	}
 
 	if res.PassWord != req.Passwd {
-		log.Log.Printf("App login pwd error : %s", err)
-		loginRsp := &pb.LoginRsp{
-			Res: &pb.Result{
-				Code: 500,
-				Msg:  "User Login pwd error. Please try again later"},
-		}
+		log.Log.Printf("App login pwd res.PassWord :%s req.Pwd: %s error : %+v", res.PassWord, req.Passwd, err)
+		loginRsp := &pb.LoginRsp{Res: &pb.Result{Code: 500, Msg: "User Login pwd error. Please try again later"}}
 		return loginRsp, nil
 	}
 	userInfo := &pb.Member{

@@ -97,6 +97,14 @@ func (serv *TalkCloudServiceImpl) CreateGroup(ctx context.Context, req *pb.Creat
 				tuc.UpdateUserFromDBToRedis(u, uId)
 			}
 		}
+
+		// web创建群组的时候，自己加进缓存
+		if err := tgc.AddGroupSingleMemCache(int32(gl.GroupInfo.Id), int32(gl.GroupInfo.AccountId), cache.GetRedisClient()); err != nil {
+			log.Log.Printf("CreateGroup AddGroupAndUserInCache error: %v", err)
+		}
+		if err := tuc.AddUserForSingleGroupCache(int32(gl.GroupInfo.AccountId), int32(gl.GroupInfo.Id), cache.GetRedisClient()); err != nil {
+			log.Log.Println("CreateGroup add group member into single group into cache error:", err)
+		}
 	} else {
 		for _, v := range gl.DeviceIds {
 			if err := tgc.AddGroupSingleMemCache(int32(gl.GroupInfo.Id), int32(v), cache.GetRedisClient()); err != nil {

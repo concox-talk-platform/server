@@ -166,8 +166,8 @@ type Account struct {
 }
 
 type CreateAccount struct {
-	ConfirmPwd  string `json:"confirm_pwd"`
-	Id          int    `json:"id"`
+	ConfirmPwd  string `json:"confirm_pwd" example:"111111"`
+	Id          int    `json:"id" example:"5"`
 	Pid         int    `json:"pid"`
 	Username    string `json:"username"`
 	NickName    string `json:"nick_name"`
@@ -219,4 +219,19 @@ type FileContext struct {
 	FileMD5        string
 	FileFastId     string
 	FileUploadTime string
+}
+
+// just for swagger use
+type DeviceUpdate struct {
+	Id                   int32    `protobuf:"varint,1,opt,name=Id,proto3" json:"Id,omitempty"`
+	IMei                 string   `protobuf:"bytes,2,opt,name=IMei,proto3" json:"IMei,omitempty"`
+	NickName             string   `protobuf:"bytes,3,opt,name=NickName,proto3" json:"NickName,omitempty"`
+	LoginId              int32    `protobuf:"varint,4,opt,name=LoginId,proto3" json:"LoginId,omitempty"`
+	CreateTime           string   `protobuf:"bytes,6,opt,name=CreateTime,proto3" json:"CreateTime,omitempty"`
+	LLTime               string   `protobuf:"bytes,7,opt,name=LLTime,proto3" json:"LLTime,omitempty"`
+	ChangeTime           string   `protobuf:"bytes,8,opt,name=ChangeTime,proto3" json:"ChangeTime,omitempty"`
+	LocalTime            uint64   `protobuf:"varint,9,opt,name=LocalTime,proto3" json:"LocalTime,omitempty"`
+	DeviceType           string   `protobuf:"bytes,12,opt,name=DeviceType,proto3" json:"DeviceType,omitempty"`
+	ActiveTime           string   `protobuf:"bytes,13,opt,name=ActiveTime,proto3" json:"ActiveTime,omitempty"`
+	SaleTime             string   `protobuf:"bytes,14,opt,name=SaleTime,proto3" json:"SaleTime,omitempty"`
 }

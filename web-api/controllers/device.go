@@ -13,14 +13,22 @@ import (
 	"net/http"
 	pb "server/grpc-server/api/talk_cloud"
 	cfgWs "server/web-api/configs/web_server"
+	td "server/web-api/dao/device" // table device
 	"server/web-api/grpc_client_pool"
 	"server/web-api/log"
 	"server/web-api/model"
 	"server/web-api/service"
 	"server/web-api/utils"
+	"strconv"
 )
 
-// 导入设备
+// @Summary 导入设备
+// @Produce  json
+// @Param Authorization header string true "登录时返回的sessionId"
+// @Param account_name path string true "当前用户的账号"
+// @Param Body body model.AccountImportDeviceReq true "导入设备的model"
+// @Success 200 {string} json "{"result": "success","msg":"Password changed successfully"}"
+// @Router /device/import/{account_name} [post]
 func ImportDeviceByRoot(c *gin.Context) {
 	aName := c.Param("account_name")
 	if aName == "" {
@@ -135,6 +143,72 @@ func ImportDeviceByRoot(c *gin.Context) {
 	}
 }
 
+// @Summary 转移设备
+// @Produce  json
+// @Param Authorization header string true "登录时返回的sessionId"
+// @Param accountId path string true "当前用户的账号Id"
+// @Param Body body model.AccountDeviceTransReq true "转移设备的model"
+// @Success 200 {string} json "{"result": "success","msg":"Password changed successfully"}"
+// @Router /account_device/{accountId} [post]
+func TransAccountDevice(c *gin.Context) {
+	aidStr := c.Param("accountId")
+	accountDevices := &model.AccountDeviceTransReq{}
+	if err := c.BindJSON(accountDevices); err != nil {
+		log.Log.Printf("json parse fail , error : %s", err)
+		c.JSON(http.StatusBadRequest, model.ErrorRequestBodyParseFailed)
+		return
+	}
+
+	// 使用session来校验用户
+	aid, _ := strconv.Atoi(aidStr)
+	if !service.ValidateAccountSession(c.Request, aid) {
+		c.JSON(http.StatusUnauthorized, model.ErrorNotAuthSession)
+		return
+	}
+
+	// IMEI号只能是15位数字
+	// 结构体为空
+	if accountDevices.Devices == nil {
+		c.JSON(http.StatusBadRequest, model.ErrorRequestBodyParseFailed)
+		return
+	}
+	for _, v := range accountDevices.Devices {
+		if v.IMei == "" {
+			c.JSON(http.StatusUnprocessableEntity, gin.H{
+				"error":      "Imei is not correct.",
+				"error_code": "001",
+			})
+			return
+		}
+	}
+	if accountDevices.Receiver.AccountId == 0 {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"error":      "receiver id can't be empty.",
+			"error_code": "001",
+		})
+		return
+	}
+
+	// 更新设备
+	if err := td.MultiUpdateDevice(accountDevices); err != nil {
+		log.Log.Printf("db error : %s", err)
+		c.JSON(http.StatusInternalServerError, model.ErrorDBError)
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"result": "success",
+		"msg":    "trans successful",
+	})
+}
+
+
+// @Summary 更新设备信息
+// @Produce  json
+// @Param Authorization header string true "登录时返回的sessionId"
+// @Param account_name path string true "当前用户的账号"
+// @Param Body body model.DeviceUpdate true "更新设备信息的model"
+// @Success 200 {string} json "{"result": "success","msg":"Password changed successfully"}"
+// @Router /device/update [post]
 func UpdateDeviceInfo(c *gin.Context) {
 	d := &pb.DeviceUpdate{}
 	if err := c.BindJSON(d); err != nil {
