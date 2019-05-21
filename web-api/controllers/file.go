@@ -126,6 +126,7 @@ func UploadFile(c *gin.Context) {
 		MsgCode:      strconv.FormatInt(time.Now().Unix(), 10),
 	})
 	if err != nil {
+		log.Log.Error("Upload file err with Grpc : %+v", err)
 		c.JSON(http.StatusCreated, gin.H{"msg": "Uploaded File, please try again later.", "code": 001})
 		return
 	}
