@@ -99,7 +99,7 @@ const (
 	IM_IMAGE_MSG        = 2 // 图片
 	IM_VOICE_MSG        = 3 // 音频文件
 	IM_VIDEO_MSG        = 4 // 视频文件
-	IM_PDF_MSG          = 5 // PDF文件
+	IM_PTT_MSG          = 5 // PDF文件
 	IM_SOS              = 6 // SOS消息
 	IM_UNKNOWN_TYPE_MSG = 10000
 )

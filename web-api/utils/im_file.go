@@ -20,7 +20,7 @@ const (
 	IM_IMAGE_MSG        = 2 // 图片
 	IM_VOICE_MSG        = 3 // 音频文件
 	IM_VIDEO_MSG        = 4 // 视频文件
-	IM_PDF_MSG          = 5 // PDF文件
+	IM_PTT_MSG          = 5 // PDF文件
 	IM_SOS              = 6
 	IM_UNKNOWN_TYPE_MSG = 10000
 )
@@ -46,7 +46,6 @@ func init() {
 	imFileMap.Store("avi", IM_VOICE_MSG)
 	imFileMap.Store("mid", IM_VOICE_MSG) //MIDI (mid)
 
-	imFileMap.Store("pdf", IM_PDF_MSG) //Adobe Acrobat (pdf)
 }
 
 // 获取Im上传文件类型

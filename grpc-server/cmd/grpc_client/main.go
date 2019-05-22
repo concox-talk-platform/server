@@ -19,8 +19,9 @@ const GROUP_PORT = "9999"
 var maps sync.Map
 
 func main() {
-	host := "113.105.153.240"
+	//host := "114.119.113.97"
 	//host := "127.0.0.1"
+	host := "23.98.41.159"
 
 	conn, err := grpc.Dial(host+":9001", grpc.WithInsecure())
 	if err != nil {
@@ -86,8 +87,8 @@ func main() {
 
 	fmt.Println("---------------------------------------Login Start-------------------------------------------")
 	res, err := userClient.Login(context.Background(), &pb.LoginReq{
-		Name:   "00003878",
-		Passwd: "00003878",
+		Name:   "67890",
+		Passwd: "67890",
 	})
 	fmt.Println(res.GroupList)
 

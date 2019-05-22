@@ -1,0 +1,221 @@
+{
+  "DataType": 2,
+  "offlineImMsgResp": {
+    "offlineGroupPttImMsgs": [
+      {
+        "GroupId": 2,
+        "Name": "testgroup",
+        "MsgReceiverType": 2,
+        "imMsgData": [
+          {
+            "id": 5,
+            "SenderName": "473",
+            "ReceiverType": 2,
+            "ReceiverId": 2,
+            "ResourcePath": "https://test.jimilab.com/group1/M00/00/75/cWmZ8FzlGGKAXIVRAAAF6PjxQWU462.mp3",
+            "MsgType": 5,
+            "ReceiverName": "testgroup",
+            "SendTime": "1558517858"
+          },
+          {
+            "id": 7,
+            "SenderName": "814",
+            "ReceiverType": 2,
+            "ReceiverId": 2,
+            "ResourcePath": "https://test.jimilab.com/group1/M00/00/75/cWmZ8FzlGF2APvmMAAAIKJnGO9s500.mp3",
+            "MsgType": 5,
+            "ReceiverName": "testgroup",
+            "SendTime": "1558517853"
+          },
+          {
+            "id": 5,
+            "SenderName": "473",
+            "ReceiverType": 2,
+            "ReceiverId": 2,
+            "ResourcePath": "https://test.jimilab.com/group1/M00/00/75/cWmZ8FzlGFiAYxPGAAAKsKy3cCQ359.mp3",
+            "MsgType": 5,
+            "ReceiverName": "testgroup",
+            "SendTime": "1558517848"
+          },
+          {
+            "id": 7,
+            "SenderName": "814",
+            "ReceiverType": 2,
+            "ReceiverId": 2,
+            "ResourcePath": "https://test.jimilab.com/group1/M00/00/75/cWmZ8FzlGFCAYh2uAAAJ2FbxCfU252.mp3",
+            "MsgType": 5,
+            "ReceiverName": "testgroup",
+            "SendTime": "1558517840"
+          },
+          {
+            "id": 7,
+            "SenderName": "814",
+            "ReceiverType": 2,
+            "ReceiverId": 2,
+            "ResourcePath": "https://test.jimilab.com/group1/M00/00/75/cWmZ8FzlGEWAOF38AAAHmBWrl1Y674.mp3",
+            "MsgType": 5,
+            "ReceiverName": "testgroup",
+            "SendTime": "1558517828"
+          },
+          {
+            "id": 5,
+            "SenderName": "473",
+            "ReceiverType": 2,
+            "ReceiverId": 2,
+            "ResourcePath": "https://test.jimilab.com/group1/M00/00/75/cWmZ8FzlGD-AOw73AAAGwMKOMvw871.mp3",
+            "MsgType": 5,
+            "ReceiverName": "testgroup",
+            "SendTime": "1558517823"
+          },
+          {
+            "id": 5,
+            "SenderName": "473",
+            "ReceiverType": 2,
+            "ReceiverId": 2,
+            "ResourcePath": "https://test.jimilab.com/group1/M00/00/75/cWmZ8FzlGDKAJ13XAAAC0HcqMKg037.mp3",
+            "MsgType": 5,
+            "ReceiverName": "testgroup",
+            "SendTime": "1558517810"
+          },
+          {
+            "id": 5,
+            "SenderName": "473",
+            "ReceiverType": 2,
+            "ReceiverId": 2,
+            "ResourcePath": "https://test.jimilab.com/group1/M00/00/75/cWmZ8FzlGC-AeCQQAAAB-OBCqYs782.mp3",
+            "MsgType": 5,
+            "ReceiverName": "testgroup",
+            "SendTime": "1558517807"
+          },
+          {
+            "id": 5,
+            "SenderName": "473",
+            "ReceiverType": 2,
+            "ReceiverId": 2,
+            "ResourcePath": "https://test.jimilab.com/group1/M00/00/75/cWmZ8FzlGC2AaIVeAAACQFxLvMw178.mp3",
+            "MsgType": 5,
+            "ReceiverName": "testgroup",
+            "SendTime": "1558517805"
+          },
+          {
+            "id": 5,
+            "SenderName": "473",
+            "ReceiverType": 2,
+            "ReceiverId": 2,
+            "ResourcePath": "https://test.jimilab.com/group1/M00/00/75/cWmZ8FzlGCuABbhAAAABsD2qtd0149.mp3",
+            "MsgType": 5,
+            "ReceiverName": "testgroup",
+            "SendTime": "1558517803"
+          },
+          {
+            "id": 7,
+            "SenderName": "814",
+            "ReceiverType": 2,
+            "ReceiverId": 2,
+            "ResourcePath": "https://test.jimilab.com/group1/M00/00/75/cWmZ8FzlFjaAZXrcAAARKB4hBw8394.mp3",
+            "MsgType": 5,
+            "ReceiverName": "testgroup",
+            "SendTime": "1558517302"
+          },
+          {
+            "id": 5,
+            "SenderName": "473",
+            "ReceiverType": 2,
+            "ReceiverId": 2,
+            "ResourcePath": "https://test.jimilab.com/group1/M00/00/75/cWmZ8FzlFjGAdsrHAAAPeLCGxzE507.mp3",
+            "MsgType": 5,
+            "ReceiverName": "testgroup",
+            "SendTime": "1558517297"
+          }
+        ]
+      },
+      {
+        "GroupId": 6,
+        "Name": "123123",
+        "MsgReceiverType": 2,
+        "imMsgData": [
+          {
+            "id": 10,
+            "SenderName": "test002",
+            "ReceiverType": 2,
+            "ReceiverId": 6,
+            "ResourcePath": "https://test.jimilab.com/group1/M00/00/75/cWmZ8FzlFpWAPwsXAAAA2O1bxBA207.mp3",
+            "MsgType": 5,
+            "ReceiverName": "123123",
+            "SendTime": "1558517397"
+          },
+          {
+            "id": 10,
+            "SenderName": "test002",
+            "ReceiverType": 2,
+            "ReceiverId": 6,
+            "ResourcePath": "https://test.jimilab.com/group1/M00/00/75/cWmZ8FzlFkuAZN2SAAAA2O1bxBA786.mp3",
+            "MsgType": 5,
+            "ReceiverName": "123123",
+            "SendTime": "1558517323"
+          },
+          {
+            "id": 10,
+            "SenderName": "test002",
+            "ReceiverType": 2,
+            "ReceiverId": 6,
+            "ResourcePath": "https://test.jimilab.com/group1/M00/00/75/cWmZ8FzlFkWAHQmYAAAA2O1bxBA005.mp3",
+            "MsgType": 5,
+            "ReceiverName": "123123",
+            "SendTime": "1558517316"
+          },
+          {
+            "id": 10,
+            "SenderName": "test002",
+            "ReceiverType": 2,
+            "ReceiverId": 6,
+            "ResourcePath": "https://test.jimilab.com/group1/M00/00/75/cWmZ8FzlFkKAOEtpAAAA2O1bxBA720.mp3",
+            "MsgType": 5,
+            "ReceiverName": "123123",
+            "SendTime": "1558517314"
+          },
+          {
+            "id": 10,
+            "SenderName": "test002",
+            "ReceiverType": 2,
+            "ReceiverId": 6,
+            "ResourcePath": "https://test.jimilab.com/group1/M00/00/75/cWmZ8FzlFj-AOngqAAAA2O1bxBA694.mp3",
+            "MsgType": 5,
+            "ReceiverName": "123123",
+            "SendTime": "1558517311"
+          },
+          {
+            "id": 10,
+            "SenderName": "test002",
+            "ReceiverType": 2,
+            "ReceiverId": 6,
+            "ResourcePath": "https://test.jimilab.com/group1/M00/00/75/cWmZ8FzlFjyABSq6AAAA2O1bxBA666.mp3",
+            "MsgType": 5,
+            "ReceiverName": "123123",
+            "SendTime": "1558517308"
+          },
+          {
+            "id": 10,
+            "SenderName": "test002",
+            "ReceiverType": 2,
+            "ReceiverId": 6,
+            "ResourcePath": "https://test.jimilab.com/group1/M00/00/75/cWmZ8FzlFiOAKDMQAAAA2O1bxBA652.mp3",
+            "MsgType": 5,
+            "ReceiverName": "123123",
+            "SendTime": "1558517283"
+          },
+          {
+            "id": 10,
+            "SenderName": "test002",
+            "ReceiverType": 2,
+            "ReceiverId": 6,
+            "ResourcePath": "https://test.jimilab.com/group1/M00/00/75/cWmZ8FzlFiCAOPlmAAAA2O1bxBA719.mp3",
+            "MsgType": 5,
+            "ReceiverName": "123123",
+            "SendTime": "1558517280"
+          }
+        ]
+      }
+    ]
+  }
+}

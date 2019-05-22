@@ -45,19 +45,23 @@ func InsertLocationData(req *pb.ReportDataReq, db *sql.DB) error {
 	ib.SET("lng", req.LocationInfo.GpsInfo.Longitude)
 	ib.SET("lat", req.LocationInfo.GpsInfo.Latitude)
 	ib.SET("cse_sp", PackCourseSpeed(req.LocationInfo.GpsInfo.Course, req.LocationInfo.GpsInfo.Speed))
-	ib.SET("country", req.LocationInfo.BSInfo.Country)
-	ib.SET("operator", req.LocationInfo.BSInfo.Operator)
-	ib.SET("lac", req.LocationInfo.BSInfo.Lac)
-	ib.SET("cid", req.LocationInfo.BSInfo.Cid)
-	ib.SET("bs_sth",
-		utils.FormatStrength(req.LocationInfo.BSInfo.FirstBs, req.LocationInfo.BSInfo.SecondBs,
-			req.LocationInfo.BSInfo.ThirdBs, req.LocationInfo.BSInfo.FourthBs))
-	ib.SET("bt_sth",
-		utils.FormatStrength(req.LocationInfo.BtInfo.FirstBt, req.LocationInfo.BtInfo.SecondBt,
-			req.LocationInfo.BtInfo.ThirdBt, req.LocationInfo.BtInfo.FourthBt))
-	ib.SET("wifi_sth",
-		utils.FormatStrength(req.LocationInfo.WifiInfo.FirstWifi, req.LocationInfo.WifiInfo.SecondWifi,
-			req.LocationInfo.WifiInfo.ThirdWifi, req.LocationInfo.WifiInfo.FourthWifi))
+	if req.LocationInfo.BSInfo != nil {
+		ib.SET("country", req.LocationInfo.BSInfo.Country)
+		ib.SET("operator", req.LocationInfo.BSInfo.Operator)
+		ib.SET("lac", req.LocationInfo.BSInfo.Lac)
+		ib.SET("cid", req.LocationInfo.BSInfo.Cid)
+		ib.SET("bs_sth",
+			utils.FormatStrength(req.LocationInfo.BSInfo.FirstBs, req.LocationInfo.BSInfo.SecondBs,
+				req.LocationInfo.BSInfo.ThirdBs, req.LocationInfo.BSInfo.FourthBs))
+		ib.SET("bt_sth",
+			utils.FormatStrength(req.LocationInfo.BtInfo.FirstBt, req.LocationInfo.BtInfo.SecondBt,
+				req.LocationInfo.BtInfo.ThirdBt, req.LocationInfo.BtInfo.FourthBt))
+	}
+	if req.LocationInfo.WifiInfo != nil {
+		ib.SET("wifi_sth",
+			utils.FormatStrength(req.LocationInfo.WifiInfo.FirstWifi, req.LocationInfo.WifiInfo.SecondWifi,
+				req.LocationInfo.WifiInfo.ThirdWifi, req.LocationInfo.WifiInfo.FourthWifi))
+	}
 	if _, err := ib.Exec(db); err != nil {
 		return err
 	}

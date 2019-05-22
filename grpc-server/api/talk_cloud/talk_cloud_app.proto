@@ -276,6 +276,9 @@ message OfflineImMsgResp {
 
     // 群聊的离线消息
     repeated OfflineImMsg offlineGroupImMsgs = 2;
+
+    // 群聊的ptt离线消息
+    repeated OfflineImMsg offlineGroupPttImMsgs = 3;
 }
 
 // 离线消息model

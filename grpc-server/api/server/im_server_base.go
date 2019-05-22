@@ -710,12 +710,15 @@ func GetOfflineImMsgFromDB(req *pb.StreamRequest) (*pb.StreamResponse, error) {
 	log.Log.Printf("get offline msg %+v", offlineMsg)
 
 	var (
-		idIndexSMap   = map[int32]int{}
-		idIndexGMap   = map[int32]int{}
-		respPkgSingle = make([]*pb.OfflineImMsg, 0)
-		respPkgGroup  = make([]*pb.OfflineImMsg, 0)
-		idxG          = 0
-		idxS          = 0
+		idIndexSMap     = map[int32]int{}
+		idIndexGMap     = map[int32]int{}
+		idIndexGPttMap  = map[int32]int{}
+		respPkgGroupPtt = make([]*pb.OfflineImMsg, 0)
+		respPkgSingle   = make([]*pb.OfflineImMsg, 0)
+		respPkgGroup    = make([]*pb.OfflineImMsg, 0)
+		idxGpPtt        = 0
+		idxG            = 0
+		idxS            = 0
 	)
 	// 遍历离线数据集，记录数据用户id和位置
 
@@ -741,21 +744,41 @@ func GetOfflineImMsgFromDB(req *pb.StreamRequest) (*pb.StreamResponse, error) {
 
 		// 群组
 		if msg.ReceiverType == IM_MSG_FROM_UPLOAD_RECEIVER_IS_GROUP {
-			if v, ok := idIndexGMap[msg.ReceiverId]; ok {
-				// 已经发现了这个用户的一条消息，那么就把消息加到对应的切片下的
-				log.Log.Printf("v %d, s %v msg %+v", v, ok, msg)
-				respPkgGroup[v].ImMsgData = append(respPkgGroup[v].ImMsgData, msg)
-			} else {
-				// 首次找到这个用户的第一条单人消息，就respPackage添加一个slice，并记录index
-				var userMsgs = &pb.OfflineImMsg{
-					GroupId:         msg.ReceiverId,
-					Name:            msg.ReceiverName,
-					MsgReceiverType: IM_MSG_FROM_UPLOAD_RECEIVER_IS_GROUP,
+
+			if msg.MsgType == utils.IM_PTT_MSG {
+				if v, ok := idIndexGPttMap[msg.ReceiverId]; ok {
+					// 已经发现了这个用户的一条消息，那么就把消息加到对应的切片下的
+					log.Log.Printf("v %d, s %v msg %+v", v, ok, msg)
+					respPkgGroupPtt[v].ImMsgData = append(respPkgGroupPtt[v].ImMsgData, msg)
+				} else {
+					// 首次找到这个用户的第一条群聊ptt消息，就respPackage添加一个slice，并记录index
+					var userMsgs = &pb.OfflineImMsg{
+						GroupId:         msg.ReceiverId,
+						Name:            msg.ReceiverName,
+						MsgReceiverType: IM_MSG_FROM_UPLOAD_RECEIVER_IS_GROUP,
+					}
+					userMsgs.ImMsgData = append(make([]*pb.ImMsgReqData, 0), msg)
+					respPkgGroupPtt = append(respPkgGroupPtt, userMsgs)
+					idIndexGPttMap[msg.ReceiverId] = idxGpPtt
+					idxGpPtt++
 				}
-				userMsgs.ImMsgData = append(make([]*pb.ImMsgReqData, 0), msg)
-				respPkgGroup = append(respPkgGroup, userMsgs)
-				idIndexGMap[msg.ReceiverId] = idxG
-				idxG++
+			} else {
+				if v, ok := idIndexGMap[msg.ReceiverId]; ok {
+					// 已经发现了这个用户的一条消息，那么就把消息加到对应的切片下的
+					log.Log.Printf("v %d, s %v msg %+v", v, ok, msg)
+					respPkgGroup[v].ImMsgData = append(respPkgGroup[v].ImMsgData, msg)
+				} else {
+					// 首次找到这个用户的第一条单人消息，就respPackage添加一个slice，并记录index
+					var userMsgs = &pb.OfflineImMsg{
+						GroupId:         msg.ReceiverId,
+						Name:            msg.ReceiverName,
+						MsgReceiverType: IM_MSG_FROM_UPLOAD_RECEIVER_IS_GROUP,
+					}
+					userMsgs.ImMsgData = append(make([]*pb.ImMsgReqData, 0), msg)
+					respPkgGroup = append(respPkgGroup, userMsgs)
+					idIndexGMap[msg.ReceiverId] = idxG
+					idxG++
+				}
 			}
 		}
 	}
@@ -764,8 +787,9 @@ func GetOfflineImMsgFromDB(req *pb.StreamRequest) (*pb.StreamResponse, error) {
 
 	return &pb.StreamResponse{
 		OfflineImMsgResp: &pb.OfflineImMsgResp{
-			OfflineSingleImMsgs: respPkgSingle,
-			OfflineGroupImMsgs:  respPkgGroup},
+			OfflineSingleImMsgs:   respPkgSingle,
+			OfflineGroupImMsgs:    respPkgGroup,
+			OfflineGroupPttImMsgs: respPkgGroupPtt},
 		DataType: OFFLINE_IM_MSG}, nil
 }
 

@@ -99,8 +99,9 @@ const (
 	IM_IMAGE_MSG        = 2 // 图片
 	IM_VOICE_MSG        = 3 // 音频文件
 	IM_VIDEO_MSG        = 4 // 视频文件
-	IM_PDF_MSG          = 5 // PDF文件
+	IM_PTT_MSG          = 5 // PTT文件
 	IM_SOS              = 6 // SOS消息
+	IM_SOS_CANCEL       = 7 // SOS消息
 	IM_UNKNOWN_TYPE_MSG = 10000
 )
 
@@ -111,7 +112,7 @@ func GetMsg(uid int32, stat int32, db *sql.DB) ([]*pb.ImMsgReqData, error) {
 	}
 
 	sql := fmt.Sprintf(`SELECT sender_id, s_name, send_time, recv_name, receiver_id, receiver_type, gid, msg_type, content 
-FROM message WHERE receiver_id=%d AND stat=%d AND msg_type BETWEEN %d AND %d ORDER BY create_time DESC`, uid, stat, IM_TEXT_MSG, IM_PDF_MSG)
+FROM message WHERE receiver_id=%d AND stat=%d AND msg_type BETWEEN %d AND %d ORDER BY create_time DESC`, uid, stat, IM_TEXT_MSG, IM_PTT_MSG)
 	rows, err := db.Query(sql)
 	if err != nil {
 		log.Log.Printf("query(%s), error(%s)\n", sql, err)

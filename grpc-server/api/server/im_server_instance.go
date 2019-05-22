@@ -148,7 +148,7 @@ func pttMsgDispatcher(dc *DataContext, pttMsg *interphoneMsg) {
 		fContext := &model.FileContext{
 			UserId:         int(uId),
 			FilePath:       cfgGs.FILE_BASE_URL + pttMsg.FilePath,
-			FileType:       fType,
+			FileType:       utils.IM_PTT_MSG,
 			FileName:       pttMsg.FilePath,
 			FileSize:       0, // 文件大小 TODO janus没有返回
 			FileMD5:        pttMsg.Md5,
@@ -166,7 +166,7 @@ func pttMsgDispatcher(dc *DataContext, pttMsg *interphoneMsg) {
 			ReceiverType: IM_MSG_FROM_UPLOAD_RECEIVER_IS_GROUP,
 			ReceiverId:   imG.Gid,
 			ResourcePath: cfgGs.FILE_BASE_URL + pttMsg.FilePath,
-			MsgType:      fType,
+			MsgType:      utils.IM_PTT_MSG,
 			ReceiverName: imG.GroupName,
 			SendTime:     pttMsg.Timestamp, // TODO 时间戳转换
 		})

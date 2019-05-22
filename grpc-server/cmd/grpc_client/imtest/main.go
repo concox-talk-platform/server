@@ -25,14 +25,14 @@ type interphoneMsg struct {
 
 func main() {
 	r := cache.GetRedisClient()
-	for i := 0; i < 50; i++ {
+	for i := 0; i < 5; i++ {
 		//go func(i int) {
 		m := &interphoneMsg{
-			Uid:       "1530", //strconv.FormatInt(int64(i),10),
+			Uid:       "8", //strconv.FormatInt(int64(i),10),
 			MsgType:   "ptt",
 			Md5:       "555555555555",
-			GId:       "207",
-			FilePath:  "123456789",
+			GId:       "3",
+			FilePath:  "123456789.ptt",
 			Timestamp: time.Now().String(),
 		}
 		v, e := json.Marshal(m)

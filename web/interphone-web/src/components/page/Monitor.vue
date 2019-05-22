@@ -1096,7 +1096,7 @@ export default {
                 "/janus"
                 ];
                 //                var server = [
-                // "ws://" + "113.105.153.240" + ":9188",
+                // "ws://" + "114.119.113.97" + ":9188",
                 // "/janus"
                 // ];
                  
@@ -1517,7 +1517,7 @@ export default {
                 window.console.log(this.receiver_id)
                 this.talk_name = item.user_name;  
                 // this.websocket = new WebSocket('ws://10.0.18.132:10000/im-server/'+sessionStorage.getItem('id'));
-                // this.websocket = new WebSocket('ws://113.105.153.240:8888/im-server/'+sessionStorage.getItem('id'));
+                // this.websocket = new WebSocket('ws://114.119.113.97:8888/im-server/'+sessionStorage.getItem('id'));
                 // this. initWebSocket();
                 this.im_self_show =true;
                 this.receiver_type = 1;
@@ -1528,7 +1528,7 @@ export default {
             createWebSocket(){
                 // this.websocket = new WebSocket('ws://10.0.18.132:10000/im-server/'+sessionStorage.getItem('id'));
                 // this.websocket = new WebSocket('ws://10.0.18.132:8888/im-server/'+sessionStorage.getItem('id'));
-                // this.websocket = new WebSocket('ws://113.105.153.240:8888/im-server/'+sessionStorage.getItem('id'));
+                // this.websocket = new WebSocket('ws://114.119.113.97:8888/im-server/'+sessionStorage.getItem('id'));
                 this.websocket = new WebSocket('wss://ptt.jimilab.com/websocket/'+sessionStorage.getItem('id'));
                 this. initWebSocket();
             },

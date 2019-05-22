@@ -57,7 +57,7 @@ const (
 	IM_IMAGE_MSG        = 2 // 图片
 	IM_VOICE_MSG        = 3 // 音频文件
 	IM_VIDEO_MSG        = 4 // 视频文件
-	IM_PDF_MSG          = 5 // PDF文件
+	IM_PTT_MSG          = 5 // PDF文件
 	IM_UNKNOWN_TYPE_MSG = 10000
 )
 
@@ -432,7 +432,13 @@ func sendImMessage(imw *worker, ctx context.Context) {
 						}
 					}
 				}
-
+				for _, msg := range resp.OfflineImMsgResp.OfflineGroupPttImMsgs {
+					if msg.ImMsgData != nil {
+						for _, userMsg := range msg.ImMsgData {
+							userMsg.ResourcePath = utils.ConvertOctonaryUtf8(userMsg.ResourcePath)
+						}
+					}
+				}
 				log.Log.Printf("web grpc client receive : %+v", resp)
 
 				// 返回JSON字符串

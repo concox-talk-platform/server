@@ -218,6 +218,7 @@ func GetAccountInfo(c *gin.Context) {
 				Id:         u.Id,
 				IMei:       u.IMei,
 				UserName:   u.UserName,
+				NickName:   u.NickName,
 				PassWord:   u.PassWord,
 				UserType:   u.UserType,
 				AccountId:  u.AccountId,
@@ -238,6 +239,7 @@ func GetAccountInfo(c *gin.Context) {
 					Id:         u.Id,
 					IMei:       u.IMei,
 					UserName:   u.UserName,
+					NickName:   u.NickName,
 					PassWord:   u.PassWord,
 					UserType:   u.UserType,
 					AccountId:  u.AccountId,
@@ -553,5 +555,3 @@ func GetAccountDevice(c *gin.Context) {
 		"devices":      deviceAll,
 	})
 }
-
-

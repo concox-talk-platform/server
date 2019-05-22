@@ -14,7 +14,7 @@ import (
 
 func init() {
 	// 加载数据库中所有的数据到缓存
-	gServer.DataInit()
+	//gServer.DataInit()
 	//server.ConcurrentEngine{
 	//	Scheduler: &server.SimpleScheduler{},
 	//	WorkerCount: 10,   // 加载redis数据的协程数
@@ -22,7 +22,6 @@ func init() {
 }
 
 func main() {
-	//p := flag.String("p", "9000", "grpc listening port")
 	flag.Parse()
 
 	go func() {
