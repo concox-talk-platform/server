@@ -188,7 +188,7 @@ module.exports = {
             out:"Exit the intercom",
             select:'Please choose the intercom room',
             begin:'Start intercom',
-            close:'No microphone permission, try again later',
+            close:'Someone is talking, please wait',
         },
         im:{
             group_list:'Group List',

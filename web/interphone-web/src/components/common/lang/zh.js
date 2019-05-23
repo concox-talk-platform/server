@@ -195,7 +195,7 @@ module.exports = {
         out:"退出对讲",
         select:'请选择对讲房间',
         begin:'开始对讲',
-        close:'没有麦权，稍后再试'
+        close:'有人正在讲话，请稍后'
     },
     im:{
         group_list:'群组列表',

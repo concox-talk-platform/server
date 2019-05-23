@@ -14,7 +14,6 @@
                     <span>{{$t('sos.alert')}}</span>
                 </div>
                 <div class="sos_place">{{$t('sos.place')}}</div>
-                
             </div>
             <!-- 下线提醒 -->
             <div  class="off_line_div"  v-show="off_line_show">
@@ -29,34 +28,32 @@
             </div>
             <!-- 上线提醒 -->
             <div  class="off_line_div"  v-show="online_show">
-                    <div class="off_title">{{$t('im.on_line')}}</div>
-                    <div class="off_body">
-                        <span>{{online_name}}</span> &nbsp; &nbsp;
-                        <span>{{$t('im.on_span')}}</span>
-                    </div>
-                   <div class="off_foot">
-                        <el-button type="primary" @click="online_button">{{$t('button_message.confirm')}}</el-button>
-                   </div>
+                <div class="off_title">{{$t('im.on_line')}}</div>
+                <div class="off_body">
+                    <span>{{online_name}}</span> &nbsp; &nbsp;
+                    <span>{{$t('im.on_span')}}</span>
+                </div>
+                <div class="off_foot">
+                    <el-button type="primary" @click="online_button">{{$t('button_message.confirm')}}</el-button>
+                </div>
             </div>
             <!-- websocket断开提醒 -->
             <div  class="chat_div"  v-if="refresh_show">
-                    <div class="chat_title">{{$t('im.chat')}}</div>
-                   <div class="off_foot">
-                        <el-button type="primary" @click="chat_refresh">{{$t('button_message.refresh')}}</el-button>
-                   </div>
+                <div class="chat_title">{{$t('im.chat')}}</div>
+                <div class="off_foot">
+                    <el-button type="primary" @click="chat_refresh">{{$t('button_message.refresh')}}</el-button>
+                </div>
             </div>
             <!-- 地图切换 -->
             <div class="map_select">
                 <div class="baidumap" :class="{map_active:mapshow}" @click="baidu_selected">{{$t('map.baidu')}}</div>
                 <div class="googlemap" :class="{map_active:!mapshow}" @click="google_selected">{{$t('map.google')}}</div>
             </div>
-    
-    
         <!-- <intermap :postSOS='this.sosGps' ref="soschild" v-if="mapshow"></intermap> -->
-        <intermap  ref="soschild" v-if="mapshow"></intermap>
-        <intergooglemap v-if="!mapshow" ref="googlechild"></intergooglemap>
+            <intermap  ref="soschild" v-if="mapshow"></intermap>
+            <intergooglemap v-if="!mapshow" ref="googlechild"></intergooglemap>
             <div id="monotor_content">
-                    <el-aside>
+                <el-aside>
                     <div   id="group_sider" style="height:100%"  @click="hide">
                         <!-- 侧边栏 -->
                         <div class="homePage_sideGroup">
@@ -64,296 +61,292 @@
                                 <span class="sideGroup_headname">Text群组</span>
                             </div>
                             <div class="sideGroup_body" v-show="show" >
-                                    <div class="group_total">
-                                        <i class="el-icon-caret-bottom"  @click="groupbody_show" v-show="down_show"></i> 
-                                        <i class="el-icon-caret-right"  @click="groupbody_show" v-show="right_show"></i> 
-                                        <span class="interphonefamily ">&#xe71b;</span>
-                                        <div class="group_num" >
-                                            <span class="group_name">Text</span>
-                                            <!-- <span class="group_on">  ({{online}} </span>
-                                            <span class="group_totalnum">  /{{totalnum}}) </span> -->
-                                        </div> 
-                                    </div>
-                                    <div class="group_members" v-show='members_show' >
-                                        <div v-for="(item,index) in group_list" :key="item.group_info.id" class="members"
-                                        @click="group_detail(index)" 
-                                        @mouseover="enter_group(index)"
-                                        @mouseout="leave_group(index)"
-                                        @contextmenu.prevent='editorial(index)'
-                                        :class="{active_on:active === index,active_hover:actived === index}"> 
-                                            <span class="interphonefamily groupicon">&#xe71b;</span>
-                                            <div class="members_num" >
-                                                <span class="members_name">{{item.group_info.group_name}}</span>
-                                                <span>(</span>
-                                                <span class="members_on"> {{item.group_info.online_num + 1}}</span>
-                                                <span >  / </span>
-                                                <span class="members_totalnum">{{item.device_infos.length}}</span>
-                                                <span>)</span>
-                                            </div>  
-                                            <div class="editorial_group" v-show="editorial_show === index">
-                                                <div class="ungroup" @click.stop="dissolve" >{{$t('group.dissolve')}}</div>
-                                                <div class="modification" @click.stop="amend">{{$t('group.amend')}}</div>
-                                                <div class="editor_member" @click.stop="modified_member">{{$t('group.modified_member')}}</div>
-                                            </div>
-                                        </div> 
-                                    </div>
-                                    <div class="group_foot"  @click="group_add" >
-                                            <span class="interphonefamily foot_icon">&#xe71b;</span>
-                                            <span class="foot_add">+</span>
-                                            <span class="foot_text">{{ $t("group.add_group") }}</span>                
-                                    </div>
+                                <div class="group_total">
+                                    <i class="el-icon-caret-bottom"  @click="groupbody_show" v-show="down_show"></i> 
+                                    <i class="el-icon-caret-right"  @click="groupbody_show" v-show="right_show"></i> 
+                                    <span class="interphonefamily ">&#xe71b;</span>
+                                    <div class="group_num" >
+                                        <span class="group_name">Text</span>
+                                        <!-- <span class="group_on">  ({{online}} </span>
+                                        <span class="group_totalnum">  /{{totalnum}}) </span> -->
+                                    </div> 
+                                </div>
+                                <div class="group_members" v-show='members_show' >
+                                    <div v-for="(item,index) in group_list" :key="item.group_info.id" class="members"
+                                    @click="group_detail(index)" 
+                                    @mouseover="enter_group(index)"
+                                    @mouseout="leave_group(index)"
+                                    @contextmenu.prevent='editorial(index)'
+                                    :class="{active_on:active === index,active_hover:actived === index}"> 
+                                        <span class="interphonefamily groupicon">&#xe71b;</span>
+                                        <div class="members_num" >
+                                            <span class="members_name">{{item.group_info.group_name}}</span>
+                                            <span>(</span>
+                                            <span class="members_on"> {{item.group_info.online_num + 1}}</span>
+                                            <span >  / </span>
+                                            <span class="members_totalnum">{{item.device_infos.length}}</span>
+                                            <span>)</span>
+                                        </div>  
+                                        <div class="editorial_group" v-show="editorial_show === index">
+                                            <div class="ungroup" @click.stop="dissolve" >{{$t('group.dissolve')}}</div>
+                                            <div class="modification" @click.stop="amend">{{$t('group.amend')}}</div>
+                                            <div class="editor_member" @click.stop="modified_member">{{$t('group.modified_member')}}</div>
+                                        </div>
+                                    </div> 
+                                </div>
+                                <div class="group_foot"  @click="group_add" >
+                                        <span class="interphonefamily foot_icon">&#xe71b;</span>
+                                        <span class="foot_add">+</span>
+                                        <span class="foot_text">{{ $t("group.add_group") }}</span>                
+                                </div>
                             </div>     
                         </div>
                     </div>
-                    </el-aside>
-                    <!-- 视频 -->
-                    <div  class="video_room" v-show="video_show" @mousedown.self="video_move"> 
-                        <span class="video_tittle">{{$t('video.video_text')}}</span>
-                            <div id="videocall">
-                            <div id="videos" >
-                                <div id="videoleft"></div>
-                                <div id="videoright"></div>
-                                </div>
-                            </div>
-                            <el-button type="danger" round @click="video_hangup" class="video_close">hangup</el-button>
-                    </div> 
-                    <div  class="audio_room" v-show="aduio_show" @mousedown.self="video_move"> 
-                        <div class="audio_tittle" >{{$t('video.audio_text')}}</div>
-                        <div class="audio_loding"  v-show="audio_logo"> {{$t('video.loding')}}</div>
-                        <div id="audio_box" v-show="!audio_logo"> <img class="audio_img" src="../../assets/img/inter.png" alt=""> </div>
-                            <div id="audiocall">
-                            <div id="audios" class="hide">
-                                <div id="audioleft"></div>
-                                <div id="audioright"></div>
-                                </div>
-                            </div>
-                            <el-button type="danger" round @click="audio_hangup" class="audio_close">hangup</el-button>
-                    </div>
-                    <!-- 即时聊天 -->
-                    <div class="im_box" v-show="im_show" @mousedown.self="video_move">
-                        <div class="im_aside">
-                            <div class="im_aside_logo"><img class="im_aside_img" src="../../assets/img/computer.png" alt=""></div>
-                            <div class="im_recent_icon" @click="select_imrecent" ><div class="interphonefamily im_size " v-bind:class="{aside_active:im_recent_show}">&#xe60d;</div></div>
-                            <div class="im_device_icon" @click="select_imdevice"><div class="interphonefamily im_size"  v-bind:class="{aside_active:im_device_show}">&#xe66c;</div></div>
-                            <div class="im_group_icon" @click="select_imgroup" ><div class="interphonefamily im_size" v-bind:class="{aside_active:im_group_show}">&#xe6d6;</div></div>
+                </el-aside>
+                <!-- 视频 -->
+                <div  class="video_room" v-show="video_show" @mousedown.self="video_move"> 
+                    <span class="video_tittle">{{$t('video.video_text')}}</span>
+                    <div id="videocall">
+                        <div id="videos" >
+                            <div id="videoleft"></div>
+                            <div id="videoright"></div>
                         </div>
-                        <div class="im_group">
-                            <div v-show="im_recent_show">
-                                <div class="im_group_list">{{ $t("im.chat_list") }}</div>   
-                                <div class="im_overheigh"> 
-                                        <div v-for="(item,index) in im_off_line" :key="item.id" class="im_members"
-                                        @click="select_im_outline(index,item.id,item.Name,item.MsgReceiverType,item.imMsgData,item)" 
-                                        @mouseover="enter_im_outline(index)"
-                                        @mouseout="leave_im_outline(index)"
-                                        :class="{active_on:im_line_active === index,active_hover:im_line_actived === index}"> 
-                                        <span class="interphonefamily groupicon" v-if="item.MsgReceiverType == 1">&#xe66c;</span>
-                                        <span class="interphonefamily groupicon" v-if="item.MsgReceiverType == 2">&#xe649;</span>
-                                            <div class="members_num" >
-                                                <span class="members_name">{{item.Name}}</span>
-                                            </div>  
-                                    </div>
+                    </div>
+                    <el-button type="danger" round @click="video_hangup" class="video_close">hangup</el-button>
+                </div> 
+                <div  class="audio_room" v-show="aduio_show" @mousedown.self="video_move"> 
+                    <div class="audio_tittle" >{{$t('video.audio_text')}}</div>
+                    <div class="audio_loding"  v-show="audio_logo"> {{$t('video.loding')}}</div>
+                    <div id="audio_box" v-show="!audio_logo"> <img class="audio_img" src="../../assets/img/inter.png" alt=""> </div>
+                    <div id="audiocall">
+                        <div id="audios" class="hide">
+                            <div id="audioleft"></div>
+                            <div id="audioright"></div>
+                        </div>
+                    </div>
+                    <el-button type="danger" round @click="audio_hangup" class="audio_close">hangup</el-button>
+                </div>
+                <!-- 即时聊天 -->
+                <div class="im_box" v-show="im_show" @mousedown.self="video_move">
+                    <div class="im_aside">
+                        <div class="im_aside_logo"><img class="im_aside_img" src="../../assets/img/computer.png" alt=""></div>
+                        <div class="im_recent_icon" @click="select_imrecent" ><div class="interphonefamily im_size " v-bind:class="{aside_active:im_recent_show}">&#xe60d;</div></div>
+                        <div class="im_device_icon" @click="select_imdevice"><div class="interphonefamily im_size"  v-bind:class="{aside_active:im_device_show}">&#xe66c;</div></div>
+                        <div class="im_group_icon" @click="select_imgroup" ><div class="interphonefamily im_size" v-bind:class="{aside_active:im_group_show}">&#xe6d6;</div></div>
+                    </div>
+                    <div class="im_group">
+                        <div v-show="im_recent_show">
+                            <div class="im_group_list">{{ $t("im.chat_list") }}</div>   
+                            <div class="im_overheigh"> 
+                                <div v-for="(item,index) in im_off_line" :key="item.id" class="im_members"
+                                @click="select_im_outline(index,item.id,item.Name,item.MsgReceiverType,item.imMsgData,item)" 
+                                @mouseover="enter_im_outline(index)"
+                                @mouseout="leave_im_outline(index)"
+                                :class="{active_on:im_line_active === index,active_hover:im_line_actived === index}"> 
+                                    <span class="interphonefamily groupicon" v-if="item.MsgReceiverType == 1">&#xe66c;</span>
+                                    <span class="interphonefamily groupicon" v-if="item.MsgReceiverType == 2">&#xe649;</span>
+                                    <div class="members_num" >
+                                        <span class="members_name">{{item.Name}}</span>
+                                    </div>  
                                 </div>
                             </div>
-                            <div v-show="im_device_show">
-                                <div class="im_group_list">{{ $t("im.member_list") }}</div>   
-                                <div class="im_overheigh">           
-                                    <div v-for="(item,index) in local_device_list" :key="item.id" class="im_members"
-                                        @click="select_im_device(index,item.id)" 
-                                        @mouseover="enter_im_device(index)"
-                                        @mouseout="leave_im_device(index)"
-                                        :class="{active_on:im_device_active === index,active_hover:im_device_actived === index}"> 
-                                            <span class="interphonefamily groupicon">&#xe66c;</span>
-                                            <div class="members_num" >
-                                                <span class="members_name">{{item.user_name}}</span>
-                                            </div>  
-                                    </div>
-                                </div> 
-                            </div>
-                            <div v-show="im_group_show">  
-                                <div class="im_group_list">{{ $t("im.group_list") }}</div>   
-                                <div class="im_overheigh">              
-                                    <div v-for="(item,index) in group_list" :key="item.group_info.id" class="im_members"
-                                        @click="select_im_group(index,item.group_info.id)" 
-                                        @mouseover="enter_im_group(index)"
-                                        @mouseout="leave_im_group(index)"
-                                        :class="{active_on:im_group_active === index,active_hover:im_group_actived === index}"> 
-                                            <span class="interphonefamily groupicon">&#xe649;</span>
-                                            <div class="members_num" >
-                                                <span class="members_name">{{item.group_info.group_name}}</span>
-                                            </div>  
-                                        </div>
+                        </div>
+                        <div v-show="im_device_show">
+                            <div class="im_group_list">{{ $t("im.member_list") }}</div>   
+                            <div class="im_overheigh">           
+                            <div v-for="(item,index) in local_device_list" :key="item.id" class="im_members"
+                                @click="select_im_device(index,item.id)" 
+                                @mouseover="enter_im_device(index)"
+                                @mouseout="leave_im_device(index)"
+                                :class="{active_on:im_device_active === index,active_hover:im_device_actived === index}"> 
+                                <span class="interphonefamily groupicon">&#xe66c;</span>
+                                <div class="members_num" >
+                                    <span class="members_name">{{item.user_name}}</span>
                                 </div>  
                             </div>
+                            </div> 
                         </div>
-                        
-                        <span class="interphonefamily" style="font-size: 42px;">&#xe660;</span>
-                        <span>{{talk_name}}</span>  
-                        <span class="interphonefamily" style="font-size:18px;float:right;cursor:pointer;" @click="im_close">&#xe60b;</span>
-                    
-                        <div class="im_content" v-if="im_content_show">
-                            <!-- 单人聊天 -->
-                            <div class="im_message" v-if="im_self_show" >
-                                <div  class="chat_box" v-for="(item) in im_total_message" :key="item.time_id">
-                                    <div class="clearfix" :class='item.im_send_obj==1?"im_self":"im_opposite"'  >
-                                        <div  :class='item.im_send_obj==1?"im_self_pic":"im_opposite_pic"'>
-                                            <img v-show='item.im_send_obj==1'  class="im_self_img" src="../../assets/img/computer.png" alt=""> 
-                                            <img  v-show='item.im_send_obj!==1' class="im_opposite_img" src="../../assets/img/inter.png" alt=""> 
+                        <div v-show="im_group_show">  
+                            <div class="im_group_list">{{ $t("im.group_list") }}</div>   
+                            <div class="im_overheigh">              
+                                <div v-for="(item,index) in group_list" :key="item.group_info.id" class="im_members"
+                                    @click="select_im_group(index,item.group_info.id)" 
+                                    @mouseover="enter_im_group(index)"
+                                    @mouseout="leave_im_group(index)"
+                                    :class="{active_on:im_group_active === index,active_hover:im_group_actived === index}"> 
+                                    <span class="interphonefamily groupicon">&#xe649;</span>
+                                    <div class="members_num" >
+                                        <span class="members_name">{{item.group_info.group_name}}</span>
+                                    </div>  
+                                </div>
+                            </div>  
+                        </div>
+                    </div>
+                    <span class="interphonefamily" style="font-size: 42px;">&#xe660;</span>
+                    <span>{{talk_name}}</span>  
+                    <span class="interphonefamily" style="font-size:18px;float:right;cursor:pointer;" @click="im_close">&#xe60b;</span>
+                    <div class="im_content" v-if="im_content_show">
+                        <!-- 单人聊天 -->
+                        <div class="im_message" v-if="im_self_show" >
+                            <div  class="chat_box" v-for="(item) in im_total_message" :key="item.time_id">
+                                <div class="clearfix" :class='item.im_send_obj==1?"im_self":"im_opposite"'  >
+                                    <div  :class='item.im_send_obj==1?"im_self_pic":"im_opposite_pic"'>
+                                        <img v-show='item.im_send_obj==1'  class="im_self_img" src="../../assets/img/computer.png" alt=""> 
+                                        <img  v-show='item.im_send_obj!==1' class="im_opposite_img" src="../../assets/img/inter.png" alt=""> 
+                                    </div>
+                                    <div :class='item.im_send_obj==1?"im_self_msg":"im_opposite_msg"'>
+                                        <div  :class='item.im_send_obj==1?"im_self_news":"im_opposite_news"' v-show='item.MsgType==1'>{{item.ResourcePath}}</div>
+                                        <div  :class='item.im_send_obj==1?"im_self_corner":"im_opposite_corner"'></div>
+                                        <img  class="im_get_img" v-show='item.MsgType==2'  :src="item.ResourcePath" alt=""> 
+                                        <div class="im_filebox" v-show='item.MsgType==3'>
+                                            <audio :src="item.ResourcePath"  controls="controls" style="height: 29px;width: 257px;"></audio>
+                                            <!-- <video :src="item.ResourcePath" autoplay="autoplay" controls="controls" style="max-width: 190px;"></video> -->
                                         </div>
-                                        <div :class='item.im_send_obj==1?"im_self_msg":"im_opposite_msg"'>
-                                            <div  :class='item.im_send_obj==1?"im_self_news":"im_opposite_news"' v-show='item.MsgType==1'>{{item.ResourcePath}}</div>
-                                            <div  :class='item.im_send_obj==1?"im_self_corner":"im_opposite_corner"'></div>
-                                            <img  class="im_get_img" v-show='item.MsgType==2'  :src="item.ResourcePath" alt=""> 
-                                            <div class="im_filebox" v-show='item.MsgType==3'>
-                                                <audio :src="item.ResourcePath"  controls="controls" style="height: 29px;width: 257px;"></audio>
-                                                <!-- <video :src="item.ResourcePath" autoplay="autoplay" controls="controls" style="max-width: 190px;"></video> -->
-                                            </div>
-                                            <div class="im_filebox" v-show='item.MsgType==4'>
-                                                <video :src="item.ResourcePath" autoplay="autoplay" controls="controls" style="max-width: 190px;"></video>
-                                            </div>
-                                            <div class="im_filebox" v-show='item.MsgType==5'>
-                                                    <span class="im_file_text" style="float: left;" >{{item.file_name}}</span>
-                                                    <a :href="item.ResourcePath" download="">
-                                                            <span class="interphonefamily" style="float: right;cursor: pointer;margin-left:10px" >&#xe69c;</span>
-                                                    </a>
-                                            </div>
+                                        <div class="im_filebox" v-show='item.MsgType==4'>
+                                            <video :src="item.ResourcePath" autoplay="autoplay" controls="controls" style="max-width: 190px;"></video>
+                                        </div>
+                                        <div class="im_filebox" v-show='item.MsgType==10000'>
+                                            <span class="im_file_text" style="float: left;" >{{item.file_name}}</span>
+                                            <a :href="item.ResourcePath" download="">
+                                                <span class="interphonefamily" style="float: right;cursor: pointer;margin-left:10px" >&#xe69c;</span>
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <!-- 群主聊天 -->
-                            <div class="im_message im_group_box"  v-if="im_record_show">
-                                    <div  class="chat_box" v-for="(item) in im_total_group" :key="item.time_id">
-                                        <div class="clearfix" :class='item.im_send_obj==1?"im_self":"im_opposite"'  >
-                                            <div class="im_group_name"   v-if="item.im_send_obj !=1"  v-show="item.ReceiverType == 2 ">{{item.SenderName}}</div>
-                                            <div  :class='item.im_send_obj==1?"im_self_pic":"im_opposite_pic"'>
-                                                <img v-show='item.im_send_obj==1'  class="im_self_img" src="../../assets/img/computer.png" alt=""> 
-                                                <img  v-show='item.im_send_obj!==1' class="im_opposite_img" src="../../assets/img/inter.png" alt=""> 
-                                            </div>
-                                            <div :class='item.im_send_obj==1?"im_self_msg":"im_opposite_msg"'>
-                                                <div  :class='item.im_send_obj==1?"im_self_news":"im_opposite_news"' v-show='item.MsgType==1'>{{item.ResourcePath}}</div>
-                                                <div  :class='item.im_send_obj==1?"im_self_corner":"im_opposite_corner"'></div>
-                                                <img  class="im_get_img" v-show='item.MsgType==2'  :src="item.ResourcePath" alt="">
-                                                <div class="im_filebox" v-show='item.MsgType==3'>
-                                                        <audio :src="item.ResourcePath"  controls="controls" style="height: 29px;width: 257px;"></audio>
-                                                        <!-- <video :src="item.ResourcePath" autoplay="autoplay" controls="controls" style="max-width: 190px;"></video> -->
-                                                </div> 
-                                                <div class="im_filebox" v-show='item.MsgType==4'>
-                                                    <video :src="item.ResourcePath" autoplay="autoplay" controls="controls" style="max-width: 190px;"></video>
-                                                </div>
-                                                <!-- <div class="im_filebox" v-show='item.MsgType==5'>
-                                                        <span class="im_file_text" style="float: left;" >{{item.file_name}}</span>
-                                                        <a :href="item.ResourcePath" download="">
-                                                                <span class="interphonefamily" style="float: right;cursor: pointer;margin-left:10px" >&#xe69c;</span>
-                                                        </a>
-                                                </div> -->
-                                            </div>
+                        </div>
+                        <!-- 群主聊天 -->
+                        <div class="im_message im_group_box"  v-if="im_record_show">
+                            <div  class="chat_box" v-for="(item) in im_total_group" :key="item.time_id">
+                                <div class="clearfix" :class='item.im_send_obj==1?"im_self":"im_opposite"'  >
+                                    <div class="im_group_name"   v-if="item.im_send_obj !=1"  v-show="item.ReceiverType == 2 ">{{item.SenderName}}</div>
+                                    <div  :class='item.im_send_obj==1?"im_self_pic":"im_opposite_pic"'>
+                                        <img v-show='item.im_send_obj==1'  class="im_self_img" src="../../assets/img/computer.png" alt=""> 
+                                        <img  v-show='item.im_send_obj!==1' class="im_opposite_img" src="../../assets/img/inter.png" alt=""> 
+                                    </div>
+                                    <div :class='item.im_send_obj==1?"im_self_msg":"im_opposite_msg"'>
+                                        <div  :class='item.im_send_obj==1?"im_self_news":"im_opposite_news"' v-show='item.MsgType==1'>{{item.ResourcePath}}</div>
+                                        <div  :class='item.im_send_obj==1?"im_self_corner":"im_opposite_corner"'></div>
+                                        <img  class="im_get_img" v-show='item.MsgType==2'  :src="item.ResourcePath" alt="">
+                                        <div class="im_filebox" v-show='item.MsgType==3'>
+                                            <audio :src="item.ResourcePath"  controls="controls" style="height: 29px;width: 257px;"></audio>
+                                            <!-- <video :src="item.ResourcePath" autoplay="autoplay" controls="controls" style="max-width: 190px;"></video> -->
+                                        </div> 
+                                        <div class="im_filebox" v-show='item.MsgType==4'>
+                                            <video :src="item.ResourcePath" autoplay="autoplay" controls="controls" style="max-width: 190px;"></video>
+                                        </div>
+                                        <div class="im_filebox" v-show='item.MsgType==10000'>
+                                            <span class="im_file_text" style="float: left;" >{{item.file_name}}</span>
+                                            <a :href="item.ResourcePath" download="">
+                                                    <span class="interphonefamily" style="float: right;cursor: pointer;margin-left:10px" >&#xe69c;</span>
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
-                            <div class="im_media">
-                                <label for="im_resource"><span class="interphonefamily im_media_icon" :title="$t('im.media')">&#xe7d8;</span></label>
-                                <span class="interphonefamily im_media_icon" @click="map_show" >&#xe643;</span>
-                                <span class="interphonefamily im_media_icon" @click="im_audio" :title="$t('video.audio_text')"   v-show="im_self_show">&#xe621;</span>
-                                <span class="interphonefamily im_media_icon" @click="im_video" :title="$t('video.video_text')" v-show="im_self_show">&#xe616;</span>
-                                <span class="interphonefamily im_media_icon" @click="im_audio_bridge" :title="$t('talkback.audio_bridge')" v-show="!im_self_show">&#xe6a5;</span>
-                                <div class="im_record"  @click="im_unfold_history">
+                            </div>
+                        </div>
+                        <div class="im_media">
+                            <label for="im_resource"><span class="interphonefamily im_media_icon" :title="$t('im.media')">&#xe7d8;</span></label>
+                            <span class="interphonefamily im_media_icon" @click="map_show" >&#xe643;</span>
+                            <span class="interphonefamily im_media_icon" @click="im_audio" :title="$t('video.audio_text')"   v-show="im_self_show">&#xe621;</span>
+                            <span class="interphonefamily im_media_icon" @click="im_video" :title="$t('video.video_text')" v-show="im_self_show">&#xe616;</span>
+                            <span class="interphonefamily im_media_icon" @click="im_audio_bridge" :title="$t('talkback.audio_bridge')" v-show="!im_self_show">&#xe6a5;</span>
+                            <div class="im_record"  @click="im_unfold_history">
                                 <span class="interphonefamily im_record_icon" >&#xe60d;</span>
                                 <span>{{ $t("im.chat_history") }}</span>
                                 <i class="el-icon-caret-right"></i>
-                                </div>
                             </div>
-                            <div class="im_send">
-                                <!-- <div    class="im_send_message"  contenteditable="true"  ></div> -->
-                                <textarea class="im_send_message" v-model="im_send_news" v-if="im_box_show" @keyup.enter="im_send_subimt" ></textarea>
-    
-                                <div class="upload_file" v-show="upload_show">
-                                    <form id="im_formid">
+                        </div>
+                        <div class="im_send">
+                            <!-- <div    class="im_send_message"  contenteditable="true"  ></div> -->
+                            <textarea class="im_send_message" v-model="im_send_news" v-if="im_box_show" @keyup.enter="im_send_subimt" ></textarea>
+                            <div class="upload_file" v-show="upload_show">
+                                <form id="im_formid">
                                     <input type="file" id="im_resource" name="resource" ref="resource" @change="filechange"  style="display: none">
-                                    <!-- <span >{{file_name}}</span> -->
+                                    <span  v-if="file_show">{{file_name}}</span>
                                     <!-- <div class="dele_file">删除文件</div> -->
-                                        <img src=""  id="preview_img" alt="">
-                                        <textarea id="dele_area"  @keyup.delete="dele_file" readonly="readonly"></textarea>
-                                    <!-- <button type="button" @click="dele_file">删除文件</button> -->
-                                    
+                                    <img  v-show="image_show"  src=""  id="preview_img" alt="">
+                                    <textarea  v-show="image_show" id="dele_area"  @keyup.delete="dele_file" readonly="readonly"></textarea>
+                                    <button v-if="file_show" type="button" @click="dele_file">删除文件</button>
                                 </form> 
-                                </div>
-                                <!-- <input v-show="fileupView" id="fileSelect" name="fileSelect"  ref="inputer"  type="file"/> -->
-                                <div class="im_send_button">
-                                    <span class="im_send_close" @click="im_send_close">{{ $t("im.close") }}</span>
-                                    <span class="im_send_subimt" @click="im_send_subimt">{{ $t("im.send") }}</span>
-                                </div>
+                            </div>
+                            <!-- <input v-show="fileupView" id="fileSelect" name="fileSelect"  ref="inputer"  type="file"/> -->
+                            <div class="im_send_button">
+                                <span class="im_send_close" @click="im_send_close">{{ $t("im.close") }}</span>
+                                <span class="im_send_subimt" @click="im_send_subimt">{{ $t("im.send") }}</span>
                             </div>
                         </div>
-                        <div class="im_talkback" v-if="im_talkback_show"> 
-                              <!-- <span>点击加入群对讲</span> -->
-                              <span class="out_talkback"  @click="out_talkback">{{ $t("talkback.out") }}</span>
-                              <div class="talkactive_tip" v-show="mouse_show">{{ $t("talkback.down") }}</div>
-                              <div class="talkactive_tip" v-show="!mouse_show">{{ $t("talkback.up") }}</div>
-                              <div class="talkactive_begin" v-show="talk_begin">{{ $t("talkback.begin") }}</div>
-                              <div class="talkactive_close" v-show="talk_close">{{ $t("talkback.close") }}</div>
-                              <div class="talkback_div" @mousedown="talk_active" @mouseup="talk_actived" :class="{talkback_active:talkactive}" :title="$t('talkback.touch')">
-                                    <span class="interphonefamily talkback_icon">&#xe6a5;</span>
-                              </div>
-
-
+                    </div>
+                    <!-- 对讲页面 -->
+                    <div class="im_talkback" v-if="im_talkback_show"> 
+                        <!-- <span>点击加入群对讲</span> -->
+                        <span class="out_talkback"  @click="out_talkback">{{ $t("talkback.out") }}</span>
+                        <div class="talkactive_tip" v-show="mouse_show">{{ $t("talkback.down") }}</div>
+                        <div class="talkactive_tip" v-show="!mouse_show">{{ $t("talkback.up") }}</div>
+                        <div class="talkactive_begin" v-show="talk_begin">{{ $t("talkback.begin") }}</div>
+                        <div class="talkactive_close" v-show="talk_close">{{ $t("talkback.close") }}</div>
+                        <div  id="mixedaudio"></div>
+                        <div class="talkback_div" @mousedown="talk_active" @mouseup="talk_actived" :class="{talkback_active:talkactive}" :title="$t('talkback.touch')">
+                            <span class="interphonefamily talkback_icon">&#xe6a5;</span>
                         </div>
-                        <div class="im_history" :style="'right:'+history_right+';'+'z-index:'+history_index">
-                            <div class="im_history_top">
-                                <div class="clearfix">
-                                    <i class="interphonefamily"> &#xe60d;</i>
-                                    <span  class="im_history_title">{{ $t("im.chat_history") }}</span>
-                                    <i class="interphonefamily" @click="im_collapse_history" style="float:right;cursor:pointer;"> &#xe60e;</i>
-                                </div>
-                                <div class="clearfix">
-                                    <div class="im_history_text" @click="select_im_text" v-bind:class="{active_history:im_select_text}">{{ $t("im.text") }}</div>
-                                    <div class="im_history_file" @click="select_im_file" v-bind:class="{active_history:im_select_file}">{{ $t("im.file") }}</div>
-                                    <div class="im_history_talk" @click="select_im_talk" v-if="im_record_show"  v-bind:class="{active_history:im_select_talk}">{{ $t("im.talk") }}</div>
-                                </div>
-    
+                    </div>
+                    <!-- 历史记录 -->
+                    <div class="im_history" :style="'right:'+history_right+';'+'z-index:'+history_index">
+                        <div class="im_history_top">
+                            <div class="clearfix">
+                                <i class="interphonefamily"> &#xe60d;</i>
+                                <span  class="im_history_title">{{ $t("im.chat_history") }}</span>
+                                <i class="interphonefamily" @click="im_collapse_history" style="float:right;cursor:pointer;"> &#xe60e;</i>
                             </div>
-                            <div class="im-history-wrap">
-                                <div  v-if="select_text">
-                                    <div v-for="(item) in im_total_history" :key="item.time_id">
-                                        <div class="im_history_info"  v-if='item.MsgType ==1'>
-                                            <div class="im_history_name clearfix">
-                                                <div class="im_record_name">{{item.SenderName}}</div>
-                                                <div class="im_record_time">{{item.SendTime}}</div>
-                                            </div>
-                                            <div class="im_history_comtent">{{item.ResourcePath}}</div>
+                            <div class="clearfix">
+                                <div class="im_history_text" @click="select_im_text" v-bind:class="{active_history:im_select_text}">{{ $t("im.text") }}</div>
+                                <div class="im_history_file" @click="select_im_file" v-bind:class="{active_history:im_select_file}">{{ $t("im.file") }}</div>
+                                <div class="im_history_talk" @click="select_im_talk" v-if="im_record_show"  v-bind:class="{active_history:im_select_talk}">{{ $t("im.talk") }}</div>
+                            </div>
+                        </div>
+                        <div class="im-history-wrap">
+                            <div  v-if="select_text">
+                                <div v-for="(item) in im_total_history" :key="item.time_id">
+                                    <div class="im_history_info"  v-if='item.MsgType ==1'>
+                                        <div class="im_history_name clearfix">
+                                            <div class="im_record_name">{{item.SenderName}}</div>
+                                            <div class="im_record_time">{{item.SendTime}}</div>
+                                        </div>
+                                        <div class="im_history_comtent">{{item.ResourcePath}}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div  v-if="select_file">
+                                <div v-for="(item) in im_total_history" :key="item.time_id">
+                                    <div v-if='item.MsgType !=1' class="im_history_info">
+                                        <div class="im_history_name clearfix">
+                                            <div class="im_record_name">{{item.SenderName}}</div>
+                                            <div class="im_record_time">{{item.SendTime}}</div>
+                                        </div>
+                                        <img  class="im_get_img" v-if='item.MsgType==2'  :src="item.ResourcePath" alt=""> 
+                                        <div class="im_filebox" v-if='item.MsgType==3'>
+                                                <audio :src="item.ResourcePath" autoplay="autoplay" controls="controls" style="height: 20px;"></audio>
+                                        </div>
+                                        <div class="im_filebox" v-if='item.MsgType==4'>
+                                            <video :src="item.ResourcePath" autoplay="autoplay" controls="controls" style="max-width: 190px;"></video>
+                                        </div>
+                                        <div  v-if='item.MsgType==10000' style="height: 30px" >
+                                                <span class="im_file_text" style="float: left;" >{{item.file_name}}</span>
+                                                <a :href="item.ResourcePath" download="">
+                                                    <span class="interphonefamily" style="float: right;cursor: pointer;margin-left:10px" >&#xe69c;</span>
+                                                </a>
                                         </div>
                                     </div>
-                               </div>
-                               <div  v-if="select_file">
-                                    <div    v-for="(item) in im_total_history" :key="item.time_id">
-                                        <div v-if='item.MsgType !=1' class="im_history_info">
-                                            <div class="im_history_name clearfix">
-                                                <div class="im_record_name">{{item.SenderName}}</div>
-                                                <div class="im_record_time">{{item.SendTime}}</div>
-                                            </div>
-                                            <img  class="im_get_img" v-if='item.MsgType==2'  :src="item.ResourcePath" alt=""> 
-                                            <div class="im_filebox" v-if='item.MsgType==3'>
-                                                    <audio :src="item.ResourcePath" autoplay="autoplay" controls="controls" style="height: 20px;"></audio>
-                                                </div>
-                                            <div class="im_filebox" v-if='item.MsgType==4'>
-                                                <video :src="item.ResourcePath" autoplay="autoplay" controls="controls" style="max-width: 190px;"></video>
-                                            </div>
-                                            <div  v-if='item.MsgType==10000' style="height: 30px" >
-                                                    <span class="im_file_text" style="float: left;" >{{item.file_name}}</span>
-                                                    <a :href="item.ResourcePath" download="">
-                                                            <span class="interphonefamily" style="float: right;cursor: pointer;margin-left:10px" >&#xe69c;</span>
-                                                    </a>
-                                            </div>
-                                       </div>
+                                </div>
+                            </div>
+                            <div  v-if="select_talk">
+                                <div class="im_history_info" v-for="(item) in im_total_ptt" :key="item.SendTime" >
+                                    <div class="im_history_name clearfix" >
+                                        <div class="im_record_name">{{item.SenderName}}</div>
+                                        <div class="im_record_time">{{item.SendTime}}</div>
                                     </div>
-                               </div>
-                               <div  v-if="select_talk">
-                                    <div class="im_history_info" v-for="(item) in im_total_ptt" :key="item.SendTime" >
-                                            <div class="im_history_name clearfix" >
-                                                    <div class="im_record_name">{{item.SenderName}}</div>
-                                                    <div class="im_record_time">{{item.SendTime}}</div>
-                                                </div>
-                                                <audio :src="item.ResourcePath" controls="controls" style="height: 20px;width: 277px;"></audio>
-                                        </div>
+                                    <audio :src="item.ResourcePath" controls="controls" style="height: 20px;width: 277px;"></audio>
+                                </div>
                                     <!-- <div v-for="(item) in im_total_history" :key="item.time_id"> -->
                                             <!-- <div class="im_history_info"  v-if='item.MsgType ==1'> -->
                                                 <!-- <div class="im_history_name clearfix">
@@ -387,9 +380,9 @@
                                                             <div class="im_record_time">2019年04月29日 20:07:46</div>
                                                         </div>
                                             </div> -->
-                               </div>                          
-                            </div>
+                            </div>                          
                         </div>
+                    </div>
                     </div>
                     <!-- 创建组 -->
                     <el-dialog :title="$t('group.add_group')" :visible.sync="group_div" :show-close="false">
@@ -407,14 +400,14 @@
                                 </div>
                                 <div class="group_memberdiv">
                                     <ul v-if="group_memberdiv_show">
-                                            <li  v-for="(item,index) in confirm_device_List" :key="item.id" v-on:dblclick="dele_device(index)" :title="$t('group.dbremove')">
-                                                <div class='group_pic' >
+                                        <li  v-for="(item,index) in confirm_device_List" :key="item.id" v-on:dblclick="dele_device(index)" :title="$t('group.dbremove')">
+                                            <div class='group_pic' >
                                                 <img src="../../assets/img/inter.png" alt="">
-                                                </div>
-                                                <div class="member_name">
-                                                    {{item.user_name}}
-                                                </div> 
-                                            </li>                                          
+                                            </div>
+                                            <div class="member_name">
+                                                {{item.user_name}}
+                                            </div> 
+                                        </li>                                          
                                     </ul>
                                 </div>
                                 <el-button  class="addbotton" @click="add_select_div">{{$t('button_message.add')}}</el-button>
@@ -438,13 +431,13 @@
                                 <el-button class="transfer-footer" slot="right-footer" size="small">操作</el-button> -->
                             </el-transfer>
                             <div>
-                            <div class="transfer_cancel" @click="transfer_cancel">{{$t("button_message.cancel")}}</div>
-                            <div class="select_add" @click="selected_add">{{$t("button_message.confirm")}}</div>
+                                <div class="transfer_cancel" @click="transfer_cancel">{{$t("button_message.cancel")}}</div>
+                                <div class="select_add" @click="selected_add">{{$t("button_message.confirm")}}</div>
                             </div>
                         </el-dialog>
                         <div slot="footer" class="dialog-footer">
-                        <el-button @click="group_add_cancle">{{ $t("button_message.cancel") }}</el-button>
-                        <el-button type="primary" @click="group_add_submit('addgroup_form')" >{{ $t("button_message.ensure") }}</el-button>
+                            <el-button @click="group_add_cancle">{{ $t("button_message.cancel") }}</el-button>
+                            <el-button type="primary" @click="group_add_submit('addgroup_form')" >{{ $t("button_message.ensure") }}</el-button>
                         </div>
                     </el-dialog>
                     <!-- 组内详细设备 -->
@@ -497,10 +490,10 @@
                     <el-dialog :title="$t('control.Modify_group')" :visible.sync="amend_show"  :show-close="false">
                         <el-form :model="Modify_group_form">
                             <el-form-item :label="$t('control.group_num')" label-width="110px">
-                            <el-input v-model="Modify_group_form.num" autocomplete="off" :disabled="dis_control"></el-input>
+                                <el-input v-model="Modify_group_form.num" autocomplete="off" :disabled="dis_control"></el-input>
                             </el-form-item>
                             <el-form-item :label="$t('control.group_name')" label-width="110px">
-                            <el-input v-model="Modify_group_form.name" autocomplete="off"></el-input>
+                                <el-input v-model="Modify_group_form.name" autocomplete="off"></el-input>
                             </el-form-item>
                         </el-form>
                         <div slot="footer" class="dialog-footer">
@@ -511,56 +504,54 @@
                     <!-- 修改组成员弹出框 -->
                     <el-dialog width="42%" style="text-align: center;" :title="$t('group.modified_member')" :visible.sync="modified_member_show" append-to-body  :show-close="false">
                         <!-- 左侧左右列表移动 -->
-                            <el-transfer
-                                style="text-align: left; display: inline-block"
-                                v-model="select_Data"
-                                :titles="[Source, Target]"
-                                :button-texts="[toleft, toright]"
-                                :format="{
-                                    noChecked: '${total}',
-                                    hasChecked: '${checked}/${total}'
-                                }"
-                                @change="handleChange"
-                                :props="{key: 'id',label:'name'}"
-                                :data="member_data">
-                            </el-transfer>
-                            <div>
+                        <el-transfer
+                            style="text-align: left; display: inline-block"
+                            v-model="select_Data"
+                            :titles="[Source, Target]"
+                            :button-texts="[toleft, toright]"
+                            :format="{
+                                noChecked: '${total}',
+                                hasChecked: '${checked}/${total}'
+                            }"
+                            @change="handleChange"
+                            :props="{key: 'id',label:'name'}"
+                            :data="member_data">
+                        </el-transfer>
+                        <div>
                             <div class="select_cancel" @click="modified_cancel">{{$t("button_message.cancel")}}</div>
                             <div class="select_add" @click="modified_add">{{$t("button_message.confirm")}}</div>
-                            </div>
+                        </div>
                     </el-dialog>
                     <!-- 加入对讲弹出框 -->
                     <el-dialog :title="$t('control.hint')" :visible.sync="talkbackVisible" width="30%" :show-close="false">
-                            <span>{{$t('talkback.talkback')}}</span>
-                            <span slot="footer" class="dialog-footer">
-                                <el-button @click="talkbackVisible = false">{{$t('button_message.cancel')}}</el-button>
-                                <el-button type="primary" @click="talkback_submit">{{$t('button_message.confirm')}}</el-button>
-                            </span>
+                        <span>{{$t('talkback.talkback')}}</span>
+                        <span slot="footer" class="dialog-footer">
+                            <el-button @click="talkbackVisible = false">{{$t('button_message.cancel')}}</el-button>
+                            <el-button type="primary" @click="talkback_submit">{{$t('button_message.confirm')}}</el-button>
+                        </span>
                     </el-dialog>
                     <!-- 请选择对讲弹出框 -->
                     <el-dialog :title="$t('control.hint')" :visible.sync="talkback_select" width="30%" :show-close="false">
-                            <span>{{$t('talkback.select')}}</span>
-                            <span slot="footer" class="dialog-footer">
-                                <el-button @click="talkback_select = false">{{$t('button_message.cancel')}}</el-button>
-                                <el-button type="primary" @click="talkback_select = false">{{$t('button_message.confirm')}}</el-button>
-                            </span>
+                        <span>{{$t('talkback.select')}}</span>
+                        <span slot="footer" class="dialog-footer">
+                            <el-button @click="talkback_select = false">{{$t('button_message.cancel')}}</el-button>
+                            <el-button type="primary" @click="talkback_select = false">{{$t('button_message.confirm')}}</el-button>
+                        </span>
                     </el-dialog>
-
-        
              </div>
             <!-- 语音or视频请求 -->
-        <!-- 背呼方 -->
-        <div v-show="video_apply" class="video_apply" >
-            <div class="video_apply_title">
-                <span>{{your_callname}}</span> &nbsp;<span>{{$t('apply.request')}}</span>&nbsp;<span>{{your_calltype}}</span>&nbsp;<span>{{$t('apply.connection')}}</span>
+            <!-- 背呼方 -->
+            <div v-show="video_apply" class="video_apply" >
+                <div class="video_apply_title">
+                    <span>{{your_callname}}</span> &nbsp;<span>{{$t('apply.request')}}</span>&nbsp;<span>{{your_calltype}}</span>&nbsp;<span>{{$t('apply.connection')}}</span>
+                </div>
+                <div class="video_apply_body">
+                        <el-button type="info" @click="refuse">{{$t('apply.refuse')}}</el-button>
+                        <el-button type="primary" @click="video_accept">{{$t('apply.accept')}}</el-button>
+                </div>
             </div>
-            <div class="video_apply_body">
-                    <el-button type="info" @click="refuse">{{$t('apply.refuse')}}</el-button>
-                    <el-button type="primary" @click="video_accept">{{$t('apply.accept')}}</el-button>
-            </div>
-        </div>
-        <!-- 主呼方收到同意回复 -->
-        <div v-show="video_anwer" class="video_apply" >
+            <!-- 主呼方收到同意回复 -->
+            <div v-show="video_anwer" class="video_apply" >
                 <div class="video_apply_title">
                     <!-- <span>{{your_callname}}</span> &nbsp;<span>{{$t('apply.request')}}</span>&nbsp;<span>{{your_calltype}}</span>&nbsp;<span>{{$t('apply.connection')}}</span> -->
                     <span>{{$t('apply.agree')}}</span>
@@ -569,20 +560,20 @@
                         <el-button type="info" @click="cancle_call">{{$t('button_message.cancel')}}</el-button>
                         <el-button type="primary" @click="video_initial">{{$t('apply.call')}}</el-button>
                 </div>
-        </div>
-        <!-- 主呼收到拒绝回复 -->
-        <div v-show="video_reject" class="video_apply" >
-            <div class="video_apply_title">
-                <!-- <span>{{your_callname}}</span> &nbsp;<span>{{$t('apply.request')}}</span>&nbsp;<span>{{your_calltype}}</span>&nbsp;<span>{{$t('apply.connection')}}</span> -->
-                <span>{{$t('apply.reject')}}</span>
             </div>
-            <div class="video_apply_body">
-                    <el-button type="info" @click="cancle_reject">{{$t('button_message.cancel')}}</el-button>
-                    <el-button type="primary" @click="confirm_reject">{{$t('button_message.confirm')}}</el-button>
+            <!-- 主呼收到拒绝回复 -->
+            <div v-show="video_reject" class="video_apply" >
+                <div class="video_apply_title">
+                    <!-- <span>{{your_callname}}</span> &nbsp;<span>{{$t('apply.request')}}</span>&nbsp;<span>{{your_calltype}}</span>&nbsp;<span>{{$t('apply.connection')}}</span> -->
+                    <span>{{$t('apply.reject')}}</span>
+                </div>
+                <div class="video_apply_body">
+                        <el-button type="info" @click="cancle_reject">{{$t('button_message.cancel')}}</el-button>
+                        <el-button type="primary" @click="confirm_reject">{{$t('button_message.confirm')}}</el-button>
+                </div>
             </div>
-        </div>
             <!-- 主呼收到对方不在线或者不存在 -->
-        <div v-if="video_offline" class="video_apply" >
+            <div v-if="video_offline" class="video_apply" >
                 <div class="video_apply_title">
                     <span v-show="offline_span">{{$t('apply.offline')}}</span>
                     <span v-show="exist_span">{{$t('apply.exist')}}</span>
@@ -590,11 +581,11 @@
                 <div class="video_apply_body">
                         <el-button type="primary" @click="confirm_offline">{{$t('button_message.confirm')}}</el-button>
                 </div>
-        </div>
+            </div>
     </div>
-    </template>
+</template>
     
-    <script>
+<script>
     import adapter from 'webrtc-adapter'
     import $ from 'jquery'
     import Janus from '../../assets/videocall/janus.js'
@@ -603,7 +594,7 @@
     import intergooglemap from '../inter-components/inter-googlemap'
     export default {
         components:{
-                intermap,intergooglemap
+            intermap,intergooglemap
             // testComponent:require('./testComponent.vue').default
             },
         data() {   
@@ -696,6 +687,8 @@
                     im_send_news:'',
                     im_send_obj:1,
                     receiver_type:1,
+                    file_show:false,
+                    image_show:false,
                     receiver_id:'',
                     im_now_date:'',
                     // im_my_img:require('../../assets/img/computer.png'),
@@ -753,6 +746,8 @@
                     offline_span:false,
                     exist_span:false,
                     talkback_id:'',
+                    now_talker:'',
+                    free_talker:'',
                     talkactive:false,
                     mouse_show:true,
                     talk_begin:false,
@@ -780,13 +775,14 @@
         },
         methods: {
                 hide(){
-                this.editorial_show = false.stop;
-                this.media_show = false.stop
+                    this.editorial_show = false.stop;
+                    this.media_show = false.stop
                 },
                 // 鼠标右击
                 media_control(index){
                     this.media_show =index;
                 },
+                // 收缩
                 unfold(){
                     this.show = !this.show;
                 },
@@ -834,7 +830,6 @@
                     index = null;
                     this.im_line_actived = index;
                 },
-    
                 // 添加新的组
                 group_add(){
                     this.group_div = true;
@@ -874,68 +869,65 @@
                 },
                  //添加新组提交
                 group_add_submit(addgroup_form){
-                    
                     let submit_form={};
                     this.$refs[addgroup_form].validate((valid) => {
                         if (valid) {
-            
                             // submit_form.group_name = this.addgroup_form.name;
                             // submit_form.group_device = this.confirm_device_List;
-                        if(this.confirm_device_List.length !== 0){
-                            let group_info={};
-                            group_info.group_name = this.addgroup_form.name;
-                            group_info.account_id =  parseInt(sessionStorage.getItem('id')) ;
-                            submit_form.group_info = group_info;
-                            submit_form.device_ids = [-1];
-                            submit_form.device_infos = this.confirm_device_List;
-                            window.console.log(submit_form)
-                            this.$axios.post('/group',submit_form,
-                            { headers: 
-                            {"Authorization" : sessionStorage.getItem('setSession_id')}
-                            })
-                            .then((response) =>{
-                                window.console.log(response)
-                            this.$message({
-                            message: this.$t('establish.success'),
-                            type: 'success'
-                            });
-                            this.get_new_group();
-                            this.group_add_cancle();
-                            window.console.log(response.data.group_info.gid)
-                            var room_id= parseInt(response.data.group_info.gid);
-                            var new_room={"request":"create","room":room_id,"permanent":true,"is_private":false}
-                            this.mixertest.send({'message':new_room})
-    
-                            })
-                            .catch( (error) => {
-                                window.console.log(error)
-                            // if( error.response.data.code == 422){
-                            //         this.$message({                                   
-                            //         message: this.$t('group.name'),
-                            //         type: 'warning'
-                            //         }); 
-                            //     }else{
-                            //         this.$message({                                   
-                            //         message: this.$t('establish.failed'),
-                            //         type: 'warning'
-                            //         }); 
-                            //     }
-                            });
-                        }else{
-                            this.$message({
-                            message: this.$t('prompt_message.device_num'),
-                            type: 'warning'
-                            });
-                        }
+                            if(this.confirm_device_List.length !== 0){
+                                let group_info={};
+                                group_info.group_name = this.addgroup_form.name;
+                                group_info.account_id =  parseInt(sessionStorage.getItem('id')) ;
+                                submit_form.group_info = group_info;
+                                submit_form.device_ids = [-1];
+                                submit_form.device_infos = this.confirm_device_List;
+                                window.console.log(submit_form)
+                                this.$axios.post('/group',submit_form,
+                                { headers: 
+                                {"Authorization" : sessionStorage.getItem('setSession_id')}
+                                })
+                                .then((response) =>{
+                                    window.console.log(response)
+                                this.$message({
+                                message: this.$t('establish.success'),
+                                type: 'success'
+                                });
+                                this.get_new_group();
+                                this.group_add_cancle();
+                                window.console.log(response.data.group_info.gid)
+                                var room_id= parseInt(response.data.group_info.gid);
+                                var new_room={"request":"create","room":room_id,"permanent":true,"is_private":false}
+                                this.mixertest.send({'message':new_room})
+                                })
+                                .catch( (error) => {
+                                    window.console.log(error)
+                                // if( error.response.data.code == 422){
+                                //         this.$message({                                   
+                                //         message: this.$t('group.name'),
+                                //         type: 'warning'
+                                //         }); 
+                                //     }else{
+                                //         this.$message({                                   
+                                //         message: this.$t('establish.failed'),
+                                //         type: 'warning'
+                                //         }); 
+                                //     }
+                                });
+                            }else{
+                                this.$message({
+                                    message: this.$t('prompt_message.device_num'),
+                                    type: 'warning'
+                                });
+                            }
                         }else{
                             return false;
                         }
                     })
                 },
-            // 双击删除
-                dele_device(qua){
-                    this.confirm_device_List.splice(qua,1);
-                    this.yesData.splice(qua,1);
+                // 双击删除选中设备
+                dele_device(dev){
+                    this.confirm_device_List.splice(dev,1);
+                    this.yesData.splice(dev,1);
                 },
                 // 编辑组成员
                 editorial(index){
@@ -980,7 +972,6 @@
                     // this.Modify_group_form.num = amend_group_list[amend_num].group_info.id
                     this.Modify_group_form.num = this.local_group_list[amend_num].group_info.id;
                     this.Modify_group_info = this.local_group_list[amend_num].group_info
-    
                 },
                 // 左侧修改组提交
                 amend_group_submit(){
@@ -1005,19 +996,17 @@
                     })
                     .catch( (error)=>{
                         window.console.log(error.response.data.code);
-                    if( error.response.data.code == 422){
-                        this.$message({                                   
-                        message: this.$t('group.name'),
-                        type: 'warning'
-                        }); 
-                    }else{
-                        this.$message({                                   
-                        message: this.$t('group.modify_failed'),
-                        type: 'warning'
-                        }); 
-                    }
-                
-                    
+                        if( error.response.data.code == 422){
+                            this.$message({                                   
+                            message: this.$t('group.name'),
+                            type: 'warning'
+                            }); 
+                        }else{
+                            this.$message({                                   
+                            message: this.$t('group.modify_failed'),
+                            type: 'warning'
+                            }); 
+                        }
                     });            
                     this.amend_cancel();
                     }else{
@@ -1048,7 +1037,7 @@
                         }
                     })
                     this.select_Data=selected_member_data;
-                        window.console.log(selected_member_data)
+                    window.console.log(selected_member_data)
                     window.console.log(this.select_Data)
                 },
                 modified_cancel(){
@@ -1056,62 +1045,62 @@
                 },
                 // 左侧成员编辑提交
                 modified_add(){
-                        window.console.log(this.select_Data);
+                    window.console.log(this.select_Data);
                     this.modified_add_member = []      
-                        for( var i=0;i<this.local_device_list.length;i++){
-                            for(var j=0;j< this.select_Data.length;j++){
-                                // if(modified_divice[i].id == this.select_Data[j]){
-                                if(this.local_device_list[i].id == this.select_Data[j]){
-                                    // this.modified_add_member.push(modified_divice[i])
-                                    this.modified_add_member.push(this.local_device_list[i])
-                                }
+                    for( var i=0;i<this.local_device_list.length;i++){
+                        for(var j=0;j< this.select_Data.length;j++){
+                            // if(modified_divice[i].id == this.select_Data[j]){
+                            if(this.local_device_list[i].id == this.select_Data[j]){
+                                // this.modified_add_member.push(modified_divice[i])
+                                this.modified_add_member.push(this.local_device_list[i])
                             }
                         }
-                        window.console.log(this.modified_add_member)
-                        let group_info_new = {};
-                        group_info_new.group_name = this.updata_group_info.group_name;
-                        group_info_new.account_id = this.updata_group_info.account_id;
-                        group_info_new.id = this.updata_group_info.id;
-                        let sent_group = {};
-                        sent_group.group_info = group_info_new;
-                        sent_group.device_ids = [-1];
-                        sent_group.device_infos = this.modified_add_member;
-                        window.console.log(sent_group);
-                        // sent_group.device_infos = [];
-                        this.$axios.post('/group/devices/update',sent_group,
-                            { headers: 
-                            {"Authorization" : sessionStorage.getItem('setSession_id')}
-                            })
-                            .then(() =>{
-                            this.$message({
-                            message: this.$t('group.modify_success'),
-                            type: 'success'
-                            });
-                            this.get_new_group();
-                            this.group_add_cancle();
-                            })
-                            .catch( (error) => {
-                                window.console.log(error)
-                                // if( error.response.data.code == 422){
-                                //     this.$message({                                   
-                                //     message: this.$t('group.name'),
-                                //     type: 'warning'
-                                //     }); 
-                                // }else{
-                                //     this.$message({                                   
-                                //     message: this.$t('establish.failed'),
-                                //     type: 'warning'
-                                //     }); 
-                                // }
+                    }
+                    window.console.log(this.modified_add_member)
+                    let group_info_new = {};
+                    group_info_new.group_name = this.updata_group_info.group_name;
+                    group_info_new.account_id = this.updata_group_info.account_id;
+                    group_info_new.id = this.updata_group_info.id;
+                    let sent_group = {};
+                    sent_group.group_info = group_info_new;
+                    sent_group.device_ids = [-1];
+                    sent_group.device_infos = this.modified_add_member;
+                    window.console.log(sent_group);
+                    // sent_group.device_infos = [];
+                    this.$axios.post('/group/devices/update',sent_group,
+                        { headers: 
+                        {"Authorization" : sessionStorage.getItem('setSession_id')}
+                        })
+                        .then(() =>{
+                        this.$message({
+                        message: this.$t('group.modify_success'),
+                        type: 'success'
                         });
-                        this.modified_member_show=false;
-                        this.group_div_show=false;
+                        this.get_new_group();
+                        this.group_add_cancle();
+                        })
+                        .catch( (error) => {
+                            window.console.log(error)
+                            // if( error.response.data.code == 422){
+                            //     this.$message({                                   
+                            //     message: this.$t('group.name'),
+                            //     type: 'warning'
+                            //     }); 
+                            // }else{
+                            //     this.$message({                                   
+                            //     message: this.$t('establish.failed'),
+                            //     type: 'warning'
+                            //     }); 
+                            // }
+                        });
+                    this.modified_member_show=false;
+                    this.group_div_show=false;
                 },
                 transfer_cancel(){
                     this.confirm_device = this.yesData;
                     this.members_div = false;
                 },
-                // 获得组
+                // 获得组和设备列表
                 get_group_list(){
                     this.local_group_list = JSON.parse(localStorage.getItem('group_list'));
                     this.get_device_list = JSON.parse(localStorage.getItem('device_list'))
@@ -1159,376 +1148,387 @@
                     var yourusername = null;
                     var incoming  =null;
                     if(!Janus.isWebrtcSupported()) {
-                                alert("No WebRTC support... ");
-                            return;
+                        alert("No WebRTC support... ");
+                        return;
                     }
                     Janus.init({debug: true, callback: function() {
-                    janus = new Janus({
-                        server: server,
-                        success: function() {
-                        janus.attach({
-                            plugin: "janus.plugin.videocall",
-                            opaqueId: opaqueId,
-                            success: function(pluginHandle) {
-                                self.videocall = pluginHandle;
-                                Janus.log("Plugin attached! (" + self.videocall.getPlugin() + ", id=" + self.videocall.getId() + ")");
-                                // $('#videocall').removeClass('hide').show();
-                                var user_register =sessionStorage.getItem('id').toString();
-                                var viedo_register = { "request": "register", "username": user_register };
-                                self.videocall.send({"message": viedo_register});   
-                                window.console.log('````````````````````````1')
-                            },
-                            error: function(error) {
-                                Janus.error("  -- Error attaching plugin...", error);
-                                alert("  -- Error attaching plugin... " + error);
-                                window.console.log('````````````````````````2')
-                            },
-                            consentDialog: function(on) {
-                                Janus.debug("Consent dialog should be " + (on ? "on" : "off") + " now");
-                                window.console.log('````````````````````````3')
-                            },
-                            mediaState: function(medium, on) {
-                                Janus.log("Janus " + (on ? "started" : "stopped") + " receiving our " + medium);
-                                window.console.log('````````````````````````4')
-                            },
-                            webrtcState: function(on) {
-                                Janus.log("Janus says our WebRTC PeerConnection is " + (on ? "up" : "down") + " now");
-                                window.console.log(on)
-                                if(on == true&&self.video_audio == false){
-                                    window.console.log('............0')
-                                    setTimeout(()=>{self.close_video()},5000)
-                                    // self.videocall.send({"message": { "request": "set", "video": false}});  
-                                }
-                                window.console.log('````````````````````````5')
-                            },
-                            onmessage: function(msg, jsep) {
-                                window.console.log('````````````````````````6')
-                                Janus.debug(" ::: Got a message :::");
-                                Janus.debug(msg);
-                                window.console.log(msg)
-                                var result = msg["result"];
-                                if(result !== null && result !== undefined) {
-                                    if(result["list"] !== undefined && result["list"] !== null) {
-                                        window.console.log('````````````````````````7')
-                                        var list = result["list"];
-                                        Janus.debug("Got a list of registered peers:");
-                                        Janus.debug(list);
-                                        for(var mp in list) {
-                                        Janus.debug("  >> [" + list[mp] + "]");
-                                        }
-                                    } else if(result["event"] !== undefined && result["event"] !== null) {
-                                    var event = result["event"];
-                                    if(event === 'registered') {
-                                        window.console.log('````````````````````````8')
-                                        myusername = result["username"];
-                                        self.videocall.send({"message": { "request": "list" }});
-                                    } else if(event === 'calling') {
-                                        Janus.log("Waiting for the peer to answer...");
-                                        // alert("Waiting for the peer to answer...");
-                                        window.console.log('````````````````````````9')
-                                    } else if(event === 'incomingcall') {
-                                        window.console.log('````````````````````````10')
-                                        Janus.log("Incoming call from " + result["username"] + "!");
-                                        yourusername = result["username"];
-                                        self.$confirm("Incoming call from " + result["username"] + "!" , {
-                                        confirmButtonText: self.$t("button_message.confirm"),
-                                        cancelButtonText: self.$t("button_message.cancel"),
-                                        type: 'warning'
-                                        }).then(() => {
-                                        // window.console.log(self.jesp_code)
-                                        incoming=null;
-                                        self.videocall.createAnswer(
-                                            {
-                                                jsep: jsep,
-                                                // No media provided: by default, it's sendrecv for audio and video
-                                                media: { data: true },	
-                                                // Let's negotiate data channels as well
-                                                // If you want to test simulcasting (Chrome and Firefox only), then
-                                                // pass a ?simulcast=true when opening this demo page: it will turn
-                                                // the following 'simulcast' property to pass to janus.js to true
-                                                // simulcast: true,
-                                                success: function(jsep) {
-                                                    Janus.debug("Got SDP!");
-                                                    Janus.debug(jsep); 
-                                                    window.console.log(self.video_audio)
-                                                            if(self.video_audio == true){
-                                                                self.video_show= true;
-                                                            }else{
-                                                                self.aduio_show= true;
-                                                                self.audio_logo=false  
-                                                    }
-                                                    var accept_body = { "request": "accept"};
-                                                    self.videocall.send({"message": accept_body, "jsep": jsep});
-                                                    $('#videos').show();
-                                                },
-                                                error: function(error) {
-                                                    Janus.error("WebRTC error:", error);
-                                                    // window.console.log(jsep)
-                                                    alert("WebRTC error... " + JSON.stringify(error));
+                        janus = new Janus({
+                            server: server,
+                            success: function() {
+                            janus.attach({
+                                plugin: "janus.plugin.videocall",
+                                opaqueId: opaqueId,
+                                success: function(pluginHandle) {
+                                    self.videocall = pluginHandle;
+                                    Janus.log("Plugin attached! (" + self.videocall.getPlugin() + ", id=" + self.videocall.getId() + ")");
+                                    // $('#videocall').removeClass('hide').show();
+                                    var user_register =sessionStorage.getItem('id').toString();
+                                    var viedo_register = { "request": "register", "username": user_register };
+                                    self.videocall.send({"message": viedo_register});   
+                                    window.console.log('````````````````````````1')
+                                },
+                                error: function(error) {
+                                    Janus.error("  -- Error attaching plugin...", error);
+                                    alert("  -- Error attaching plugin... " + error);
+                                    window.console.log('````````````````````````2')
+                                },
+                                consentDialog: function(on) {
+                                    Janus.debug("Consent dialog should be " + (on ? "on" : "off") + " now");
+                                    window.console.log('````````````````````````3')
+                                },
+                                mediaState: function(medium, on) {
+                                    Janus.log("Janus " + (on ? "started" : "stopped") + " receiving our " + medium);
+                                    window.console.log('````````````````````````4')
+                                },
+                                webrtcState: function(on) {
+                                    Janus.log("Janus says our WebRTC PeerConnection is " + (on ? "up" : "down") + " now");
+                                    window.console.log(on)
+                                    if(on == true&&self.video_audio == false){
+                                        window.console.log('............0')
+                                        setTimeout(()=>{self.close_video()},5000)
+                                        // self.videocall.send({"message": { "request": "set", "video": false}});  
+                                    }
+                                    window.console.log('````````````````````````5')
+                                },
+                                onmessage: function(msg, jsep) {
+                                    window.console.log('````````````````````````6')
+                                    window.console.log(msg)
+                                    Janus.debug(" ::: Got a message :::");
+                                    Janus.debug(msg);
+                                    window.console.log(msg)
+                                    var result = msg["result"];
+                                    if(result !== null && result !== undefined) {
+                                        if(result["list"] !== undefined && result["list"] !== null) {
+                                            window.console.log('````````````````````````7')
+                                            var list = result["list"];
+                                            Janus.debug("Got a list of registered peers:");
+                                            Janus.debug(list);
+                                            for(var mp in list) {
+                                            Janus.debug("  >> [" + list[mp] + "]");
+                                            }
+                                        } 
+                                        else if(result["event"] !== undefined && result["event"] !== null) {
+                                            var event = result["event"];
+                                            if(event === 'registered') {
+                                                window.console.log('````````````````````````8')
+                                                myusername = result["username"];
+                                                self.videocall.send({"message": { "request": "list" }});
+                                            } 
+                                            else if(event === 'calling') {
+                                                Janus.log("Waiting for the peer to answer...");
+                                                // alert("Waiting for the peer to answer...");
+                                                window.console.log('````````````````````````9')
+                                            } 
+                                            else if(event === 'incomingcall') {
+                                                window.console.log('````````````````````````10')
+                                                Janus.log("Incoming call from " + result["username"] + "!");
+                                                yourusername = result["username"];
+                                                self.$confirm("Incoming call from " + result["username"] + "!" , {
+                                                confirmButtonText: self.$t("button_message.confirm"),
+                                                cancelButtonText: self.$t("button_message.cancel"),
+                                                type: 'warning'
+                                                }).then(() => {
+                                                // window.console.log(self.jesp_code)
+                                                incoming=null;
+                                                self.videocall.createAnswer(
+                                                    {
+                                                        jsep: jsep,
+                                                        // No media provided: by default, it's sendrecv for audio and video
+                                                        media: { data: true },	
+                                                        // Let's negotiate data channels as well
+                                                        // If you want to test simulcasting (Chrome and Firefox only), then
+                                                        // pass a ?simulcast=true when opening this demo page: it will turn
+                                                        // the following 'simulcast' property to pass to janus.js to true
+                                                        // simulcast: true,
+                                                        success: function(jsep) {
+                                                            Janus.debug("Got SDP!");
+                                                            Janus.debug(jsep); 
+                                                            window.console.log(self.video_audio)
+                                                                    if(self.video_audio == true){
+                                                                        self.video_show= true;
+                                                                    }else{
+                                                                        self.aduio_show= true;
+                                                                        self.audio_logo=false  
+                                                            }
+                                                            var accept_body = { "request": "accept"};
+                                                            self.videocall.send({"message": accept_body, "jsep": jsep});
+                                                            $('#videos').show();
+                                                        },
+                                                        error: function(error) {
+                                                            Janus.error("WebRTC error:", error);
+                                                            // window.console.log(jsep)
+                                                            alert("WebRTC error... " + JSON.stringify(error));
+                                                        }
+                                                    });	  
+                                                }).catch(() => {
+                                                    
+                                                });
+                                            } 
+                                            else if(event === 'accepted') {
+                                                window.console.log('````````````````````````11')
+                                                if(jsep){
+                                                    self.videocall.handleRemoteJsep({jsep: jsep});
                                                 }
-                                            });	  
-                                        }).catch(() => {
-                                            
-                                        });
-                                    } else if(event === 'accepted') {
-                                        window.console.log('````````````````````````11')
-                                        if(jsep){
-                                            self.videocall.handleRemoteJsep({jsep: jsep});
-                                        }
-                                        
-                                        if(self.video_audio == true){
-                                            window.console.log('````````````````````````12')   
-                                                    //    self.close_video()      
-                                            }else{
+                                                // if(self.video_audio == true){
+                                                //     window.console.log('````````````````````````12')   
+                                                //             //    self.close_video()      
+                                                //     }else{
+                                                //         window.console.log('````````````````````````13')
+                                                //         //  self.videocall.send({"message": { "request": "set", "video": false}});                    
+                                                //         //  self.videocall.send({"message": { "request": "set", "audio": false}});  
+                                                //         // setTimeout(()=>{self.close_video()},5000)
+                                                //         // self.setTimeout(self.close_video(),5000);                  
+                                                // }
+                                            } 
+                                            else if(event === 'update') {
                                                 window.console.log('````````````````````````13')
-                                            
-                                                //  self.videocall.send({"message": { "request": "set", "video": false}});                    
-                                                //  self.videocall.send({"message": { "request": "set", "audio": false}});  
-                                                // setTimeout(()=>{self.close_video()},5000)
-                                                // self.setTimeout(self.close_video(),5000);                  
-                                        }
-                                  
-                                    } else if(event === 'update') {
-                                        window.console.log('````````````````````````13')
-                                        if(jsep) {
-                                        if(jsep.type === "answer") {
-                                            window.console.log('````````````````````````14')
-                                            self.videocall.handleRemoteJsep({jsep: jsep});
-                                        } else {
-                                            window.console.log('````````````````````````15')
-                                            self.videocall.createAnswer(
-                                            {
-                                                jsep: jsep,
-                                                media: { data: true },	// Let's negotiate data channels as well
-                                                success: function(jsep) {
-                                                Janus.debug("Got SDP!");
-                                                Janus.debug(jsep);
-                                                var body = { "request": "set",
-                                                };
-                                                self.videocall.send({"message": body, "jsep": jsep});
-                                                },
-                                                error: function(error) {
-                                                Janus.error("WebRTC error:", error);
-                                                // alert("WebRTC error... " + JSON.stringify(error));
+                                                if(jsep) {
+                                                    if(jsep.type === "answer") {
+                                                        window.console.log('````````````````````````14')
+                                                        self.videocall.handleRemoteJsep({jsep: jsep});
+                                                    }else{
+                                                        window.console.log('````````````````````````15')
+                                                        self.videocall.createAnswer(
+                                                        {
+                                                            jsep: jsep,
+                                                            media: { data: true },	// Let's negotiate data channels as well
+                                                            success: function(jsep) {
+                                                            Janus.debug("Got SDP!");
+                                                            Janus.debug(jsep);
+                                                            var body = { "request": "set",
+                                                            };
+                                                            self.videocall.send({"message": body, "jsep": jsep});
+                                                            },
+                                                            error: function(error) {
+                                                            Janus.error("WebRTC error:", error);
+                                                            // alert("WebRTC error... " + JSON.stringify(error));
+                                                            }
+                                                        });
+                                                    }
                                                 }
+                                            } 
+                                            else if(event === 'hangup') {
+                                                window.console.log('````````````````````````16')
+                                                Janus.log("Call hung up by " + result["username"] + " (" + result["reason"] + ")!");
+                                                // Reset status
+                                                if(self.video_audio == true){
+                                                        self.video_show= false;
+                                                }else{
+                                                        self.aduio_show= false;
+                                                        self.audio_logo=false  
+                                                }
+                                                self.videocall.hangup();
+                                                $('#videos').hide();
+            
+                                            }
+                                        }
+                                        } 
+                                        else {
+                                            window.console.log('````````````````````````17')
+                                            var no_video =msg
+                                                if(no_video.event === 'notified'){
+                                                    window.console.log('5--------------------------------------')
+                                                }
+                                                else{
+                                                    // FIXME Error?
+                                                    window.console.log('6--------------------------------------')
+                                                    var error = msg["error"];
+                                                    alert(error);
+                                                    self.$router.go(0)
+                                                    // self.video_hang.destroy();
+                                                    self.video_show=false;
+                                                    self.videocall.hangup();
+                                                    $('#videos').hide();
+                                                }
+                                        }
+                                },
+                                onlocalstream: function(stream) {
+                                    window.console.log('````````````````````````18')
+                                    Janus.debug(" ::: Got a local stream :::");
+                                    Janus.debug(stream);
+                                    // self.video_show= true
+                                    var videoTracks =''
+                                    if(self.audio_answer == true){
+                                        $('#audios').removeClass('hide').show();
+                                        if($('#myaudio').length === 0)
+                                        $('#audiocall').append('<video class="rounded centered" id="myaudio"  style="display:none" width=131 height=83 autoplay playsinline muted="muted"  />');
+                                        Janus.attachMediaStream($('#myaudio').get(0), stream);
+                                        $("#myaudio").get(0).muted = "muted";
+                                        // if(audio_self.videocall.webrtcStuff.pc.iceConnectionState !== "completed" &&
+                                        //     audio_self.videocall.webrtcStuff.pc.iceConnectionState !== "connected") {
+                                        //     $('#audioright').append('<video class="rounded centered" id="waitingvideo" width=406 height=271    />');
+                                        // }
+                                        videoTracks = stream.getVideoTracks();
+                                        if(videoTracks === null || videoTracks === undefined || videoTracks.length === 0) {
+                                            // No webcam
+                                            $('#myaudio').hide();
+                                            if($('#audiocall .no-video-container').length === 0) {
+                                            $('#audiocall').append(
+                                                '<div class="no-video-container">' +
+                                                '<span class="no-video-text">No webcam available</span>' +
+                                                '</div>');
+                                            }
+                                        }
+                                        else{
+                                            $('#audiocall .no-video-container').remove();
+                                            // $('#myvideo').removeClass('hide').show();
+                                        }
+                                    }
+                                    else{
+                                        window.console.log('````````````````````````19')
+                                        $('#videos').show();
+                                        if($('#myvideo').length === 0)
+                                            $('#videoleft').append('<video class="rounded centered" id="myvideo" width=131 height=83 autoplay playsinline muted="muted" />');
+                                        Janus.attachMediaStream($('#myvideo').get(0), stream);
+                                        $("#myvideo").get(0).muted = "muted";
+                                        videoTracks = stream.getVideoTracks();
+                                        if(videoTracks === null || videoTracks === undefined || videoTracks.length === 0) {
+                                            // No webcam
+                                            $('#myvideo').hide();
+                                            if($('#videoleft .no-video-container').length === 0) {
+                                            $('#videoleft').append(
+                                                '<div class="no-video-container">' +
+                                                '<span class="no-video-text">No webcam available</span>' +
+                                                '</div>');
+                                            }
+                                        } else {
+                                            $('#videoleft .no-video-container').remove();
+                                            $('#myvideo').removeClass('hide').show();
+                                        }
+                                    }
+                                },
+                                onremotestream: function(stream) {
+                                    window.console.log('````````````````````````20')
+                                    Janus.debug(" ::: Got a remote stream :::");
+                                    Janus.debug(stream);
+                                    var addButtons = false;
+                                    var videoTracks =''
+                                    if(self.audio_answer == true){
+                                        if($('#remoteaudio').length === 0) {
+                                            addButtons = true;
+                                            $('#audioright').append('<video class="rounded centered hide" id="remoteaudio" style="display:none"  width=406 height=271   autoplay playsinline />');
+                                            // $('.audio_loding').hide()
+                                            self.audio_logo=false                 
+                                            // $('#audio_box').show();
+                                            $("#remoteaudio").bind("playing", function () {
+                                                if(this.videoWidth)
+                                                // $('#remotevideo').removeClass('hide').show();
+                                                var width = this.videoWidth;
+                                                var height = this.videoHeight;
                                             });
                                         }
-                                        }
-                                    } else if(event === 'hangup') {
-                                        window.console.log('````````````````````````16')
-                                        Janus.log("Call hung up by " + result["username"] + " (" + result["reason"] + ")!");
-                                        // Reset status
-                                        if(self.video_audio == true){
-                                                self.video_show= false;
-                                            }else{
-                                                self.aduio_show= false;
-                                                self.audio_logo=false  
-                                    }
-                                        self.videocall.hangup();
-                                        $('#videos').hide();
-    
-                                    }
-                                    }
-                                } else {
-                                    window.console.log('````````````````````````17')
-                                    var no_video =msg
-                                        if(no_video.event === 'notified'){
-                                            window.console.log('5--------------------------------------')
-                                        }else{
-                                            // FIXME Error?
-                                            window.console.log('6--------------------------------------')
-                                            
-                                    var error = msg["error"];
-                                    alert(error);
-                                    self.$router.go(0)
-                                    // self.video_hang.destroy();
-                                    self.video_show=false;
-                                    self.videocall.hangup();
-                                    $('#videos').hide();
-                                     }
-                                }
-                            },
-                            onlocalstream: function(stream) {
-                                window.console.log('````````````````````````18')
-                                Janus.debug(" ::: Got a local stream :::");
-                                Janus.debug(stream);
-                                // self.video_show= true
-                                var videoTracks =''
-                                if(self.audio_answer == true){
-                                    $('#audios').removeClass('hide').show();
-                                    if($('#myaudio').length === 0)
-                                    $('#audiocall').append('<video class="rounded centered" id="myaudio"  style="display:none" width=131 height=83 autoplay playsinline muted="muted"  />');
-                                    Janus.attachMediaStream($('#myaudio').get(0), stream);
-                                    $("#myaudio").get(0).muted = "muted";
-                                    // if(audio_self.videocall.webrtcStuff.pc.iceConnectionState !== "completed" &&
-                                    //     audio_self.videocall.webrtcStuff.pc.iceConnectionState !== "connected") {
-                                    //     $('#audioright').append('<video class="rounded centered" id="waitingvideo" width=406 height=271    />');
-                                    // }
-                                    videoTracks = stream.getVideoTracks();
-                                    if(videoTracks === null || videoTracks === undefined || videoTracks.length === 0) {
-                                        // No webcam
-                                        $('#myaudio').hide();
-                                        if($('#audiocall .no-video-container').length === 0) {
-                                        $('#audiocall').append(
+                                        Janus.attachMediaStream($('#remoteaudio').get(0), stream);
+                                        videoTracks = stream.getVideoTracks();
+                                        if(videoTracks === null || videoTracks === undefined || videoTracks.length === 0) {
+                                        // No remote video
+                                        $('#remoteaudio').hide();
+                                        if($('#audioright .no-video-container').length === 0) {
+                                            $('#audioright').append(
                                             '<div class="no-video-container">' +
-                                            '<span class="no-video-text">No webcam available</span>' +
+                                                '<span class="no-video-text">No remote video available</span>' +
                                             '</div>');
                                         }
-                                    } else {
-                                        $('#audiocall .no-video-container').remove();
-                                        // $('#myvideo').removeClass('hide').show();
+                                        } 
+                                        else {
+                                        $('#audioright .no-video-container').remove();
+                                        }
                                     }
-                                }else{
-                                    window.console.log('````````````````````````19')
-                                    $('#videos').show();
-                                    if($('#myvideo').length === 0)
-                                        $('#videoleft').append('<video class="rounded centered" id="myvideo" width=131 height=83 autoplay playsinline muted="muted" />');
-                                    Janus.attachMediaStream($('#myvideo').get(0), stream);
-                                    $("#myvideo").get(0).muted = "muted";
-                                    videoTracks = stream.getVideoTracks();
-                                    if(videoTracks === null || videoTracks === undefined || videoTracks.length === 0) {
-                                        // No webcam
-                                        $('#myvideo').hide();
-                                        if($('#videoleft .no-video-container').length === 0) {
-                                        $('#videoleft').append(
+                                    else{
+                                        window.console.log('````````````````````````21')
+                                        if($('#remotevideo').length === 0) {
+                                            addButtons = true;
+                                            $('#videoright').append('<video class="rounded centered hide" id="remotevideo" width=406 height=271   autoplay playsinline/>');
+                                            $("#remotevideo").bind("playing", function () {
+                                                if(this.videoWidth)
+                                                $('#remotevideo').removeClass('hide').show();
+                                                var width = this.videoWidth;
+                                                var height = this.videoHeight;
+                                            });
+                                        }
+                                        Janus.attachMediaStream($('#remotevideo').get(0), stream);
+                                        videoTracks = stream.getVideoTracks();
+                                        if(videoTracks === null || videoTracks === undefined || videoTracks.length === 0) {
+                                        // No remote video
+                                        $('#remotevideo').hide();
+                                        if($('#videoright .no-video-container').length === 0) {
+                                            $('#videoright').append(
                                             '<div class="no-video-container">' +
-                                            '<span class="no-video-text">No webcam available</span>' +
+                                                '<span class="no-video-text">No remote video available</span>' +
                                             '</div>');
                                         }
-                                    } else {
-                                        $('#videoleft .no-video-container').remove();
-                                        $('#myvideo').removeClass('hide').show();
+                                        } 
+                                        else {
+                                            $('#videoright .no-video-container').remove();
+                                            $('#remotevideo').removeClass('hide').show();
+                                        }
+                                    }
+                                },
+                                });
+                            },
+                            error: function(error) {
+                                window.console.log('````````````````````````22')
+                                Janus.error(error);
+                                alert(error, function() {
+                                window.location.reload();
+                                });
+                                self.$router.go(0)
+                            },
+                            mycallmessage:function(e){
+                                window.console.log('````````````````````````23')
+                                window.console.log(e);
+                                window.console.log('--------------------p');
+                                if(e.code == 1){
+                                    self.video_offline = true;
+                                    self.offline_span=true
+                                    
+                                }else if(e.code ==2){
+                                    self.video_offline = true;
+                                    self.exist_span=true
+        
+                                }
+                            },
+                            youcallmessage:function(e){
+                                window.console.log('````````````````````````24')
+                                window.console.log(e);
+                                window.console.log('````````````````````````````p');
+                                if(e.type == 0&&e.isAccept == 0){
+                                    self.video_apply =true;
+                                    self.your_callname = e.name;
+                                    self.your_callid = e.myId;
+                                    if(e.isVideo == "true"){
+                                        self.your_calltype = 'video';
+                                        self.is_Video= 'true';
+                                        self.video_audio=true;
+                                        window.console.log('````````````````````````0')
+                                    }
+                                    else{
+                                        self.your_calltype = 'audio';
+                                        self.is_Video= 'false';
+                                        self.video_audio=false
+                                        window.console.log('````````````````````````5')
+                                    }
+                                }
+                                if(e.type == 1){
+                                    if(e.isAccept == 2){
+                                    self.video_anwer =true;
+                                    self.call_id =e.myId
+                                    if(e.isVideo == 'true'){
+                                        self.video_audio=true;
+                                    }
+                                    else{
+                                        self.video_audio;
+                                        self.video_audio=false
+                                    }
+                                    } 
+                                    else if(e.isAccept == 1){
+                                        self.video_reject =true
                                     }
                                 }
                             },
-                            onremotestream: function(stream) {
-                                window.console.log('````````````````````````20')
-                                Janus.debug(" ::: Got a remote stream :::");
-                                Janus.debug(stream);
-                                var addButtons = false;
-                                var videoTracks =''
-                                if(self.audio_answer == true){
-                                    if($('#remoteaudio').length === 0) {
-                                    addButtons = true;
-                                    $('#audioright').append('<video class="rounded centered hide" id="remoteaudio" style="display:none"  width=406 height=271   autoplay playsinline />');
-                                    // $('.audio_loding').hide()
-                                    self.audio_logo=false                 
-                                    // $('#audio_box').show();
-                                    $("#remoteaudio").bind("playing", function () {
-                                        if(this.videoWidth)
-                                        // $('#remotevideo').removeClass('hide').show();
-                                        var width = this.videoWidth;
-                                        var height = this.videoHeight;
-                                    });
-                                    }
-                                    Janus.attachMediaStream($('#remoteaudio').get(0), stream);
-                                    videoTracks = stream.getVideoTracks();
-                                    if(videoTracks === null || videoTracks === undefined || videoTracks.length === 0) {
-                                    // No remote video
-                                    $('#remoteaudio').hide();
-                                    if($('#audioright .no-video-container').length === 0) {
-                                        $('#audioright').append(
-                                        '<div class="no-video-container">' +
-                                            '<span class="no-video-text">No remote video available</span>' +
-                                        '</div>');
-                                    }
-                                    } else {
-                                    $('#audioright .no-video-container').remove();
-                                    }
-    
-                                }else{
-                                    window.console.log('````````````````````````21')
-                                if($('#remotevideo').length === 0) {
-                                    addButtons = true;
-                                    $('#videoright').append('<video class="rounded centered hide" id="remotevideo" width=406 height=271   autoplay playsinline/>');
-                                    $("#remotevideo").bind("playing", function () {
-                                        if(this.videoWidth)
-                                        $('#remotevideo').removeClass('hide').show();
-                                        var width = this.videoWidth;
-                                        var height = this.videoHeight;
-                                    });
-                                    }
-                                    Janus.attachMediaStream($('#remotevideo').get(0), stream);
-                                    videoTracks = stream.getVideoTracks();
-                                    if(videoTracks === null || videoTracks === undefined || videoTracks.length === 0) {
-                                    // No remote video
-                                    $('#remotevideo').hide();
-                                    if($('#videoright .no-video-container').length === 0) {
-                                        $('#videoright').append(
-                                        '<div class="no-video-container">' +
-                                            '<span class="no-video-text">No remote video available</span>' +
-                                        '</div>');
-                                    }
-                                    } else {
-                                    $('#videoright .no-video-container').remove();
-                                    $('#remotevideo').removeClass('hide').show();
-                                    }
-                                }
-                            },
-                            });
-                        },
-                        error: function(error) {
-                            window.console.log('````````````````````````22')
-                            Janus.error(error);
-                            alert(error, function() {
-                            window.location.reload();
-                            });
-                            self.$router.go(0)
-                        },
-                        mycallmessage:function(e){
-                            window.console.log('````````````````````````23')
-                            window.console.log(e);
-                            window.console.log('--------------------p');
-                            if(e.code == 1){
-                                self.video_offline = true;
-                                self.offline_span=true
-                                
-                            }else if(e.code ==2){
-                                self.video_offline = true;
-                                self.exist_span=true
-    
+                            destroyed: function() {
+                                // window.location.reload();
+                                window.console.log('````````````````````````25')
                             }
-                        },
-                        youcallmessage:function(e){
-                            window.console.log('````````````````````````24')
-                            window.console.log(e);
-                            window.console.log('````````````````````````````p');
-                            if(e.type == 0&&e.isAccept == 0){
-                                self.video_apply =true;
-                                self.your_callname = e.name;
-                                self.your_callid = e.myId;
-                                if(e.isVideo == "true"){
-                                    self.your_calltype = 'video';
-                                    self.is_Video= 'true';
-                                    self.video_audio=true;
-                                    window.console.log('````````````````````````0')
-                                }else{
-                                    self.your_calltype = 'audio';
-                                    self.is_Video= 'false';
-                                    self.video_audio=false
-                                    window.console.log('````````````````````````5')
-                                }
-                            }
-                            if(e.type == 1){
-                                if(e.isAccept == 2){
-                                  self.video_anwer =true;
-                                  self.call_id =e.myId
-                                   if(e.isVideo == 'true'){
-                                    self.video_audio=true;
-                                   }else{
-                                    self.video_audio;
-                                    self.video_audio=false
-                                   }
-                                } else if(e.isAccept == 1){
-                                    self.video_reject =true
-                                }
-                            }
-                            
-                        },
-                        destroyed: function() {
-                            // window.location.reload();
-                            window.console.log('````````````````````````25')
-                        }
                         });
                     }})
                     this.video_hang=janus;
@@ -1536,20 +1536,18 @@
                 video_begin(item){
                     this.audio_answer = false;
                     var body ={
-                    'uid':item.id,'type':0,"name":sessionStorage.getItem('username'),"isVideo":'true','isAccept':0,
-                     'myId':sessionStorage.getItem('id')
+                        'uid':item.id,'type':0,"name":sessionStorage.getItem('username'),"isVideo":'true','isAccept':0,
+                        'myId':sessionStorage.getItem('id')
                     }
                     window.console.log(body)
                     this.videocall.send({'user_call':body})
-                    
-            
                 },
                 // 语音通话
                 audio_begin(item){
                     // var audio_self=this 
                     var body ={
-                    'uid':item.id,'type':0,"name":sessionStorage.getItem('username'),"isVideo":'false','isAccept':0,
-                     'myId':sessionStorage.getItem('id')
+                        'uid':item.id,'type':0,"name":sessionStorage.getItem('username'),"isVideo":'false','isAccept':0,
+                        'myId':sessionStorage.getItem('id')
                     }
                     window.console.log(body)
                     // audio_self.videocall.send({'user_call':body})
@@ -1566,7 +1564,7 @@
                     // "wss://" + "ptt.jimilab.com" + ":8989",
                     // "/janus"
                     // ];  
-                    var janus = null;
+                    var poc = null;
                     // var mixertest = null;
                     var opaqueId = "audiobridgetest-"+Janus.randomString(12);
                     var spinner = null;
@@ -1583,12 +1581,12 @@
                             return;
                         }
                         // Create session
-                        janus = new Janus(
+                        poc = new Janus(
                             {
                                 server: server,
                                 success: function() {
                                     // Attach to Audio Bridge test plugin
-                                    janus.attach(
+                                    poc.attach(
                                         {
                                             plugin: "janus.plugin.pocroom",
                                             opaqueId: opaqueId,
@@ -1600,7 +1598,7 @@
                                             error: function(error) {
                                                 Janus.error("  -- Error attaching plugin...", error);
                                                 window.console.log('············2')
-                                            alert("Error attaching plugin... " + error);
+                                                 alert("Error attaching plugin... " + error);
                                             },
                                             consentDialog: function(on) {
                                                 Janus.debug("Consent dialog should be " + (on ? "on" : "off") + " now");
@@ -1614,9 +1612,15 @@
                                                 window.console.log(msg);
                                                 var event = msg["pocroom"];
                                                 Janus.debug("Event: " + event);
+                                                bridge.free_talker=msg.talkfreed;
+                                                window.console.log(bridge.free_talker)
+                                                if(bridge.free_talker == bridge.now_talker){
+                                                    bridge.talk_close=false;
+                                                    
+                                                }
                                                 window.console.log('``````````````````122');
                                                 window.console.log(event)
-                                                window.console.log('············4')
+                                                window.console.log('············4');
                                                 if(event != undefined && event != null) {
                                                     if(event === "joined") {
                                                         window.console.log('············5')
@@ -1625,7 +1629,6 @@
                                                         Janus.log("Successfully joined room " + msg["room"] + " with ID " + myid);
                                                         if(!webrtcUp) {
                                                             window.console.log('············6')
-                                                         
                                                             webrtcUp = true;
                                                             // Publish our stream
                                                             bridge.mixertest.createOffer(
@@ -1649,7 +1652,8 @@
                                                             Janus.debug("Got a list of participants:");
                                                             Janus.debug(lists);
                                                         }
-                                                    } else if(event === "roomchanged") {
+                                                    } 
+                                                    else if(event === "roomchanged") {
                                                         // The user switched to a different room
                                                         myid = msg["id"];
                                                         Janus.log("Moved to room " + msg["room"] + ", new ID: " + myid);
@@ -1659,18 +1663,21 @@
                                                             Janus.debug("Got a list of participants:");
                                                             Janus.debug(listss);
                                                         }
-                                                    } else if(event === "destroyed") {
+                                                    } 
+                                                    else if(event === "destroyed") {
                                                         // The room has been destroyed
                                                         Janus.warn("The room has been destroyed!");
                                                         alert("The room has been destroyed", function() {
                                                             window.location.reload();
                                                         });
-                                                    } else if(event === "event") {
+                                                    } 
+                                                    else if(event === "event") {
                                                         if(msg["participants"] !== undefined && msg["participants"] !== null) {
                                                             var listsss = msg["participants"];
                                                             Janus.debug("Got a list of participants:");
                                                             Janus.debug(listsss);
-                                                        } else if(msg["error"] !== undefined && msg["error"] !== null) {
+                                                        } 
+                                                        else if(msg["error"] !== undefined && msg["error"] !== null) {
                                                             if(msg["error_code"] === 485) {
                                                                 // This is a "no such room" error: give a more meaningful description
                                                             alert(
@@ -1685,10 +1692,11 @@
                                                             return;
                                                         }
                                                         // Any new feed to attach to?
-                                                    }else if(event === "talked"){
+                                                    }
+                                                    else if(event === "talked"){
                                                         window.console.log('``````````````````133');   
                                                         bridge.talker_id = msg["talkholder"];
-                                                       var chater_id = msg["talkholder"];
+                                                        var chater_id = msg["talkholder"];
                                                         window.console.log( bridge.talker_id);
                                                         // window.console.log(  parseInt (sessionStorage.getItem('id')));
                                                         var user_id =parseInt(sessionStorage.getItem('id'))
@@ -1702,9 +1710,12 @@
                                                         }else{
                                                             window.console.log('不能发言')
                                                             bridge.talk_close=true;
+                                                            bridge.now_talker=msg["talkholder"]
+                                                            window.console.log(msg)
+                                                            window.console.log(bridge.now_talker)
                                                         }
                                                     }
-                                            }
+                                                }
                                                 if(jsep !== undefined && jsep !== null) {
                                                     Janus.debug("Handling SDP as well...");
                                                     Janus.debug(jsep);
@@ -1716,9 +1727,8 @@
                                                 Janus.debug(stream);
                                             },
                                             onremotestream: function(stream) {
-                                        
-                                                // Mute button
-                                                audioenabled = true;
+                                                $('#mixedaudio').append('<audio  id="roomaudio" width="100%" height="100%" autoplay/>');
+                                                Janus.attachMediaStream($('#roomaudio').get(0), stream);
                                             },
                                             oncleanup: function() {
                                                 webrtcUp = false;
@@ -1737,11 +1747,10 @@
                                 destroyed: function() {
                                     window.location.reload();
                                 }
-                            }); 
-}});
-                this.audio_bridge=janus
-            },
-
+                        }); 
+                    }});
+                     this.audio_bridge=poc
+                },
                 // 即时链接
                 text_begin(item){
                     window.console.log(item.id);
@@ -1862,11 +1871,13 @@
                         this.audio_answer = false;
                         var userpeer = this.call_id.toString();
                         window.console.log(userpeer)
+                        window.console.log('`````````````````````````1')
                             this.videocall.createOffer(
                             {
                                 media: { data: true },	
                                 success: function(jsep) {
                                 var body = { "request": "call", "username": userpeer };
+                                
                                 selfs.videocall.send({"message": body, "jsep": jsep});
                                 },
                                 error: function(error) {
@@ -2050,7 +2061,6 @@
                         this.im_self_show = true;
                         var your_out_name=type+'.'+sessionStorage.getItem('id')+'_'+local.SenderId;
                         window.console.log(your_out_name);
-                        
                         window.console.log(JSON.parse(localStorage.getItem(your_out_name)));
                         this.local_mynews = JSON.parse(localStorage.getItem(your_out_name));
                                 if(this.local_mynews  ==null){
@@ -2097,33 +2107,31 @@
                    if(this.history_index == -1){
                         this.history_index=1;
                         this.history_right='-332px'
-                   }else{
+                   }
+                   else{
                         this.history_index = -1;
                         this.history_right='0px'
                    }
-                
                    window.console.log(this.receiver_type)
                    if(this.receiver_type ==1){
-                    
-                    window.console.log(this.talk_id)
-                    var im_alone_history = this.receiver_type +'.'+sessionStorage.getItem('id')+'_'+this.talk_id;
-                    window.console.log(im_alone_history);
-                    this.local_history = JSON.parse(localStorage.getItem(im_alone_history));
-                    window.console.log( this.local_history);
-                    window.console.log( this.im_total_history);
-                   }else{
-                    window.console.log(this.talk_id)
-                    var im_group_history = this.receiver_type +'.'+sessionStorage.getItem('id')+'_'+this.talk_id;
-                    window.console.log(im_group_history)
-                    this.local_history = JSON.parse(localStorage.getItem(im_group_history));
-                    window.console.log( this.local_history);
-                    window.console.log( this.im_total_history);
-                    var im_ptt_locale = '5'+'.'+sessionStorage.getItem('id')+'_'+this.talk_id;
-                    this.local_ptthistory=JSON.parse(localStorage.getItem(im_ptt_locale));
-                    window.console.log(im_ptt_locale);
-                    window.console.log( this.local_ptthistory);
-
-
+                        window.console.log(this.talk_id)
+                        var im_alone_history = this.receiver_type +'.'+sessionStorage.getItem('id')+'_'+this.talk_id;
+                        window.console.log(im_alone_history);
+                        this.local_history = JSON.parse(localStorage.getItem(im_alone_history));
+                        window.console.log( this.local_history);
+                        window.console.log( this.im_total_history);
+                   }
+                   else{
+                        window.console.log(this.talk_id)
+                        var im_group_history = this.receiver_type +'.'+sessionStorage.getItem('id')+'_'+this.talk_id;
+                        window.console.log(im_group_history)
+                        this.local_history = JSON.parse(localStorage.getItem(im_group_history));
+                        window.console.log( this.local_history);
+                        window.console.log( this.im_total_history);
+                        var im_ptt_locale = '5'+'.'+sessionStorage.getItem('id')+'_'+this.talk_id;
+                        this.local_ptthistory=JSON.parse(localStorage.getItem(im_ptt_locale));
+                        window.console.log(im_ptt_locale);
+                        window.console.log( this.local_ptthistory);
                    }
     
                 //    window.console.log(this.local_history)
@@ -2294,7 +2302,6 @@
                     this.im_show = false;
                     window.console.log('111'); 
                 },
-
                 im_close(){
                     this.im_show = false;
                     // this.mapshow=true
@@ -2312,20 +2319,30 @@
                 filechange(){
                     this.im_box_show = false;
                     this.upload_show = true,
-                  window.console.log(2222);
-                  this.file_name = this.$refs.resource.files[0].name;
+                    window.console.log(2222);
+                    this.file_name = this.$refs.resource.files[0].name;
                 //   this.file_type = 
                  var filepath= $('#im_resource').val();
                  var fileType = this.getFileType(filepath)
                  window.console.log(fileType)
                  if("jpg" == fileType || "jpeg" == fileType  || "png" == fileType || "gif" == fileType){
                     this.file_type = 2
+                    this.file_show=false;
+                    this.image_show=true;
                  }else if("mp3" == fileType ){
                     this.file_type = 3
+                    this.image_show=false;
+                    this.file_show=true;
+                    this.file_name = this.$refs.resource.files[0].name;
                  }else if("mp4" == fileType || "rmvb" == fileType || "avi" == fileType || "ts" == fileType){
                     this.file_type = 4
+                    this.image_show=false;
+                    this.file_show=true;
+                    this.file_name = this.$refs.resource.files[0].name;
                  }else{
                     this.file_type = 1000
+                    this.image_show=false;
+                    this.file_show=true;
                  }
                  if(this.file_type == 2){
                      window.console.log(111)
@@ -2337,8 +2354,10 @@
                          preview_image.src=e.target.result
 
                      }
-
                  }
+                //  if(this.file_type == 10000){
+                //      this.file_show=true;
+                //  }
              
                  
                 },
@@ -2375,7 +2394,8 @@
                     window.console.log(e)
                     this.refresh_show = true;
                 },
-                setOnmessageMessage (e){ //数据接收
+                //数据接收
+                setOnmessageMessage (e){ 
                     window.console.log(e)
                     window.console.log(e.data)
                     if(JSON.parse(e.data).DataType == 2){
@@ -2386,7 +2406,8 @@
                         if(Object.keys(off_line).length==0){
                             window.console.log(333333)
                             window.console.log(off_line)
-                        }else{
+                        }
+                        else{
                             window.console.log(222222)
                             window.console.log(off_line);
                             window.console.log(off_line.offlineGroupPttImMsgs);
@@ -2430,7 +2451,6 @@
                                        localStorage.setItem(ptt_history_name,JSON.stringify(ptt_history_message))
                                     }
                                 }
-
                             }
                             if(off_line.hasOwnProperty('offlineGroupImMsgs') || off_line.hasOwnProperty('offlineSingleImMsgs')){
                                 window.console.log(333)
@@ -2450,14 +2470,12 @@
                                 }
 
                             }
-                            
                             // localStorage.setItem('off_line_local', JSON.stringify(off_line));
                             // window.console.log(JSON.parse(localStorage.getItem('off_line_local')))
-                            
                         }
                         // window.console.log(off_line)
-                        
-                    }else if(JSON.parse(e.data).DataType == 3){
+                    }
+                    else if(JSON.parse(e.data).DataType == 3){
                         const redata = JSON.parse(e.data).imMsgData;
                         redata.time_id = (new Date()).getTime();
                         window.console.log(redata)
@@ -2477,7 +2495,7 @@
                             window.console.log(ppt_name)
                             window.console.log(JSON.parse(localStorage.getItem(ppt_name)))
                             
-                        }else if(redata.MsgType == 1 ||redata.MsgType == 2||redata.MsgType == 3 ||redata.MsgType == 4){
+                        }else if(redata.MsgType == 1 ||redata.MsgType == 2||redata.MsgType == 3 ||redata.MsgType == 4 ||redata.MsgType == 10000){
                             window.console.log('wenzi')
                             // redata.time=this.im_now_date;
                             window.console.log(this.receiver_id)
@@ -2491,26 +2509,27 @@
                                 window.console.log(sessionStorage.getItem('id'))
                                 var your_local_name =''
                                 if(redata.id == this.receiver_id ||redata.id == parseInt(sessionStorage.getItem('id'))){
-                                      
                                        if(redata.id == parseInt(sessionStorage.getItem('id'))){
-                                        redata.im_send_obj = 1;
-                                        your_local_name=redata.ReceiverType+'.'+redata.id+'_'+redata.ReceiverId;
-                                       window.console.log(your_local_name)
-                                       }else{
+                                            redata.im_send_obj = 1;
+                                            your_local_name=redata.ReceiverType+'.'+redata.id+'_'+redata.ReceiverId;
+                                            window.console.log(your_local_name)
+                                       }
+                                       else{
                                         redata.im_send_obj = 2;
                                         your_local_name=redata.ReceiverType+'.'+redata.ReceiverId+'_'+redata.id;
-                                          window.console.log(your_local_name)
+                                        window.console.log(your_local_name)
                                        }
-    
                                         this.local_mynews = JSON.parse(localStorage.getItem(your_local_name));
                                         if(this.local_mynews  ==null){
                                             this.local_mynews = [] ;
                                             this.local_mynews.push(redata);
-                                        }else{
+                                        }
+                                        else{
                                             this.local_mynews.push(redata);
                                         }
                                         localStorage.setItem(your_local_name, JSON.stringify(this.local_mynews));                       
-                                }else{
+                                }
+                                else{
                                     your_local_name=redata.ReceiverType+'.'+redata.ReceiverId+'_'+redata.id;
                                     window.console.log(redata.id)
                                     window.console.log(redata.ReceiverId)
@@ -2531,7 +2550,8 @@
                                         this.other_send_id = redata.id
                                         this.other_group_id =redata.ReceiverId
                                 }
-                            }else{
+                            }
+                            else{
                                 if(redata.id ==sessionStorage.getItem('id')){
                                     redata.im_send_obj = 1;
                                 }else{
@@ -2555,7 +2575,8 @@
                                             this.local_groupnews.push(redata);
                                         }
                                         localStorage.setItem(group_local_name, JSON.stringify(this.local_groupnews));                                
-                                }else{
+                                }
+                                else{
                                     window.console.log(9999999)
                                     window.console.log(redata);
                                     var other_group_num = JSON.parse(localStorage.getItem(group_local_name));
@@ -2582,7 +2603,8 @@
                             }else{
                                 window.console.log('sos')
                             }
-                    }else if(JSON.parse(e.data).DataType == 5){
+                    }
+                    else if(JSON.parse(e.data).DataType == 5){
                         this.off_line_show =true;
                         // var off_device=JSON.parse(e.data).logoutNotify.group_list[0].usr_list;
                         // window.console.log(off_device)
@@ -2609,7 +2631,8 @@
                                 window.console.log(error);
                                 }); 
                                 window.console.log('````````````````````````89')
-                    }else if(JSON.parse(e.data).DataType == 6){
+                    }
+                    else if(JSON.parse(e.data).DataType == 6){
                         this.online_show =true;
                         var online_device=JSON.parse(e.data).Notify.userInfo.name;
                         this.online_name =online_device;
@@ -2671,7 +2694,8 @@
                         this.local_mynews = JSON.parse(localStorage.getItem(look_other_self));
                         this.receiver_id = this.other_send_id;
                         this.talk_id = this.other_send_id 
-                    }else{
+                    }
+                    else{
                         this.im_device_show = false;
                         this.im_group_show = true;
                         window.console.log(this.group_list)
@@ -2693,8 +2717,6 @@
                         
                     }
                     // this.talk_name=
-                    
-                    
                     // this.talk_id = this.other_send_id;
                     this.receiver_type = this.other_send_type;
                     this.other_show =false;
@@ -2783,7 +2805,8 @@
                     window.console.log(this.talkback_id);
                     var talkroom = this.talkback_id;
                     var my_roomname = sessionStorage.getItem('loginName')
-                    var talk_request = { "request": "join", "room":talkroom, "display": my_roomname };
+                    var my_id = sessionStorage.getItem('id')
+                    var talk_request = { "request": "join", "room":talkroom, "display": my_roomname ,'id':my_id};
                     window.console.log(talk_request);
                     this.mixertest.send({"message": talk_request}); 
                     this.im_content_show=false;
@@ -2795,7 +2818,7 @@
                     this.im_talkback_show=false;
                     this.im_content_show=true;
                     var out_talkroom ={"request": "leave"}
-                   this.mixertest.send({"message": out_talkroom});
+                    this.mixertest.send({"message": out_talkroom});
                     this.talk_id = this.talkback_id;
                     this.receiver_id = this.talk_id
                     this.receiver_type = 2;
@@ -2805,7 +2828,7 @@
                     this.local_groupnews =JSON.parse(localStorage.getItem(im_group_num));
                 },
                 talk_active(){
-                     this.talkactive=true;
+                    this.talkactive=true;
                     window.console.log(1)
                     var timese = Date.parse(new Date());
                     window.console.log(timese);
@@ -2815,8 +2838,8 @@
                     window.console.log(active_room)
                     window.console.log(active_id)
                     window.console.log(active_name)
-                        var talksend ={"request":"talk","room":active_room,"id":active_id,"muted":false,"display":active_name,"timestamp":timese}
-                        this.mixertest.send({"message":talksend})
+                    var talksend ={"request":"talk","room":active_room,"id":active_id,"muted":false,"display":active_name,"timestamp":timese}
+                    this.mixertest.send({"message":talksend})
                     this.mouse_show=false;
                 },
                 talk_actived(){
@@ -2838,8 +2861,6 @@
                         this.can_speanker=false
                         window.console.log('jingying')
                     }
-
-
                 },                
                 map_show(){
                 },
@@ -2997,13 +3018,12 @@
               this.get_group_list();
               window.console.log( JSON.parse(localStorage.getItem('group_list')))
               window.console.log( JSON.parse(localStorage.getItem('device_list')))
-               
         },
         mounted(){ 
-            // this.audiobridge_serve(); 
+            this.audiobridge_serve(); 
             window.console.log( JSON.parse(localStorage.getItem('group_list')))
-            // this.video_server();    
-            this.createWebSocket()
+            this.video_server();    
+            // this.createWebSocket()
             window.console.log(this.group_list)
         },
         updated() {
@@ -3013,7 +3033,7 @@
             this.socket_cloes()
         }
     }
-    </script>
+</script>
     
     <style >
     #big_box{
