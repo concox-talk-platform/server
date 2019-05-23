@@ -796,7 +796,7 @@ function Janus(gatewayCallbacks) {
 				ws.onerror = null;
 				ws.onclose = null;
 				if(wsKeepaliveTimeoutId) {
-					clearTimeout(wsKeepaliveTimeoutId);
+					clealearTimeout(wsKeepaliveTimeoutId);
 					wsKeepaliveTimeoutId = null;
 				}
 			}

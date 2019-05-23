@@ -192,7 +192,10 @@ module.exports = {
         talkback:'是否加入群对讲?',
         down:"鼠标按下开始对讲",
         up:"鼠标松开结束对讲",
-        out:"退出对讲"
+        out:"退出对讲",
+        select:'请选择对讲房间',
+        begin:'开始对讲',
+        close:'没有麦权，稍后再试'
     },
     im:{
         group_list:'群组列表',

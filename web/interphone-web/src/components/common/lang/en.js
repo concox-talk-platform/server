@@ -185,7 +185,10 @@ module.exports = {
             talkback:'Do you join the group talk?',
             down:"Mouse press to start intercom",
             up:"Mouse release to end the intercom",
-            out:"Exit the intercom"
+            out:"Exit the intercom",
+            select:'Please choose the intercom room',
+            begin:'Start intercom',
+            close:'No microphone permission, try again later',
         },
         im:{
             group_list:'Group List',

@@ -204,7 +204,7 @@
                                             <div  :class='item.im_send_obj==1?"im_self_corner":"im_opposite_corner"'></div>
                                             <img  class="im_get_img" v-show='item.MsgType==2'  :src="item.ResourcePath" alt=""> 
                                             <div class="im_filebox" v-show='item.MsgType==3'>
-                                                <audio :src="item.ResourcePath"  controls="controls"></audio>
+                                                <audio :src="item.ResourcePath"  controls="controls" style="height: 29px;width: 257px;"></audio>
                                                 <!-- <video :src="item.ResourcePath" autoplay="autoplay" controls="controls" style="max-width: 190px;"></video> -->
                                             </div>
                                             <div class="im_filebox" v-show='item.MsgType==4'>
@@ -234,18 +234,18 @@
                                                 <div  :class='item.im_send_obj==1?"im_self_corner":"im_opposite_corner"'></div>
                                                 <img  class="im_get_img" v-show='item.MsgType==2'  :src="item.ResourcePath" alt="">
                                                 <div class="im_filebox" v-show='item.MsgType==3'>
-                                                        <audio :src="item.ResourcePath"  controls="controls"></audio>
+                                                        <audio :src="item.ResourcePath"  controls="controls" style="height: 29px;width: 257px;"></audio>
                                                         <!-- <video :src="item.ResourcePath" autoplay="autoplay" controls="controls" style="max-width: 190px;"></video> -->
                                                 </div> 
                                                 <div class="im_filebox" v-show='item.MsgType==4'>
                                                     <video :src="item.ResourcePath" autoplay="autoplay" controls="controls" style="max-width: 190px;"></video>
                                                 </div>
-                                                <div class="im_filebox" v-show='item.MsgType==5'>
+                                                <!-- <div class="im_filebox" v-show='item.MsgType==5'>
                                                         <span class="im_file_text" style="float: left;" >{{item.file_name}}</span>
                                                         <a :href="item.ResourcePath" download="">
                                                                 <span class="interphonefamily" style="float: right;cursor: pointer;margin-left:10px" >&#xe69c;</span>
                                                         </a>
-                                                </div>
+                                                </div> -->
                                             </div>
                                         </div>
                                     </div>
@@ -280,8 +280,6 @@
                                 <!-- <input v-show="fileupView" id="fileSelect" name="fileSelect"  ref="inputer"  type="file"/> -->
                                 <div class="im_send_button">
                                     <span class="im_send_close" @click="im_send_close">{{ $t("im.close") }}</span>
-                                    <!-- <span @click="duankai">   断开</span>
-                                    <span @click="lianjie">lianjie</span> -->
                                     <span class="im_send_subimt" @click="im_send_subimt">{{ $t("im.send") }}</span>
                                 </div>
                             </div>
@@ -291,6 +289,8 @@
                               <span class="out_talkback"  @click="out_talkback">{{ $t("talkback.out") }}</span>
                               <div class="talkactive_tip" v-show="mouse_show">{{ $t("talkback.down") }}</div>
                               <div class="talkactive_tip" v-show="!mouse_show">{{ $t("talkback.up") }}</div>
+                              <div class="talkactive_begin" v-show="talk_begin">{{ $t("talkback.begin") }}</div>
+                              <div class="talkactive_close" v-show="talk_close">{{ $t("talkback.close") }}</div>
                               <div class="talkback_div" @mousedown="talk_active" @mouseup="talk_actived" :class="{talkback_active:talkactive}" :title="$t('talkback.touch')">
                                     <span class="interphonefamily talkback_icon">&#xe6a5;</span>
                               </div>
@@ -331,10 +331,13 @@
                                                 <div class="im_record_time">{{item.SendTime}}</div>
                                             </div>
                                             <img  class="im_get_img" v-if='item.MsgType==2'  :src="item.ResourcePath" alt=""> 
+                                            <div class="im_filebox" v-if='item.MsgType==3'>
+                                                    <audio :src="item.ResourcePath" autoplay="autoplay" controls="controls" style="height: 20px;"></audio>
+                                                </div>
                                             <div class="im_filebox" v-if='item.MsgType==4'>
                                                 <video :src="item.ResourcePath" autoplay="autoplay" controls="controls" style="max-width: 190px;"></video>
                                             </div>
-                                            <div  v-if='item.MsgType==5' style="height: 30px" >
+                                            <div  v-if='item.MsgType==10000' style="height: 30px" >
                                                     <span class="im_file_text" style="float: left;" >{{item.file_name}}</span>
                                                     <a :href="item.ResourcePath" download="">
                                                             <span class="interphonefamily" style="float: right;cursor: pointer;margin-left:10px" >&#xe69c;</span>
@@ -344,6 +347,13 @@
                                     </div>
                                </div>
                                <div  v-if="select_talk">
+                                    <div class="im_history_info" v-for="(item) in im_total_ptt" :key="item.SendTime" >
+                                            <div class="im_history_name clearfix" >
+                                                    <div class="im_record_name">{{item.SenderName}}</div>
+                                                    <div class="im_record_time">{{item.SendTime}}</div>
+                                                </div>
+                                                <audio :src="item.ResourcePath" controls="controls" style="height: 20px;width: 277px;"></audio>
+                                        </div>
                                     <!-- <div v-for="(item) in im_total_history" :key="item.time_id"> -->
                                             <!-- <div class="im_history_info"  v-if='item.MsgType ==1'> -->
                                                 <!-- <div class="im_history_name clearfix">
@@ -353,7 +363,8 @@
                                                 <div class="im_history_comtent">{{item.ResourcePath}}</div>
                                             </div> -->
                                         <!-- </div> -->
-                                        <div class="im_history_info" v-for="(item,index) in ssaudio" :key="item.id" >
+                                        <!-- 动画对讲 -->
+                                        <!-- <div class="im_history_info" v-for="(item,index) in ssaudio" :key="item.id" >
                                                 <div class="im_history_name clearfix">
                                                         <div class="im_record_name">{{item.name}}</div>
                                                         <div class="im_record_time">{{item.time}}</div>
@@ -364,27 +375,18 @@
                                                             <img class="im_voice_img" :filename="item.file" 
                                                             :src="pause_img" alt="" @click="play_audio(item,index)"  v-show="audio_play">
                                                             <img  class="im_voice_gif"  :src="play_img" alt="" v-show="img_gif===index">
-                                                            <!-- <audio src="../../assets/img/qwe.mp3"></audio> -->
                                                         </div>
     
                                                         <span class="im_voice_num">{{item.long}}</span>
                                                     </div>
                                                 </div>
-                                            </div>
-                                           <div class="im_history_info"  >
-                                                <div class="im_history_name clearfix">
-                                                        <div class="im_record_name">leikun</div>
-                                                        <div class="im_record_time">2019年04月29日 19:07:46</div>
-                                                    </div>
-                                                    <!-- <div class="im_history_comtent">{{item.ResourcePath}}</div> -->
-                                            </div>
-                                            <div class="im_history_info"  >
+                                            </div> -->
+                                            <!-- <div class="im_history_info"  >
                                                     <div class="im_history_name clearfix">
                                                             <div class="im_record_name">leikun</div>
                                                             <div class="im_record_time">2019年04月29日 20:07:46</div>
                                                         </div>
-                                                        <!-- <div class="im_history_comtent">{{item.ResourcePath}}</div> -->
-                                            </div>
+                                            </div> -->
                                </div>                          
                             </div>
                         </div>
@@ -467,7 +469,8 @@
                                                     <img src="../../assets/img/inter.png" alt="">
                                                 </div>
                                                 <span class="device_name" :title="item.user_name">
-                                                    {{item.user_name}}
+                                                    <!-- {{item.user_name}} -->
+                                                    {{item.nick_name}}
                                                 </span> 
                                                 <div class="control_menum" v-if="media_show === index">
                                                     <div class="control_voice" @click="audio_begin(item)">{{ $t("group.voice") }}</div>
@@ -533,7 +536,15 @@
                                 <el-button @click="talkbackVisible = false">{{$t('button_message.cancel')}}</el-button>
                                 <el-button type="primary" @click="talkback_submit">{{$t('button_message.confirm')}}</el-button>
                             </span>
-                        </el-dialog>
+                    </el-dialog>
+                    <!-- 请选择对讲弹出框 -->
+                    <el-dialog :title="$t('control.hint')" :visible.sync="talkback_select" width="30%" :show-close="false">
+                            <span>{{$t('talkback.select')}}</span>
+                            <span slot="footer" class="dialog-footer">
+                                <el-button @click="talkback_select = false">{{$t('button_message.cancel')}}</el-button>
+                                <el-button type="primary" @click="talkback_select = false">{{$t('button_message.confirm')}}</el-button>
+                            </span>
+                    </el-dialog>
 
         
              </div>
@@ -617,6 +628,7 @@
                     editorial_show:false,
                     dialogVisible: false,
                     talkbackVisible:false,
+                    talkback_select:false,
                     select_group_nummber:'a' ,
                     group_div_show: false,
                     modified_member_show: false,
@@ -678,6 +690,7 @@
                     im_select_text:true,
                     im_select_file:false,
                     im_select_talk:false,
+                    can_speanker:false,
                     history_right:'0px',
                     history_index:-1,
                     im_send_news:'',
@@ -694,12 +707,14 @@
                     local_mynews:[],
                     local_groupnews:[],
                     local_history:[],
+                    local_ptthistory:[],
                     im_content_show:true,
                     im_talkback_show:false,
                     network_message:{
                     },
                     local_message:[
                     ],
+                    off_message:'',
                     // websocket
                     websocket: null,
                     im_box_show:true,
@@ -740,6 +755,9 @@
                     talkback_id:'',
                     talkactive:false,
                     mouse_show:true,
+                    talk_begin:false,
+                    talk_close:false,
+                    talker_id:'',
                     // jiadata:'',
     
                     // sosGps
@@ -1572,30 +1590,42 @@
                                     // Attach to Audio Bridge test plugin
                                     janus.attach(
                                         {
-                                            plugin: "janus.plugin.audiobridge",
+                                            plugin: "janus.plugin.pocroom",
                                             opaqueId: opaqueId,
                                             success: function(pluginHandle) {
                                                 bridge.mixertest = pluginHandle;
                                                 Janus.log("Plugin attached! (" + bridge.mixertest.getPlugin() + ", id=" + bridge.mixertest.getId() + ")");
+                                                window.console.log('············1')
                                             },
                                             error: function(error) {
                                                 Janus.error("  -- Error attaching plugin...", error);
+                                                window.console.log('············2')
                                             alert("Error attaching plugin... " + error);
                                             },
                                             consentDialog: function(on) {
                                                 Janus.debug("Consent dialog should be " + (on ? "on" : "off") + " now");
+                                                window.console.log(on)
+                                                window.console.log('············3')
                                             },
                                             onmessage: function(msg, jsep) {
                                                 Janus.debug(" ::: Got a message :::");
                                                 Janus.debug(msg);
-                                                var event = msg["audiobridge"];
+                                                Janus.log(msg);
+                                                window.console.log(msg);
+                                                var event = msg["pocroom"];
                                                 Janus.debug("Event: " + event);
+                                                window.console.log('``````````````````122');
+                                                window.console.log(event)
+                                                window.console.log('············4')
                                                 if(event != undefined && event != null) {
                                                     if(event === "joined") {
+                                                        window.console.log('············5')
                                                         // Successfully joined, negotiate WebRTC now
                                                         myid = msg["id"];
                                                         Janus.log("Successfully joined room " + msg["room"] + " with ID " + myid);
                                                         if(!webrtcUp) {
+                                                            window.console.log('············6')
+                                                         
                                                             webrtcUp = true;
                                                             // Publish our stream
                                                             bridge.mixertest.createOffer(
@@ -1604,7 +1634,7 @@
                                                                     success: function(jsep) {
                                                                         Janus.debug("Got SDP!");
                                                                         Janus.debug(jsep);
-                                                                        var publish = { "request": "configure", "muted": false };
+                                                                        var publish = { "request": "configure", "muted": true };
                                                                         bridge.mixertest.send({"message": publish, "jsep": jsep});
                                                                     },
                                                                     error: function(error) {
@@ -1655,6 +1685,24 @@
                                                             return;
                                                         }
                                                         // Any new feed to attach to?
+                                                    }else if(event === "talked"){
+                                                        window.console.log('``````````````````133');   
+                                                        bridge.talker_id = msg["talkholder"];
+                                                       var chater_id = msg["talkholder"];
+                                                        window.console.log( bridge.talker_id);
+                                                        // window.console.log(  parseInt (sessionStorage.getItem('id')));
+                                                        var user_id =parseInt(sessionStorage.getItem('id'))
+                                                        if(chater_id == user_id){
+                                                            window.console.log('可以发言')
+                                                            bridge.can_speanker=true
+                                                            bridge.talk_begin=true;
+                                                            var can_speak={"request":"configure","muted":false,"display":sessionStorage.getItem('loginName')};
+                                                            bridge.mixertest.send({"message":can_speak})
+
+                                                        }else{
+                                                            window.console.log('不能发言')
+                                                            bridge.talk_close=true;
+                                                        }
                                                     }
                                             }
                                                 if(jsep !== undefined && jsep !== null) {
@@ -1883,6 +1931,8 @@
                     this.im_line_active = 'a' ;
                     this.talk_name ='';
                     this.talk_id ='';
+                    window.console.log(JSON.parse(localStorage.getItem('off_line_local')))
+                    this.off_message = JSON.parse(localStorage.getItem('off_line_local'))
                 },
                 select_imdevice(){
                     this.im_device_active = 'a' ;
@@ -1899,6 +1949,11 @@
                         this.history_index = -1;
                         this.history_right='0px'
                    }
+                   if(this.im_talkback_show == true){
+                        this.im_talkback_show =false;
+                        var leave_rooms ={"request": "leave"}
+                         this.mixertest.send({"message": leave_rooms});  
+                    }
                 },
                 select_imgroup(){
                     this.im_group_active = 'a' ;
@@ -1932,6 +1987,11 @@
                     this.talk_id = this.group_list[index].group_info.id;
                     this.receiver_id = this.talk_id
                     this.receiver_type = 2;
+                    if(this.im_talkback_show == true){
+                        this.im_talkback_show =false;
+                        var leaves_rooms ={"request": "leave"}
+                         this.mixertest.send({"message": leaves_rooms});  
+                    }
                     var im_group_num= this.receiver_type+'.'+sessionStorage.getItem('id')+'_'+this.talk_id
                     window.console.log(im_group_num);
                     window.console.log(JSON.parse(localStorage.getItem(im_group_num)));
@@ -1949,6 +2009,11 @@
                     this.im_self_show =true;
                     window.console.log(index);
                     window.console.log(select_id);
+                    if(this.im_talkback_show == true){
+                        this.im_talkback_show =false;
+                        var leave_deviceroom ={"request": "leave"}
+                         this.mixertest.send({"message": leave_deviceroom});  
+                    }
                     // this.local_mymessage =[]
                     // this.local_mynews =[]
                     window.console.log(this.local_device_list[index].id);
@@ -1959,6 +2024,7 @@
                     var im_device_num= this.receiver_type+'.'+sessionStorage.getItem('id')+'_'+this.talk_id
                     window.console.log(im_device_num)
                     this.local_mynews =JSON.parse(localStorage.getItem(im_device_num));
+                    window.console.log(this.local_mynews)
                     if(this.history_index == 1){
                         this.history_index = -1;
                         this.history_right='0px'
@@ -1972,20 +2038,19 @@
                     window.console.log(type)
                     window.console.log(data)
                     window.console.log(local)
-    
                     this.im_line_active = index ;
                     this.im_content_show =false;
                     this.im_content_show =true;
                     this.im_record_show =false;
                     this.im_self_show =true;
                     this.talk_name=name
-                    
                     if(type==1){
                         this.id=local.SenderId
                         this.im_record_show = false;
                         this.im_self_show = true;
                         var your_out_name=type+'.'+sessionStorage.getItem('id')+'_'+local.SenderId;
                         window.console.log(your_out_name);
+                        
                         window.console.log(JSON.parse(localStorage.getItem(your_out_name)));
                         this.local_mynews = JSON.parse(localStorage.getItem(your_out_name));
                                 if(this.local_mynews  ==null){
@@ -1997,9 +2062,8 @@
                                     for(var s=0;s<data.length;s++){
                                         this.local_mynews.push(data[s]);
                                     }
-                                   
                                 }
-                        // localStorage.setItem(your_out_name, JSON.stringify(this.local_mynews));  
+                        localStorage.setItem(your_out_name, JSON.stringify(this.local_mynews));  
     
                     }else{
                         this.id=local.GroupId
@@ -2024,7 +2088,7 @@
                                             window.console.log( this.local_groupnews)
                                          
                                         }
-                    // localStorage.setItem(group_out_name, JSON.stringify(this.local_groupnews));  
+                    localStorage.setItem(group_out_name, JSON.stringify(this.local_groupnews));  
                     }
                     
                 },
@@ -2054,6 +2118,12 @@
                     this.local_history = JSON.parse(localStorage.getItem(im_group_history));
                     window.console.log( this.local_history);
                     window.console.log( this.im_total_history);
+                    var im_ptt_locale = '5'+'.'+sessionStorage.getItem('id')+'_'+this.talk_id;
+                    this.local_ptthistory=JSON.parse(localStorage.getItem(im_ptt_locale));
+                    window.console.log(im_ptt_locale);
+                    window.console.log( this.local_ptthistory);
+
+
                    }
     
                 //    window.console.log(this.local_history)
@@ -2086,7 +2156,7 @@
                     this.select_file =false;
                     this.select_text =false;
                     this.select_talk=true;
-    
+
                 },
                 play_audio(item,index){
                      if(this.set_time != null){
@@ -2223,28 +2293,18 @@
                 im_send_close(){
                     this.im_show = false;
                     window.console.log('111'); 
-//                     var audio_poc = { "request": "join", "room":371, "371": '1687' };
-//  this.mixertest.send({"message": audio_poc});
-                  
                 },
-            //     duankai(){
-            //         window.console.log('duankai')
-            //         var leave_room ={"request": "leave"}
 
-            //         this.mixertest.send({"message": leave_room});
-
-
-            //     },
-            //     lianjie(){
-            //         window.console.log('lianjie');
-            //         var audio_poc2 = { "request": "join", "room":372, "display": '1687' };
-		    // this.mixertest.send({"message": audio_poc2});
-            //     },
                 im_close(){
                     this.im_show = false;
                     // this.mapshow=true
                     // this.closeWebSocket();
                     // this.websocket.close()
+                    if(this.im_talkback_show == true){
+                        this.im_talkback_show=false
+                        var leave_talkroom ={"request": "leave"}
+                         this.mixertest.send({"message": leave_talkroom});                       
+                    }
                 },
                 socket_cloes(){
                     this.websocket.close()
@@ -2265,7 +2325,7 @@
                  }else if("mp4" == fileType || "rmvb" == fileType || "avi" == fileType || "ts" == fileType){
                     this.file_type = 4
                  }else{
-                    this.file_type = 5
+                    this.file_type = 1000
                  }
                  if(this.file_type == 2){
                      window.console.log(111)
@@ -2321,24 +2381,104 @@
                     if(JSON.parse(e.data).DataType == 2){
                         window.console.log('---------------------------------p')
                         var off_line =JSON.parse(e.data).offlineImMsgResp;
-                        
+                        window.console.log(e.data)
+                        window.console.log(off_line)
                         if(Object.keys(off_line).length==0){
                             window.console.log(333333)
                             window.console.log(off_line)
                         }else{
                             window.console.log(222222)
-                            window.console.log(off_line.offlineImMsgs);
-                            localStorage.setItem('off_line_local', JSON.stringify(off_line.offlineImMsgs));
+                            window.console.log(off_line);
+                            window.console.log(off_line.offlineGroupPttImMsgs);
+                            window.console.log(off_line.offlineGroupImMsgs);
+                            window.console.log(off_line.offlineSingleImMsgs);
+                            if(off_line.hasOwnProperty('offlineGroupPttImMsgs')){
+                                window.console.log(off_line.offlineGroupPttImMsgs);
+                                let ptt_length = off_line.offlineGroupPttImMsgs
+                                let ten_message =[];
+                                for(let u =0 ;u<ptt_length.length;u++){
+                                    ten_message.push(ptt_length[u])
+                                }
+                                window.console.log(ptt_length);
+                                let local_ptt =[]
+                                for (let h=0; h<ten_message.length;h++){
+                                    let singleptt = ten_message[h]
+                                    let singlepttlength = singleptt.imMsgData
+                                    let singlepttnum = singlepttlength.length
+                                    if(singlepttnum>10){
+                                        let addnum  = singlepttnum -10
+                                        singlepttlength =singlepttlength.slice(addnum)
+                                        ten_message[h].imMsgData=singlepttlength
+                                        local_ptt.push(ten_message[h])
+                                    }else{
+                                        local_ptt.push(ten_message[h])
+                                    }
+                                }
+                                window.console.log(local_ptt)
+                                if(local_ptt.length != 0){
+                                    for(var q =0 ; q<local_ptt.length;q++){
+                                        var ptt_history_name = '5'+'.'+sessionStorage.getItem('id')+'_'+local_ptt[q].GroupId;
+                                        var ptt_history_message = local_ptt[q].imMsgData;
+                                        var ptt_history_info = JSON.parse(localStorage.getItem(ptt_history_name))
+                                        window.console.log(ptt_history_info)
+                                        if(ptt_history_info  == null){
+                                            ptt_history_info = []
+                                            ptt_history_info.push(ptt_history_message)
+                                        }else{
+                                            ptt_history_info.push(ptt_history_message)
+                                        }
+                                       localStorage.setItem(ptt_history_name,JSON.stringify(ptt_history_message))
+                                    }
+                                }
+
+                            }
+                            if(off_line.hasOwnProperty('offlineGroupImMsgs') || off_line.hasOwnProperty('offlineSingleImMsgs')){
+                                window.console.log(333)
+                                window.console.log(off_line.offlineGroupImMsgs);
+                                window.console.log(off_line.offlineSingleImMsgs);
+                                var single_group={};
+                                if(off_line.hasOwnProperty('offlineSingleImMsgs')){
+                                    single_group.offlineSingleImMsgs=off_line.offlineSingleImMsgs
+                                }
+                                if(off_line.hasOwnProperty('offlineGroupImMsgs')){
+                                    single_group.offlineGroupImMsgs=off_line.offlineGroupImMsgs
+                                }
+                                if( single_group.length != 0){
+                                    window.console.log(single_group)
+                            localStorage.setItem('off_line_local', JSON.stringify(single_group));
+                            // window.console.log(JSON.parse(localStorage.getItem('off_line_local')))
+                                }
+
+                            }
+                            
+                            // localStorage.setItem('off_line_local', JSON.stringify(off_line));
+                            // window.console.log(JSON.parse(localStorage.getItem('off_line_local')))
                             
                         }
-                        window.console.log(off_line)
+                        // window.console.log(off_line)
+                        
                     }else if(JSON.parse(e.data).DataType == 3){
                         const redata = JSON.parse(e.data).imMsgData;
+                        redata.time_id = (new Date()).getTime();
                         window.console.log(redata)
-                        // if(redata.MsgType != 1){
-                        //     redata.ResourcePath=  "http://"+ redata.ResourcePath
-                        // }
-                            redata.time_id = (new Date()).getTime();
+                        if(redata.MsgType == 5){
+                            window.console.log('ptt')
+                            window.console.log(redata)
+                            var ppt_name = redata.MsgType+'.'+sessionStorage.getItem('id')+'_'+redata.ReceiverId;
+                            var ppt_measge=JSON.parse(localStorage.getItem(ppt_name));
+                            window.console.log(JSON.parse(localStorage.getItem(ppt_name)))
+                            if(ppt_measge == null){
+                                ppt_measge =[];
+                                ppt_measge.push(redata)
+                            }else{
+                                ppt_measge.push(redata) 
+                            }
+                            localStorage.setItem(ppt_name,JSON.stringify(ppt_measge))
+                            window.console.log(ppt_name)
+                            window.console.log(JSON.parse(localStorage.getItem(ppt_name)))
+                            
+                        }else if(redata.MsgType == 1 ||redata.MsgType == 2||redata.MsgType == 3 ||redata.MsgType == 4){
+                            window.console.log('wenzi')
                             // redata.time=this.im_now_date;
                             window.console.log(this.receiver_id)
                             window.console.log(this.local_mymessage);
@@ -2439,6 +2579,9 @@
                                 window.console.log(scrollHeight)
                                 $('.im_message').scrollTop(scrollHeight,200);
                                 })
+                            }else{
+                                window.console.log('sos')
+                            }
                     }else if(JSON.parse(e.data).DataType == 5){
                         this.off_line_show =true;
                         // var off_device=JSON.parse(e.data).logoutNotify.group_list[0].usr_list;
@@ -2626,28 +2769,33 @@
                     }
                 },
                 im_audio_bridge(){
-                    this.talkbackVisible=true
+                    window.console.log(this.talkback_id)
+                    if(this.talkback_id == ''){
+                        window.console.log(1)
+                        this.talkback_select =true
+                    }else{
+                        this.talkbackVisible=true
+                    }
                             // this.im_content_show=false;
                             // this.im_talkback_show=true
                 },
                 talkback_submit(){
                     window.console.log(this.talkback_id);
                     var talkroom = this.talkback_id;
-                    var my_roomname = sessionStorage.getItem('id')
+                    var my_roomname = sessionStorage.getItem('loginName')
                     var talk_request = { "request": "join", "room":talkroom, "display": my_roomname };
                     window.console.log(talk_request);
-                    // this.mixertest.send({"message": talk_request}); 
+                    this.mixertest.send({"message": talk_request}); 
                     this.im_content_show=false;
                     this.im_talkback_show=true;
                     this.talkbackVisible=false;
-
+             
                 },
-
                 out_talkback(){
                     this.im_talkback_show=false;
                     this.im_content_show=true;
                     var out_talkroom ={"request": "leave"}
-                //  this.mixertest.send({"message": out_talkroom});
+                   this.mixertest.send({"message": out_talkroom});
                     this.talk_id = this.talkback_id;
                     this.receiver_id = this.talk_id
                     this.receiver_type = 2;
@@ -2659,12 +2807,39 @@
                 talk_active(){
                      this.talkactive=true;
                     window.console.log(1)
+                    var timese = Date.parse(new Date());
+                    window.console.log(timese);
+                    var active_room=this.talk_id
+                    var active_id=parseInt(sessionStorage.getItem('id'))
+                    var active_name =sessionStorage.getItem('loginName')
+                    window.console.log(active_room)
+                    window.console.log(active_id)
+                    window.console.log(active_name)
+                        var talksend ={"request":"talk","room":active_room,"id":active_id,"muted":false,"display":active_name,"timestamp":timese}
+                        this.mixertest.send({"message":talksend})
                     this.mouse_show=false;
                 },
                 talk_actived(){
+                    var timesed = Date.parse(new Date());
                      this.talkactive=false;
                     window.console.log(2)
                     this.mouse_show=true;
+                    this.talk_begin=false;
+                    this.talk_close=false;
+                    var actived_room=this.talk_id
+                    var actived_id=parseInt(sessionStorage.getItem('id'))
+                    var actived_name =sessionStorage.getItem('loginName')
+                    var untalk={"request":"untalk","room":actived_room,"id":actived_id,"muted":true,"display":actived_name,"timestamp":timesed}
+                    this.mixertest.send({"message":untalk})
+                    if( this.can_speanker ==true){
+                        var no_speak={"request":"configure","muted":true,"display":actived_name}
+                        window.console.log(no_speak)
+                        this.mixertest.send({"message":no_speak})
+                        this.can_speanker=false
+                        window.console.log('jingying')
+                    }
+
+
                 },                
                 map_show(){
                 },
@@ -2765,20 +2940,33 @@
                 im_total_history(){
                     return this.local_history
                 },
+                im_total_ptt(){
+                    return this.local_ptthistory
+                },
+                im_ads(){
+                    return  this.off_message
+                },
                 im_off_line(){
+                     
                     // var a = JSON.parse(localStorage.getItem('off_line_local'));
-                    window.console.log(localStorage.getItem('off_line_local'))
-                    if(localStorage.getItem('off_line_local') == 'undefined'){
+                    // this.off_message = localStorage.getItem('off_line_local')
+                    // window.console.log(localStorage.getItem('off_line_local'))
+                    var recent_message = this.off_message
+                    window.console.log(recent_message)
+                    if(recent_message == ''){
                         return []
                     }else{
-                        var a = JSON.parse(localStorage.getItem('off_line_local'));
+                        var a = recent_message;
+                        window.console.log(a)
+                        // var a = JSON.parse(localStorage.getItem('off_line_local'));
                         var b =[]
-                    if (a !== null){
+                    // if (a !== null){
                         if(a.hasOwnProperty('offlineSingleImMsgs')){
-                         window.console.log('```````456')
+                         
                          for(var i =0;i<a.offlineSingleImMsgs.length;i++){
                              b.push(a.offlineSingleImMsgs[i])
                          }
+                         window.console.log(b)
                      }
                      if(a.hasOwnProperty('offlineGroupImMsgs')){
                         for(var j =0;j<a.offlineGroupImMsgs.length;j++){
@@ -2788,8 +2976,8 @@
                      for (var k = 0; k<b.length;k++){
                          b[k].id=k
                      }   
-                    }
-                     
+                    // }
+                    //  window.console.log(b)
                     //   return this.jiadata
                     return b
                     }
@@ -2812,9 +3000,9 @@
                
         },
         mounted(){ 
-            this.audiobridge_serve(); 
+            // this.audiobridge_serve(); 
             window.console.log( JSON.parse(localStorage.getItem('group_list')))
-            this.video_server();    
+            // this.video_server();    
             this.createWebSocket()
             window.console.log(this.group_list)
         },
@@ -3032,6 +3220,7 @@
         bottom: 0px;
         width: 80px;
         overflow: hidden;
+        font-size: 9px;
      
     }
     .off_color{
@@ -3547,6 +3736,9 @@
         margin-top: 3px;
         display: inline-block;
     }
+    .el-transfer-panel__list{
+        width: 248px 
+    }
     .im_voice_num{
         float: right
     }
@@ -3707,6 +3899,9 @@
     .talkactive_tip{
         margin-top: 174px;
         text-align: center;
+    }
+    .talkactive_begin,.talkactive_close{
+        text-align: center
     }
     </style>
     
