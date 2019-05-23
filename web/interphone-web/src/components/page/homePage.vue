@@ -2,341 +2,334 @@
     <div class="client">
         <el-container>
             <el-aside width="345px">
-        <div class="client_left">
-            <div class="client_left_tittle">
-                <i class="el-icon-caret-bottom client_left_icon"></i>
-                <span class="client_left_name">{{ $t("client_lang.client_list") }} </span>
-                <div class="client_left_import" @click="device_import" v-if="rootShow">{{ $t("client_lang.import") }}</div>            
-                <div class="client_left_regiter" @click="register">{{ $t("client_lang.client_add") }}</div>            
-            </div>
-            <div class="client_left_body">
-                <!-- <el-input :placeholder="$t('ztree.filter')" v-model="filterText">
-                </el-input> -->
-                <!-- <el-tree @node-click="handleNodeClick"  class="filter-tree" :data="ztree_data" :props="defaultProps" default-expand-all :filter-node-method="filterNode" ref="ztree" :empty-text="$t('table.no_data')">
-                </el-tree> -->
-                <el-tree @node-click="handleNodeClick"  class="filter-tree"  :props="defaultProps" node-key="id" :default-expanded-keys="[5]" 
-                lazy :load="get_newtree"   ref="ztree" :empty-text="$t('table.no_data')" v-if="tree_show">
-                </el-tree>
-            </div>
-        </div>
-        </el-aside>
-        <el-main>
-        <div class="client_right">
-            <div class="client_details">
-                <div class="account_info"><span class="account_info_tittle">{{$t('account.account_information')}}</span></div> 
-                <div class="account_detailed_info">
-                   <table>
-                       <tbody>
-                           <tr>
-                               <td colspan="3">
-                                   <label class="account_detailed_name">{{information_name}}</label> 
-                                   <i class="el-icon-edit" @click="edit"></i>
-                                </td>
-                           </tr>
-                           <tr>
-                               <td> 
-                                   <label >{{$t('information.login_name')}}:</label>
-                                    <span>{{information_login}}</span>
-                               </td>
-                               <td>
-                                   <label >{{$t('information.type')}}:</label>
-                                    <span>{{information_type}}</span>
-                               </td>
-                               <td>
-                                   <label >{{$t('information.number')}}:</label>
-                                   <span>{{information_number}}</span>
-                               </td>
-                           </tr>
-                           <tr>
-                               <td>
-                                    <label>{{$t('information.contact')}}:</label>
-                                    <span id="account_detailed_contact">{{information_contact}}</span>
-                               </td>
-                               <td>
-                                   <label>{{$t('information.phone')}}:</label>
-                                   <span id="account_detailed_phone">{{information_phone}}</span>
-                               </td>
-                               <td>
-                                   <label>{{$t('information.adress')}}:</label>
-                                   <span id="account_detailed_addres">{{information_adress}}</span>
-                               </td>
-    
-                           </tr>
-                           
-                       </tbody>
-                    </table> 
-                </div> 
-            </div>
-            <div class="equipment_form">
-                <el-tabs v-model="activeName"  @tab-click="handleClick">
-                    <el-tab-pane :label="$t('information.equipment')" name="first">
-                        <div class="equipment_table">
-                            <div class="transfer_tittle">
-                                <span class="mass_transfer" @click="transfer">{{$t('table.mass')}}</span>
-                            </div>
-                            <!-- 完整分页 -->
-                            <el-table ref="multipleTable" :data="table_page" tooltip-effect="dark"
-                             :empty-text="$t('table.no_data')" style="width: 100%"  @selection-change="handleSelectionChange">
-                                   <!-- <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark"
-                             :empty-text="$t('table.no_data')" style="width: 100%"  @selection-change="handleSelectionChange"> -->
-                                <el-table-column type="selection" width="55" ></el-table-column>
-                                <el-table-column  type="index" width="80" :label="$t('table.number')"></el-table-column>
-                                <el-table-column prop="imei" label="IMEI" width="240"> </el-table-column>
-                                <el-table-column prop="device_type" :label="$t('table.model')" width="80" > </el-table-column>
-                                <el-table-column prop="user_name" :label="$t('table.name')" width="240" > </el-table-column>
-                                <el-table-column prop="create_time" :label="$t('table.time')" width="150"> </el-table-column>
-                                <el-table-column prop="sale_time" :label="$t('table.sell')" width="150"> </el-table-column>
-                                <el-table-column prop="nick_name" :label="$t('table.nickname')" width="150"> </el-table-column>
-                                <el-table-column :label="$t('table.operation')" >
-                                <!-- <el-table-column type="selection" style="width: 10%" ></el-table-column>
-                                <el-table-column  type="index" style="width: 30%" :label="$t('table.number')"></el-table-column>
-                                <el-table-column prop="imei" label="IMEI" style="width: 30%"> </el-table-column>
-                                <el-table-column prop="bind_status.String" :label="$t('table.model')" style="width: 10%" > </el-table-column>
-                                <el-table-column prop="user_name" :label="$t('table.name')" style="width: 10%" > </el-table-column>
-                                <el-table-column prop="create_time" :label="$t('table.time')" style="width: 5%"> </el-table-column>
-                                <el-table-column :label="$t('table.operation')" style="width: 5%" >  -->
-                                    <template slot-scope="scope">
-                                                <el-button size="mini" @click="device_export(scope.$index, scope.row)">{{$t('table.export')}}</el-button>
-                                                <el-button size="mini" @click="device_amend(scope.$index, scope.row)">{{$t('table.amend')}}</el-button>
-                                        </template>
-                                </el-table-column>
-                            </el-table>
-                            <!-- 完整分页 -->
-                            <!-- <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage" :page-sizes="[10, 20, 30, 40]"
-                            :page-size="10" layout="total, sizes, prev, pager, next, jumper" :total="400" >
-                            </el-pagination>       -->
-                            <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage" :page-sizes="[10, 20, 30, 40]"
-                            :page-size="10" layout="prev, pager, next" :total="page_mumber" >
-                            </el-pagination>                       
+                <div class="client_left">
+                    <div class="client_left_tittle">
+                        <i class="el-icon-caret-bottom client_left_icon"></i>
+                        <span class="client_left_name">{{ $t("client_lang.client_list") }} </span>
+                        <div class="client_left_import" @click="device_import" v-if="rootShow">{{ $t("client_lang.import") }}</div>            
+                        <div class="client_left_regiter" @click="register">{{ $t("client_lang.client_add") }}</div>            
+                    </div>
+                    <div class="client_left_body">
+                        <!-- <el-input :placeholder="$t('ztree.filter')" v-model="filterText">
+                        </el-input> -->
+                        <!-- <el-tree @node-click="handleNodeClick"  class="filter-tree" :data="ztree_data" :props="defaultProps" default-expand-all :filter-node-method="filterNode" ref="ztree" :empty-text="$t('table.no_data')">
+                        </el-tree> -->
+                        <el-tree @node-click="handleNodeClick"  class="filter-tree"  :props="defaultProps" node-key="id" :default-expanded-keys="[5]" 
+                        lazy :load="get_newtree"   ref="ztree" :empty-text="$t('table.no_data')" v-if="tree_show">
+                        </el-tree>
+                    </div>
+                </div>
+            </el-aside>
+            <el-main>
+                    <div class="client_right">
+                        <div class="client_details">
+                            <div class="account_info"><span class="account_info_tittle">{{$t('account.account_information')}}</span></div> 
+                            <div class="account_detailed_info">
+                                <table>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="3">
+                                                <label class="account_detailed_name">{{information_name}}</label> 
+                                                <i class="el-icon-edit" @click="edit"></i>
+                                                </td>
+                                        </tr>
+                                        <tr>
+                                            <td> 
+                                                <label >{{$t('information.login_name')}}:</label>
+                                                    <span>{{information_login}}</span>
+                                            </td>
+                                            <td>
+                                                <label >{{$t('information.type')}}:</label>
+                                                    <span>{{information_type}}</span>
+                                            </td>
+                                            <td>
+                                                <label >{{$t('information.number')}}:</label>
+                                                <span>{{information_number}}</span>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                    <label>{{$t('information.contact')}}:</label>
+                                                    <span id="account_detailed_contact">{{information_contact}}</span>
+                                            </td>
+                                            <td>
+                                                <label>{{$t('information.phone')}}:</label>
+                                                <span id="account_detailed_phone">{{information_phone}}</span>
+                                            </td>
+                                            <td>
+                                                <label>{{$t('information.adress')}}:</label>
+                                                <span id="account_detailed_addres">{{information_adress}}</span>
+                                            </td>
+
+                                        </tr>
+                                        
+                                    </tbody>
+                                </table> 
+                            </div> 
                         </div>
-                    </el-tab-pane>
-                    <el-tab-pane :label="$t('information.data')" name="second">
-                        <div class="subordinate_div">
-                                <el-form ref="subordinate" :model="subordinate"  label-width="136px" @submit.native.prevent>
-                                <el-form-item :label="$t('reg_message.name')">
-                                    <el-input  v-model="subordinate.name" ></el-input>
-                                </el-form-item>                         
-                                <el-form-item :label="$t('reg_message.account')">
-                                    <el-input  v-model="subordinate.account"  :disabled="ban"></el-input>
-                                </el-form-item>
-                                <!-- <el-form-item :label="$t('reg_message.account_type')" prop="register_type">
-                                        <el-radio-group v-model="subordinate.type">
-                                        <el-radio v-for="item in Account_typedata" :key="item.Account_type"  :label="item.Account_type" :value="item.value" ></el-radio>       
-                                        </el-radio-group>
-                                </el-form-item> -->
+                        <div class="equipment_form">
+                            <el-tabs v-model="activeName"  @tab-click="handleClick">
+                                <el-tab-pane :label="$t('information.equipment')" name="first">
+                                    <div class="equipment_table">
+                                        <div class="transfer_tittle">
+                                            <span class="mass_transfer" @click="transfer">{{$t('table.mass')}}</span>
+                                        </div>
+                                        <!-- 完整分页 -->
+                                        <el-table ref="multipleTable" :data="table_page" tooltip-effect="dark"
+                                        :empty-text="$t('table.no_data')" style="width: 100%"  @selection-change="handleSelectionChange">
+                                            <!-- <el-table ref="multipleTable" :data="tableData" tooltip-effect="dark"
+                                        :empty-text="$t('table.no_data')" style="width: 100%"  @selection-change="handleSelectionChange"> -->
+                                            <el-table-column type="selection" width="55" ></el-table-column>
+                                            <el-table-column  type="index" width="80" :label="$t('table.number')"></el-table-column>
+                                            <el-table-column prop="imei" label="IMEI" width="240"> </el-table-column>
+                                            <el-table-column prop="device_type" :label="$t('table.model')" width="80" > </el-table-column>
+                                            <el-table-column prop="user_name" :label="$t('table.name')" width="240" > </el-table-column>
+                                            <el-table-column prop="create_time" :label="$t('table.time')" width="150"> </el-table-column>
+                                            <el-table-column prop="sale_time" :label="$t('table.sell')" width="150"> </el-table-column>
+                                            <el-table-column prop="nick_name" :label="$t('table.nickname')" width="150"> </el-table-column>
+                                            <el-table-column :label="$t('table.operation')" >
+                                            <!-- <el-table-column type="selection" style="width: 10%" ></el-table-column>
+                                            <el-table-column  type="index" style="width: 30%" :label="$t('table.number')"></el-table-column>
+                                            <el-table-column prop="imei" label="IMEI" style="width: 30%"> </el-table-column>
+                                            <el-table-column prop="bind_status.String" :label="$t('table.model')" style="width: 10%" > </el-table-column>
+                                            <el-table-column prop="user_name" :label="$t('table.name')" style="width: 10%" > </el-table-column>
+                                            <el-table-column prop="create_time" :label="$t('table.time')" style="width: 5%"> </el-table-column>
+                                            <el-table-column :label="$t('table.operation')" style="width: 5%" >  -->
+                                                <template slot-scope="scope">
+                                                            <el-button size="mini" @click="device_export(scope.$index, scope.row)">{{$t('table.export')}}</el-button>
+                                                            <el-button size="mini" @click="device_amend(scope.$index, scope.row)">{{$t('table.amend')}}</el-button>
+                                                    </template>
+                                            </el-table-column>
+                                        </el-table>
+                                        <!-- 完整分页 -->
+                                        <!-- <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage" :page-sizes="[10, 20, 30, 40]"
+                                        :page-size="10" layout="total, sizes, prev, pager, next, jumper" :total="400" >
+                                        </el-pagination>       -->
+                                        <el-pagination @size-change="handleSizeChange" @current-change="handleCurrentChange" :current-page="currentPage" :page-sizes="[10, 20, 30, 40]"
+                                        :page-size="10" layout="prev, pager, next" :total="page_mumber" >
+                                        </el-pagination>                       
+                                    </div>
+                                </el-tab-pane>
+                                <el-tab-pane :label="$t('information.data')" name="second">
+                                    <div class="subordinate_div">
+                                            <el-form ref="subordinate" :model="subordinate"  label-width="136px" @submit.native.prevent>
+                                            <el-form-item :label="$t('reg_message.name')">
+                                                <el-input  v-model="subordinate.name" ></el-input>
+                                            </el-form-item>                         
+                                            <el-form-item :label="$t('reg_message.account')">
+                                                <el-input  v-model="subordinate.account"  :disabled="ban"></el-input>
+                                            </el-form-item>
+                                            <!-- <el-form-item :label="$t('reg_message.account_type')" prop="register_type">
+                                                    <el-radio-group v-model="subordinate.type">
+                                                    <el-radio v-for="item in Account_typedata" :key="item.Account_type"  :label="item.Account_type" :value="item.value" ></el-radio>       
+                                                    </el-radio-group>
+                                            </el-form-item> -->
+                                            <el-form-item :label="$t('reg_message.account_type')" prop="register_type">
+                                                    <el-input  v-model="subordinate.type"  :disabled="ban"></el-input>
+                                            </el-form-item>
+                                            <el-form-item :label="$t('reg_message.contact')">
+                                            <el-input v-model="subordinate.contact" autocomplete="off" ></el-input>
+                                            </el-form-item>
+                                            <el-form-item :label="$t('reg_message.phone')" >
+                                            <el-input v-model="subordinate.phone" autocomplete="off" ></el-input>
+                                            </el-form-item>
+                                            <el-form-item :label="$t('reg_message.email')">
+                                            <el-input v-model="subordinate.email" autocomplete="off" ></el-input>
+                                            </el-form-item>                
+                                            <el-form-item :label="$t('reg_message.adress')" >
+                                            <el-input v-model="subordinate.adress" autocomplete="off" ></el-input>
+                                            </el-form-item>
+                                            <el-form-item :label="$t('reg_message.remark')"  >
+                                                <el-input type="textarea" v-model="subordinate.remark" autocomplete="off" ></el-input>
+                                            </el-form-item> 
+                                        </el-form>
+                                        <div slot="footer" class="dialog-footer subordinate_footer">
+                                            <el-button @click="reset ">{{$t('button_message.reset')}}</el-button>
+                                            <el-button type="primary" @click="subordinate_submit">{{$t('button_message.confirm')}}</el-button>
+                                        </div>
+                                    </div>
+                                </el-tab-pane>
+                            </el-tabs>
+                        </div>
+                    </div>
+                    <!-- 超级管理员导入imei失败的提示 -->
+                    <div class="fail_imei" v-if="fail_show" @mousedown.self="tip_move">
+                        <span class="fail_title" style="font-size: 18px">{{$t('failed.title')}}</span>
+                        <br>
+                        <span style="font-size: 18px">{{$t('failed.import')}}</span>
+                        <br>
+                        <span class="fail_text" style="font-size: 18px" >{{$t('failed.text')}}</span>
+                        <div class="format_imei" v-show="format_show">
+                            <span>{{$t('failed.format')}}</span> 
+                            <span>:</span>       
+                            <ul v-for="(item) in err_format" :key=item.imei>
+                                <li>{{item.imei}}</li>
+                            
+                            </ul>
+                        </div>
+                        <div class="unique_imei" v-show="unique_show">
+                            <span>{{$t('failed.unique')}}</span>
+                            <span>:</span>
+                            <ul v-for="(items) in err_unique" :key=items.imei>
+                                <li>{{items.imei}}</li>
+                            </ul>
+                        </div>
+                        <el-button type="primary" size="mini" id="err_button" @click="err_submit">{{$t('button_message.confirm')}}</el-button>
+                    </div>
+                <!-- 注册 -->
+                    <el-dialog :title="$t('reg_message.title')" :visible.sync="registerVisible" :show-close="false" width="33%">
+                        <el-form ref="registerForm" :model="registerForm"  :rules="register_rules" label-width="136px" @submit.native.prevent>
+                            <el-form-item :label="$t('reg_message.name')" prop="register_name">
+                                <el-input ref="register_name" v-model="registerForm.register_name" :placeholder="$t('prompt_message.name')"></el-input>
+                            </el-form-item>
+                            <el-form-item :label="$t('reg_message.account')" prop="register_Account">
+                                <el-input ref="register_Account" v-model="registerForm.register_Account" :placeholder="$t('prompt_message.account')"></el-input>
+                            </el-form-item>
+                            <el-form-item :label="$t('reg_message.pwd')" prop="register_Password">
+                                <el-input ref="register_Password" v-model="registerForm.register_Password" :placeholder="$t('prompt_message.pwd')" ></el-input>
+                            </el-form-item>
+                            <el-form-item :label="$t('reg_message.cfm_pwd')" prop="register_cfmPassword">
+                                <el-input v-model="registerForm.register_cfmPassword" :placeholder="$t('prompt_message.again_pwd')" ></el-input>
+                            </el-form-item>
                                 <el-form-item :label="$t('reg_message.account_type')" prop="register_type">
-                                        <el-input  v-model="subordinate.type"  :disabled="ban"></el-input>
+                                    <el-radio-group v-model="registerForm.register_type">
+                                    <el-radio v-for="item in Account_typedata" :key="item.Account_type"  :label="item.Account_type" :value="item.value" ></el-radio>       
+                                    </el-radio-group>
                                 </el-form-item>
-                                <el-form-item :label="$t('reg_message.contact')">
-                                <el-input v-model="subordinate.contact" autocomplete="off" ></el-input>
-                                </el-form-item>
-                                <el-form-item :label="$t('reg_message.phone')" >
-                                <el-input v-model="subordinate.phone" autocomplete="off" ></el-input>
-                                </el-form-item>
-                                <el-form-item :label="$t('reg_message.email')">
-                                <el-input v-model="subordinate.email" autocomplete="off" ></el-input>
-                                </el-form-item>                
+                            <el-form-item :label="$t('reg_message.contact')">
+                                <el-input v-model="registerForm.name" autocomplete="off" ></el-input>
+                            </el-form-item>
+                            <el-form-item :label="$t('reg_message.phone')" >
+                                <el-input v-model="registerForm.phone" autocomplete="off" ></el-input>
+                            </el-form-item>
+                            <el-form-item :label="$t('reg_message.email')">
+                                <el-input v-model="registerForm.email" autocomplete="off" ></el-input>
+                            </el-form-item>                
                                 <el-form-item :label="$t('reg_message.adress')" >
-                                <el-input v-model="subordinate.adress" autocomplete="off" ></el-input>
-                                </el-form-item>
-                                <el-form-item :label="$t('reg_message.remark')"  >
-                                    <el-input type="textarea" v-model="subordinate.remark" autocomplete="off" ></el-input>
-                                </el-form-item> 
-                            </el-form>
-                            <div slot="footer" class="dialog-footer subordinate_footer">
-                                <el-button @click="reset ">{{$t('button_message.reset')}}</el-button>
-                                <el-button type="primary" @click="subordinate_submit">{{$t('button_message.confirm')}}</el-button>
-                            </div>
+                                <el-input v-model="registerForm.adress" autocomplete="off" ></el-input>
+                            </el-form-item>
+                            <el-form-item :label="$t('reg_message.remark')"  >
+                                <el-input type="textarea" v-model="registerForm.remark" autocomplete="off" ></el-input>
+                            </el-form-item> 
+                        </el-form>
+                        <div slot="footer" class="dialog-footer">
+                            <el-button @click="register_Cancle">{{$t('button_message.cancel')}}</el-button>
+                            <el-button type="primary" @click="submit_register('registerForm')">{{$t('button_message.sign_up')}}</el-button>
                         </div>
-                    </el-tab-pane>
-                </el-tabs>
-            </div>
-        </div>
-         <!-- 超级管理员导入imei失败的提示 -->
-         <div class="fail_imei" v-if="fail_show" @mousedown.self="tip_move">
-             <span class="fail_title" style="font-size: 18px">{{$t('failed.title')}}</span>
-             <br>
-             <span style="font-size: 18px">{{$t('failed.import')}}</span>
-             <br>
-             <span class="fail_text" style="font-size: 18px" >{{$t('failed.text')}}</span>
-             <div class="format_imei" v-show="format_show">
-                 <span>{{$t('failed.format')}}</span> 
-                 <span>:</span>       
-                 <ul v-for="(item) in err_format" :key=item.imei>
-                     <li>{{item.imei}}</li>
-                    
-                 </ul>
-             </div>
-             <div class="unique_imei" v-show="unique_show">
-                    <span>{{$t('failed.unique')}}</span>
-                    <span>:</span>
-                    <ul v-for="(items) in err_unique" :key=items.imei>
-                            <li>{{items.imei}}</li>
-                        </ul>
-                </div>
-                <el-button type="primary" size="mini" id="err_button" @click="err_submit">{{$t('button_message.confirm')}}</el-button>
-    
-         </div>
-          
-      <!-- 注册 -->
-            <el-dialog :title="$t('reg_message.title')" :visible.sync="registerVisible" :show-close="false" width="33%">
-                <el-form ref="registerForm" :model="registerForm"  :rules="register_rules" label-width="136px" @submit.native.prevent>
-                    <el-form-item :label="$t('reg_message.name')" prop="register_name">
-                        <el-input ref="register_name" v-model="registerForm.register_name" :placeholder="$t('prompt_message.name')"></el-input>
-                    </el-form-item>
-                    <el-form-item :label="$t('reg_message.account')" prop="register_Account">
-                        <el-input ref="register_Account" v-model="registerForm.register_Account" :placeholder="$t('prompt_message.account')"></el-input>
-                    </el-form-item>
-                    <el-form-item :label="$t('reg_message.pwd')" prop="register_Password">
-                        <el-input ref="register_Password" v-model="registerForm.register_Password" :placeholder="$t('prompt_message.pwd')" ></el-input>
-                    </el-form-item>
-                    <el-form-item :label="$t('reg_message.cfm_pwd')" prop="register_cfmPassword">
-                        <el-input v-model="registerForm.register_cfmPassword" :placeholder="$t('prompt_message.again_pwd')" ></el-input>
-                    </el-form-item>
-                      <el-form-item :label="$t('reg_message.account_type')" prop="register_type">
-                            <el-radio-group v-model="registerForm.register_type">
-                            <el-radio v-for="item in Account_typedata" :key="item.Account_type"  :label="item.Account_type" :value="item.value" ></el-radio>       
-                            </el-radio-group>
-                        </el-form-item>
-                    <el-form-item :label="$t('reg_message.contact')">
-                      <el-input v-model="registerForm.name" autocomplete="off" ></el-input>
-                    </el-form-item>
-                    <el-form-item :label="$t('reg_message.phone')" >
-                      <el-input v-model="registerForm.phone" autocomplete="off" ></el-input>
-                    </el-form-item>
-                    <el-form-item :label="$t('reg_message.email')">
-                      <el-input v-model="registerForm.email" autocomplete="off" ></el-input>
-                    </el-form-item>                
-                     <el-form-item :label="$t('reg_message.adress')" >
-                      <el-input v-model="registerForm.adress" autocomplete="off" ></el-input>
-                    </el-form-item>
-                    <el-form-item :label="$t('reg_message.remark')"  >
-                        <el-input type="textarea" v-model="registerForm.remark" autocomplete="off" ></el-input>
-                    </el-form-item> 
-                </el-form>
-                <div slot="footer" class="dialog-footer">
-                    <el-button @click="register_Cancle">{{$t('button_message.cancel')}}</el-button>
-                    <el-button type="primary" @click="submit_register('registerForm')">{{$t('button_message.sign_up')}}</el-button>
-                </div>
-            </el-dialog> 
-      <!-- 转移 -->
-            <el-dialog :title="$t('table.info')" :visible.sync="transfer_dialog" width="30%" :show-close="false">
-                <el-select v-model="customer" filterable :placeholder="$t('table.select')">
-                    <!-- <el-option  v-for="item in customer_List" :key="item.id" :label="item.account_name" :value="item.id"> -->
-                    <el-option  v-for="item in customer_List" :key="item.id" :label="item.account_name+item.account_nickname" :value="item.id">
-                        <span style="float:left">{{item.account_name}}</span>
-                        <span style="float:right">{{item.account_nickname}}</span>
-                    </el-option>
-                </el-select>
-                <el-table :data="gridData" :empty-text="$t('table.no_data')">
-                    <el-table-column property="imei" label="IMEI"  width="200"></el-table-column>
-                    <el-table-column property="device_type" :label="$t('table.model')"  width="150"></el-table-column>
-                    <el-table-column property="user_name" :label="$t('table.name')"  width="150"></el-table-column>
-                </el-table>
-            <span slot="footer" class="dialog-footer">
-                <el-button @click="dialig_hidden">{{$t('button_message.cancel')}}</el-button>
-                <el-button type="primary" @click="submit_transfer">{{$t('button_message.confirm')}}</el-button>
-            </span>
-            </el-dialog>
-          <!-- 超级管理员导入设备 add添加 -->
-          <!-- <el-dialog :title="$t('table.new_device')" :visible.sync="import_show" width="30%"  :show-close="false">
-            <div class="imei_div">
-                <el-button @click="add_imei">{{$t('group.add')}}</el-button>
-                <el-table :data="imei_data" :empty-text="$t('table.no_data')">
-                        <el-table-column prop="iemi" label="IMEI">
-                        <template  slot-scope="scope">
-                        <el-input v-model.number="imei_data[scope.$index].iemi"   ref="iemi_rule"></el-input>
-                        </template>
-                        </el-table-column>
-                        <el-table-column prop="leixing" label="versions ">
-                            <template  slot-scope="scope">
-                            <el-select v-model="imei_data[scope.$index].version_value" :placeholder="$t('table.select')">
-                                <el-option
-                                  v-for="item in version_type"
-                                  :key="item.value"
-                                  :label="item.label"
-                                  :value="item.value">
-                                </el-option>
-                              </el-select>
-                            </template>
-                            </el-table-column>
-                        <el-table-column prop="command" :label="$t('table.operation')">
-                        <template  slot-scope="scope">
-                        <el-button @click="delete_imei(scope.$index)">{{$t('group.remove')}}</el-button>
-                        </template>
-                        </el-table-column>
-                </el-table>
-            </div>
-            <span slot="footer" class="dialog-footer">
-                <el-button @click="import_cancle">{{$t('button_message.cancel')}}</el-button>
-                <el-button type="primary" @click="import_submit">{{$t('button_message.confirm')}}</el-button>
-            </span>
-            </el-dialog> -->
-    
-                 <!-- 超级管理员导入设备 粘贴添加 -->
-          <el-dialog :title="$t('table.new_device')" :visible.sync="import_show" width="30%"  :show-close="false">
-            <div class="imei_div">
-                 <table>
-                    <tr>
-                        <th>IMEI</th>
-                        <th>{{$t('table.model')}}</th>
-                    </tr>
-                    <tr>
-                        <td> 
-                            <textarea style="width: 367px; height: 206px; resize: none; border-color:#dcdfe6" :placeholder="$t('table.more')"  v-model="more_imei" ></textarea></td>
-                        <td>                        
-                            <el-select  v-model="only_type"  :placeholder="$t('table.select')">
-                            <el-option
-                              v-for="item in version_type"
-                              :key="item.value"
-                              :label="item.label"
-                              :value="item.value">
+                    </el-dialog> 
+                <!-- 转移 -->
+                    <el-dialog :title="$t('table.info')" :visible.sync="transfer_dialog" width="30%" :show-close="false">
+                        <el-select v-model="customer" filterable :placeholder="$t('table.select')">
+                            <!-- <el-option  v-for="item in customer_List" :key="item.id" :label="item.account_name" :value="item.id"> -->
+                            <el-option  v-for="item in customer_List" :key="item.id" :label="item.account_name+item.account_nickname" :value="item.id">
+                                <span style="float:left">{{item.account_name}}</span>
+                                <span style="float:right">{{item.account_nickname}}</span>
                             </el-option>
-                          </el-select></td>
-                    </tr>
-    
-                 </table>
-    
-            </div>
-            <span slot="footer" class="dialog-footer">
-                <el-button @click="import_cancle">{{$t('button_message.cancel')}}</el-button>
-                <el-button type="primary" @click="import_submit">{{$t('button_message.confirm')}}</el-button>
-            </span>
-            </el-dialog>
-    
-            <!-- 修改设备信息 -->
-            <el-dialog :title="$t('device.title')" :visible.sync="deviceVisible" :show-close="false" width="33%">
-                <el-form ref="deviceForm" :model="deviceForm"  label-width="136px" @submit.native.prevent>
-                    <el-form-item :label="$t('device.imei')">
-                      <el-input v-model="deviceForm.imei" autocomplete="off" disabled="disabled" ></el-input>
-                    </el-form-item>
-                    <el-form-item :label="$t('device.user_name')" >
-                      <el-input v-model="deviceForm.user_name" autocomplete="off" disabled="disabled" ></el-input>
-                    </el-form-item>
-                    <el-form-item :label="$t('device.import_time')">
-                      <el-input v-model="deviceForm.import_time" autocomplete="off" disabled="disabled" ></el-input>
-                    </el-form-item>                
-                     <el-form-item :label="$t('device.type')" >
-                      <el-input v-model="deviceForm.type" autocomplete="off" disabled="disabled" ></el-input>
-                    </el-form-item>
-                    <el-form-item :label="$t('device.nick_name')" >
-                        <el-input v-model="deviceForm.nick_name" autocomplete="off" ></el-input>
-                      </el-form-item>
-                </el-form>
-                <div slot="footer" class="dialog-footer">
-                    <el-button @click="amend_Cancle">{{$t('button_message.cancel')}}</el-button>
-                    <el-button type="primary" @click="amend_subimt">{{$t('device.submit')}}</el-button>
-                </div>
-            </el-dialog> 
-            
-    </el-main>
-    
-    
-     </el-container>
+                        </el-select>
+                        <el-table :data="gridData" :empty-text="$t('table.no_data')">
+                            <el-table-column property="imei" label="IMEI"  width="200"></el-table-column>
+                            <el-table-column property="device_type" :label="$t('table.model')"  width="150"></el-table-column>
+                            <el-table-column property="user_name" :label="$t('table.name')"  width="150"></el-table-column>
+                        </el-table>
+                        <span slot="footer" class="dialog-footer">
+                        <el-button @click="dialig_hidden">{{$t('button_message.cancel')}}</el-button>
+                        <el-button type="primary" @click="submit_transfer">{{$t('button_message.confirm')}}</el-button>
+                    </span>
+                    </el-dialog>
+                    <!-- 超级管理员导入设备 add添加 -->
+                    <!-- <el-dialog :title="$t('table.new_device')" :visible.sync="import_show" width="30%"  :show-close="false">
+                        <div class="imei_div">
+                            <el-button @click="add_imei">{{$t('group.add')}}</el-button>
+                            <el-table :data="imei_data" :empty-text="$t('table.no_data')">
+                                    <el-table-column prop="iemi" label="IMEI">
+                                    <template  slot-scope="scope">
+                                    <el-input v-model.number="imei_data[scope.$index].iemi"   ref="iemi_rule"></el-input>
+                                    </template>
+                                    </el-table-column>
+                                    <el-table-column prop="leixing" label="versions ">
+                                        <template  slot-scope="scope">
+                                        <el-select v-model="imei_data[scope.$index].version_value" :placeholder="$t('table.select')">
+                                            <el-option
+                                            v-for="item in version_type"
+                                            :key="item.value"
+                                            :label="item.label"
+                                            :value="item.value">
+                                            </el-option>
+                                        </el-select>
+                                        </template>
+                                        </el-table-column>
+                                    <el-table-column prop="command" :label="$t('table.operation')">
+                                    <template  slot-scope="scope">
+                                    <el-button @click="delete_imei(scope.$index)">{{$t('group.remove')}}</el-button>
+                                    </template>
+                                    </el-table-column>
+                            </el-table>
+                        </div>
+                        <span slot="footer" class="dialog-footer">
+                            <el-button @click="import_cancle">{{$t('button_message.cancel')}}</el-button>
+                            <el-button type="primary" @click="import_submit">{{$t('button_message.confirm')}}</el-button>
+                        </span>
+                        </el-dialog> -->
+                
+                            <!-- 超级管理员导入设备 粘贴添加 -->
+                    <el-dialog :title="$t('table.new_device')" :visible.sync="import_show" width="30%"  :show-close="false">
+                        <div class="imei_div">
+                                <table>
+                                <tr>
+                                    <th>IMEI</th>
+                                    <th>{{$t('table.model')}}</th>
+                                </tr>
+                                <tr>
+                                    <td> 
+                                        <textarea style="width: 367px; height: 206px; resize: none; border-color:#dcdfe6" :placeholder="$t('table.more')"  v-model="more_imei" ></textarea></td>
+                                    <td>                        
+                                        <el-select  v-model="only_type"  :placeholder="$t('table.select')">
+                                        <el-option
+                                            v-for="item in version_type"
+                                            :key="item.value"
+                                            :label="item.label"
+                                            :value="item.value">
+                                        </el-option>
+                                        </el-select></td>
+                                </tr>
+
+                                </table>
+
+                        </div>
+                        <span slot="footer" class="dialog-footer">
+                            <el-button @click="import_cancle">{{$t('button_message.cancel')}}</el-button>
+                            <el-button type="primary" @click="import_submit">{{$t('button_message.confirm')}}</el-button>
+                        </span>
+                    </el-dialog>
+                    <!-- 修改设备信息 -->
+                    <el-dialog :title="$t('device.title')" :visible.sync="deviceVisible" :show-close="false" width="33%">
+                        <el-form ref="deviceForm" :model="deviceForm"  label-width="136px" @submit.native.prevent>
+                            <el-form-item :label="$t('device.imei')">
+                                <el-input v-model="deviceForm.imei" autocomplete="off" disabled="disabled" ></el-input>
+                            </el-form-item>
+                            <el-form-item :label="$t('device.user_name')" >
+                                <el-input v-model="deviceForm.user_name" autocomplete="off" disabled="disabled" ></el-input>
+                            </el-form-item>
+                            <el-form-item :label="$t('device.import_time')">
+                                <el-input v-model="deviceForm.import_time" autocomplete="off" disabled="disabled" ></el-input>
+                            </el-form-item>                
+                                <el-form-item :label="$t('device.type')" >
+                                <el-input v-model="deviceForm.type" autocomplete="off" disabled="disabled" ></el-input>
+                            </el-form-item>
+                            <el-form-item :label="$t('device.nick_name')" >
+                                <el-input v-model="deviceForm.nick_name" autocomplete="off" ></el-input>
+                                </el-form-item>
+                        </el-form>
+                        <div slot="footer" class="dialog-footer">
+                            <el-button @click="amend_Cancle">{{$t('button_message.cancel')}}</el-button>
+                            <el-button type="primary" @click="amend_subimt">{{$t('device.submit')}}</el-button>
+                        </div>
+                    </el-dialog> 
+            </el-main>
+        </el-container>
     </div>
-        
     </template>
-    <script>
+<script>
     export default {
         inject:['reload'],
         data() {
@@ -492,9 +485,6 @@
             err_unique:[],
             err_format:[],
             }
-           
-    
-    
         },
         methods: {
                 register(){
@@ -795,7 +785,6 @@
                 },
                 // 修改设备信息
                 amend_subimt(){
-          
                 var updata_device={};
                 updata_device.IMei = this.deviceForm.imei;
                 updata_device.NickName = this.deviceForm.nick_name;
@@ -1095,8 +1084,7 @@
                         window.console.log(_)
                     });
                 },
-               
-            //    移动
+                 //    移动
                tip_move(e){
                         let odiv = e.target;    //获取目标元素
                         //算出鼠标相对元素的位置
@@ -1122,7 +1110,7 @@
                     },
                
                 // ztree操作
-                 handleNodeClick(data) {
+                handleNodeClick(data) {
                      window.console.log(data)
                      this.treeNode = data.$treeNodeId; 
                      window.console.log(data.$treeNodeId)
@@ -1283,8 +1271,6 @@
                 //     this.node.childNodes = [];
                 //     this.loadNode(this.node,this.resolve)
                 // },
-     
-    
                 // 页面赋值公共方法
                 update_data(){
                     window.console.log(this.treeNode)
