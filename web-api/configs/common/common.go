@@ -15,6 +15,7 @@ import (
 
 var (
 	TimeLayout string // 时间模板
+	WebTimeLayout string // 时间模板
 )
 
 func init() {
@@ -25,4 +26,5 @@ func init() {
 	}
 
 	TimeLayout = cfg.Section("time").Key("layout").String()
+	WebTimeLayout =  cfg.Section("time").Key("web_layout").String()
 }

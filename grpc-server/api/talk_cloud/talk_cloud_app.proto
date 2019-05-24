@@ -93,6 +93,9 @@ service TalkCloud {
     // app获取apk
     rpc GetApkInfo (apkInfoReq) returns (apkInfoResp) {
     }
+
+    // 获取janus、grpc服务ip和地址 TODO
+    rpc GetServerAddr(AppRegReq) returns (AppRegRsp){}
 }
 
 /*************** Register ***************/

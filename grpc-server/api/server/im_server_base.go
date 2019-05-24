@@ -723,6 +723,8 @@ func GetOfflineImMsgFromDB(req *pb.StreamRequest) (*pb.StreamResponse, error) {
 	// 遍历离线数据集，记录数据用户id和位置
 
 	for _, msg := range offlineMsg {
+		//msg.MsgCode = msg.SendTime  // TODO 和app讨论这两个字段，时间戳还是sendtime的时间格式
+		//msg.SendTime = utils.UnixStrToTimeFormat(msg.SendTime)
 		if msg.ReceiverType == IM_MSG_FROM_UPLOAD_RECEIVER_IS_USER {
 			if v, ok := idIndexSMap[msg.Id]; ok {
 				// 已经发现了这个用户的一条消息，那么就把消息加到对应的切片下的

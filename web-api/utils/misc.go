@@ -22,6 +22,11 @@ func UnixStrToTimeFormat(tStr string) string {
 	return time.Unix(t, 0).Format(cfgComm.TimeLayout)
 }
 
+func UnixStrToWebTimeFormat(tStr string) string {
+	t, _ := strconv.ParseInt(tStr, 10, 64)
+	return time.Unix(t, 0).Format(cfgComm.WebTimeLayout)
+}
+
 func FormatStrength(first, second, third, fourth int32) string {
 	return strconv.FormatInt(int64(first), 10) + "," +
 		strconv.FormatInt(int64(second), 10) + "," +

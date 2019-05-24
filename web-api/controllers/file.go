@@ -418,27 +418,39 @@ func sendImMessage(imw *worker, ctx context.Context) {
 
 			if resp.DataType == OFFLINE_IM_MSG {
 				// 把中文转换为utf-8
-				for _, msg := range resp.OfflineImMsgResp.OfflineGroupImMsgs {
-					if msg.ImMsgData != nil {
-						for _, userMsg := range msg.ImMsgData {
-							userMsg.ResourcePath = utils.ConvertOctonaryUtf8(userMsg.ResourcePath)
-						}
-					}
-				}
-				for _, msg := range resp.OfflineImMsgResp.OfflineSingleImMsgs {
-					if msg.ImMsgData != nil {
-						for _, userMsg := range msg.ImMsgData {
-							userMsg.ResourcePath = utils.ConvertOctonaryUtf8(userMsg.ResourcePath)
-						}
-					}
-				}
-				for _, msg := range resp.OfflineImMsgResp.OfflineGroupPttImMsgs {
-					if msg.ImMsgData != nil {
-						for _, userMsg := range msg.ImMsgData {
-							userMsg.ResourcePath = utils.ConvertOctonaryUtf8(userMsg.ResourcePath)
-						}
-					}
-				}
+				//for _, msg := range resp.OfflineImMsgResp.OfflineGroupImMsgs {
+				//	if msg.ImMsgData != nil {
+				//		for _, userMsg := range msg.ImMsgData {
+				//			userMsg.MsgCode = userMsg.SendTime
+				//			userMsg.SendTime = utils.UnixStrToWebTimeFormat(userMsg.SendTime)
+				//			userMsg.SendTime = utils.ConvertOctonaryUtf8(userMsg.SendTime)
+				//			userMsg.ResourcePath = utils.ConvertOctonaryUtf8(userMsg.ResourcePath)
+				//		}
+				//	}
+				//}
+				//for _, msg := range resp.OfflineImMsgResp.OfflineSingleImMsgs {
+				//	if msg.ImMsgData != nil {
+				//		for _, userMsg := range msg.ImMsgData {
+				//			userMsg.MsgCode = userMsg.SendTime
+				//			userMsg.SendTime = utils.UnixStrToWebTimeFormat(userMsg.SendTime)
+				//			userMsg.SendTime = utils.ConvertOctonaryUtf8(userMsg.SendTime)
+				//			userMsg.ResourcePath = utils.ConvertOctonaryUtf8(userMsg.ResourcePath)
+				//		}
+				//	}
+				//}
+				//for _, msg := range resp.OfflineImMsgResp.OfflineGroupPttImMsgs {
+				//	if msg.ImMsgData != nil {
+				//		for _, userMsg := range msg.ImMsgData {
+				//			userMsg.MsgCode = userMsg.SendTime
+				//			userMsg.SendTime = utils.UnixStrToWebTimeFormat(userMsg.SendTime)
+				//			userMsg.SendTime = utils.ConvertOctonaryUtf8(userMsg.SendTime)
+				//			userMsg.ResourcePath = utils.ConvertOctonaryUtf8(userMsg.ResourcePath)
+				//		}
+				//	}
+				//}
+				convertEncode(resp.OfflineImMsgResp.OfflineGroupImMsgs)
+				convertEncode(resp.OfflineImMsgResp.OfflineSingleImMsgs)
+				convertEncode(resp.OfflineImMsgResp.OfflineGroupPttImMsgs)
 				log.Log.Printf("web grpc client receive : %+v", resp)
 
 				// 返回JSON字符串
@@ -458,6 +470,20 @@ func sendImMessage(imw *worker, ctx context.Context) {
 					log.Log.Println("WS message send error:", err)
 					//break
 				}
+			}
+		}
+	}
+}
+
+// 转换中文
+func convertEncode(m []*pb.OfflineImMsg) {
+	for _, msg := range m {
+		if msg.ImMsgData != nil {
+			for _, userMsg := range msg.ImMsgData {
+				userMsg.MsgCode = userMsg.SendTime
+				userMsg.SendTime = utils.UnixStrToWebTimeFormat(userMsg.SendTime)
+				userMsg.SendTime = utils.ConvertOctonaryUtf8(userMsg.SendTime)
+				userMsg.ResourcePath = utils.ConvertOctonaryUtf8(userMsg.ResourcePath)
 			}
 		}
 	}
