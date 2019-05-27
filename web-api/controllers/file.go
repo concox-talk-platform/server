@@ -487,4 +487,5 @@ func convertEncode(m []*pb.OfflineImMsg) {
 			}
 		}
 	}
+
 }
